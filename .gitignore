@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+output/
+
+# Manual test folder generated files
+manual-test/.opencode/
+manual-test/docs/
+
+# System files
+~/
+.DS_Store

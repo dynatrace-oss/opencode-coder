@@ -1,4 +1,4 @@
-import type { Plugin } from "@opencode-ai/plugin";
+import type { Plugin, PluginInput } from "@opencode-ai/plugin";
 import { readdir, readFile } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -6,6 +6,30 @@ import { fileURLToPath } from "url";
 // Get the directory where this plugin is located
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const KNOWLEDGE_BASE_DIR = join(__dirname, "..", "knowledge-base");
+
+// Logger helper using OpenCode SDK
+const SERVICE_NAME = "opencode-coder";
+
+function createLogger(client: PluginInput["client"]) {
+  const log = (level: "debug" | "info" | "warn" | "error", message: string, extra?: Record<string, unknown>) => {
+    const body: { service: string; level: "debug" | "info" | "warn" | "error"; message: string; extra?: { [key: string]: unknown } } = {
+      service: SERVICE_NAME,
+      level,
+      message,
+    };
+    if (extra) {
+      body.extra = extra;
+    }
+    client.app.log({ body });
+  };
+
+  return {
+    debug: (message: string, extra?: Record<string, unknown>) => log("debug", message, extra),
+    info: (message: string, extra?: Record<string, unknown>) => log("info", message, extra),
+    warn: (message: string, extra?: Record<string, unknown>) => log("warn", message, extra),
+    error: (message: string, extra?: Record<string, unknown>) => log("error", message, extra),
+  };
+}
 
 
 
@@ -53,7 +77,7 @@ function parseFrontmatter(content: string): { frontmatter: Record<string, string
  * Load all command files from knowledge-base/command/
  * Structure: command/<category>/<name>.md -> coder/<category>/<name>
  */
-async function loadCommands(): Promise<CommandDef[]> {
+async function loadCommands(log: ReturnType<typeof createLogger>): Promise<CommandDef[]> {
   const commands: CommandDef[] = [];
   const commandDir = join(KNOWLEDGE_BASE_DIR, "command");
 
@@ -90,7 +114,7 @@ async function loadCommands(): Promise<CommandDef[]> {
       }
     }
   } catch (error) {
-    console.error("Failed to load commands:", error);
+    log.error("Failed to load commands", { error: String(error) });
   }
 
   return commands;
@@ -100,7 +124,7 @@ async function loadCommands(): Promise<CommandDef[]> {
  * Load all agent files from knowledge-base/agent/
  * Structure: agent/<name>.md -> agent with name from frontmatter or filename
  */
-async function loadAgents(): Promise<AgentDef[]> {
+async function loadAgents(log: ReturnType<typeof createLogger>): Promise<AgentDef[]> {
   const agents: AgentDef[] = [];
   const agentDir = join(KNOWLEDGE_BASE_DIR, "agent");
 
@@ -134,20 +158,22 @@ async function loadAgents(): Promise<AgentDef[]> {
       agents.push(agent);
     }
   } catch (error) {
-    console.error("Failed to load agents:", error);
+    log.error("Failed to load agents", { error: String(error) });
   }
 
   return agents;
 }
 
-export const OpencodeCoder: Plugin = async () => {
-  console.log("OpencodeCoder plugin loading...");
+export const OpencodeCoder: Plugin = async ({ client }) => {
+  const log = createLogger(client);
+
+  log.info("OpencodeCoder plugin loading...");
 
   // Load commands and agents at plugin initialization
-  const commands = await loadCommands();
-  const agents = await loadAgents();
+  const commands = await loadCommands(log);
+  const agents = await loadAgents(log);
 
-  console.log(`Loaded ${commands.length} commands and ${agents.length} agents`);
+  log.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
 
   return {
     async config(config) {
@@ -165,7 +191,7 @@ export const OpencodeCoder: Plugin = async () => {
         if (cmd.subtask) cmdConfig.subtask = cmd.subtask;
 
         config.command[cmd.name] = cmdConfig;
-        console.log(`Registered command: /${cmd.name}`);
+        log.debug(`Registered command: /${cmd.name}`);
       }
 
       // Register agents
@@ -185,7 +211,7 @@ export const OpencodeCoder: Plugin = async () => {
         if (agent.model) agentConfig.model = agent.model;
 
         config.agent[agent.name] = agentConfig;
-        console.log(`Registered agent: @${agent.name}`);
+        log.debug(`Registered agent: @${agent.name}`);
       }
     },
   };

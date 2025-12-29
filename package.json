@@ -1,7 +1,15 @@
 {
-  "name": "opencode-coder",
+  "name": "@hk9890/opencode-coder",
   "version": "0.1.0",
   "description": "OpenCode plugin for story-driven development with agents and commands",
+  "author": "hk9890",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hk9890/opencode-coder.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "type": "module",
   "main": "dist/opencode-coder.js",
   "types": "dist/opencode-coder.d.ts",
@@ -34,7 +42,6 @@
     "ai",
     "coding-assistant"
   ],
-  "author": "",
   "license": "MIT",
   "dependencies": {
     "@opencode-ai/plugin": "^1.0.185",

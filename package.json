@@ -33,7 +33,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@opencode-ai/plugin": "^1.0.185"
+    "@opencode-ai/plugin": "^1.0.185",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@types/bun": "^1.1.14",

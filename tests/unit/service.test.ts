@@ -249,8 +249,8 @@ describe("KnowledgeBaseService", () => {
     });
   });
 
-  describe("beads command filtering", () => {
-    it("should filter out bd/* commands when beadsEnabled is false", async () => {
+  describe("beads commands", () => {
+    it("should always include bd/* commands regardless of beadsEnabled flag", async () => {
       const mockCommands: CommandDef[] = [
         { name: "story/next", template: "Story template" },
         { name: "bd/init", template: "Init beads" },
@@ -270,12 +270,11 @@ describe("KnowledgeBaseService", () => {
 
       expect(mockConfig.command?.["story/next"]).toBeDefined();
       expect(mockConfig.command?.["bug/fix"]).toBeDefined();
-      expect(mockConfig.command?.["bd/init"]).toBeUndefined();
-      expect(mockConfig.command?.["bd/close"]).toBeUndefined();
-      expect(mockLogger.hasLogged("debug", "Filtered out 2 bd/* commands")).toBe(true);
+      expect(mockConfig.command?.["bd/init"]).toBeDefined();
+      expect(mockConfig.command?.["bd/close"]).toBeDefined();
     });
 
-    it("should include bd/* commands when beadsEnabled is true", async () => {
+    it("should include all commands when beadsEnabled is true", async () => {
       const mockCommands: CommandDef[] = [
         { name: "story/next", template: "Story template" },
         { name: "bd/init", template: "Init beads" },
@@ -297,46 +296,7 @@ describe("KnowledgeBaseService", () => {
       expect(mockConfig.command?.["bd/close"]).toBeDefined();
     });
 
-    it("should default to beadsEnabled false when not provided", async () => {
-      const mockCommands: CommandDef[] = [
-        { name: "story/next", template: "Story template" },
-        { name: "bd/init", template: "Init beads" },
-      ];
-
-      const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
-        logger: mockLogger,
-        loadCommands: async () => mockCommands,
-        loadAgents: async () => [],
-        // beadsEnabled not provided
-      });
-
-      await service.apply(mockConfig);
-
-      expect(mockConfig.command?.["story/next"]).toBeDefined();
-      expect(mockConfig.command?.["bd/init"]).toBeUndefined();
-    });
-
-    it("should not log filtering message when no bd/* commands are present", async () => {
-      const mockCommands: CommandDef[] = [
-        { name: "story/next", template: "Story template" },
-        { name: "bug/fix", template: "Fix bug" },
-      ];
-
-      const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
-        logger: mockLogger,
-        loadCommands: async () => mockCommands,
-        loadAgents: async () => [],
-        beadsEnabled: false,
-      });
-
-      await service.apply(mockConfig);
-
-      expect(mockLogger.hasLogged("debug", "Filtered out")).toBe(false);
-    });
-
-    it("should report correct count of registered commands after filtering", async () => {
+    it("should report correct count of all registered commands", async () => {
       const mockCommands: CommandDef[] = [
         { name: "story/next", template: "Story template" },
         { name: "bd/init", template: "Init beads" },
@@ -354,8 +314,8 @@ describe("KnowledgeBaseService", () => {
 
       await service.apply(mockConfig);
 
-      // Should report 1 command (not 4) since 3 bd/* commands are filtered
-      expect(mockLogger.hasLogged("info", "1 commands and 0 agents")).toBe(true);
+      // Should report all 4 commands (no filtering)
+      expect(mockLogger.hasLogged("info", "4 commands and 0 agents")).toBe(true);
     });
   });
 

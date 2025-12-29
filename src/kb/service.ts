@@ -78,25 +78,6 @@ export class KnowledgeBaseService {
   }
 
   /**
-   * Filter commands based on beads integration status.
-   * If beads is not enabled, bd/* commands are excluded.
-   */
-  private filterCommands(commands: CommandDef[]): CommandDef[] {
-    if (this.beadsEnabled) {
-      return commands;
-    }
-    
-    const filtered = commands.filter(cmd => !cmd.name.startsWith("bd/"));
-    const skipped = commands.length - filtered.length;
-    
-    if (skipped > 0) {
-      this.logger.debug(`Filtered out ${skipped} bd/* commands (beads not enabled)`);
-    }
-    
-    return filtered;
-  }
-
-  /**
    * Apply the knowledge base to an OpenCode config.
    * If coderConfig.active is false, logs and returns without modification.
    * If active is true, loads commands/agents and mutates the config.
@@ -108,8 +89,7 @@ export class KnowledgeBaseService {
     }
 
     const loaderOptions = this.basePath ? { basePath: this.basePath } : undefined;
-    const allCommands = await this.commandsLoader(this.logger, loaderOptions);
-    const commands = this.filterCommands(allCommands);
+    const commands = await this.commandsLoader(this.logger, loaderOptions);
     const agents = await this.agentsLoader(this.logger, loaderOptions);
 
     // Store loaded items for later access

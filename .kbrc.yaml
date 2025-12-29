@@ -1,0 +1,19 @@
+kb-root: knowledge-base
+log-level: DEBUG
+variables:
+  ###################
+  # Langdock config
+  ###################
+  llm-anthropic-base-url: https://chat.langdock.internal.dynatrace.com/api/public/anthropic/eu
+
+  ###################
+  # DT config
+  ###################
+  dt-url: $DT_URL
+
+secrets:
+  dt-api-key: $DT_API_KEY
+  llm-api-key: $LLM_API_KEY
+
+parameter-defaults:
+  llm: anthropic

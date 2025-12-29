@@ -23,12 +23,14 @@ Contains a detailed, numbered list of steps to reproduce the problem. Each step 
 ## Expected Behavior
 
 Contains a detailed description of what the expected behavior should be, with:
+
 - Links to documentation or specifications
 - If this is a regression, include the version that worked correctly
 
 ## Actual Behavior
 
 Contains a detailed description of what the system actually does. This MUST include:
+
 - Exact error messages (copy-pasted, not paraphrased)
 - Stack traces (full, not truncated)
 - Relevant log output

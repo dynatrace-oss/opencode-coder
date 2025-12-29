@@ -12,3 +12,12 @@ manual-test/docs/
 # System files
 ~/
 .DS_Store
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+.secrets
+secrets.json
+credentials.json

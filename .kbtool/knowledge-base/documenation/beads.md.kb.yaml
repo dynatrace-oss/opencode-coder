@@ -1,0 +1,60 @@
+file:
+  hash: 8d16a662516b
+  lastUpdate: 2025-12-29T11:42:19.993Z
+  tokenCount: 833
+
+# Test Definition File - Edit this file to define tests for the markdown document
+# This file follows the TestCollection specification (see doc/TestFileSpec.md)
+
+# Optional: Description of what this test collection tests
+description: "Tests for this document"
+
+# Optional: Additional files to provide as context (relative to kb-root)
+#additionalFiles:
+#  - "path/to/related-doc.md"
+#  - "path/to/another-doc.md"
+
+# Optional: Features/topics that should be covered/tested but are NOT in the document because the model know those things anyway
+#coveredContent:
+#  - "Knowledge the model should have anyway"
+#  - "Topic not in documentation but should be tested"
+
+# Optional: Features/topics that SHOULD be documented in the document and are not covered by the model
+#documentedContent:
+#  - "Important documented topic 1"
+#  - "Important documented topic 2"
+
+# Optional: Topics/concepts that must NOT be in the document because they are covered in other documents
+#invalidContent:
+#  - "Deprecated concept"
+#  - "Out-of-scope topic"
+
+# Optional: Configure markdown validation for .md files
+#markdownChecks:
+#  markdown:
+#    disabled: false                  # Set to true to disable markdown linting validation
+#    ignoreMarkdownLintRules: []      # e.g., ["MD001", "MD009"] to ignore specific rules
+#  markdownDql:
+#    disabled: false                  # Set to true to disable DQL code block validation
+#  markdownDqlTemplate:
+#    disabled: false                  # Set to true to disable DQL template validation
+
+# Required: Array of tests to run
+# Each test must have a 'type' field ('qa' or 'dql'), 'name', 'question', and either 'answer' or 'dql'
+# See doc/TestFileSpec.md for detailed field documentation
+tests:
+  # QA Test Example (uncomment and modify as needed)
+  #- type: qa
+  #  name: "Test 1"
+  #  description: "Optional description of what this test validates"
+  #  question: "What is the main topic?"
+  #  answer: "The expected answer"
+  
+  #  disabled: false                   # Optional: set to true to skip this test
+
+  # DQL Test Example (uncomment and modify as needed)
+  #- type: dql
+  #  name: "Test 2"
+  #  description: "Optional description"
+  #  question: "Write a DQL query to fetch logs with severity ERROR"
+  #  dql: "fetch logs | filter severity == \"ERROR\""

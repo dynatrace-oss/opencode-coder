@@ -3,19 +3,11 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import type { Logger } from "../core/logger";
 import { parseFrontmatter } from "./parser";
+import type { CommandDef } from "./types";
 
 // Get the directory where this plugin is located
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const KNOWLEDGE_BASE_DIR = join(__dirname, "..", "..", "knowledge-base");
-
-export interface CommandDef {
-  name: string;
-  template: string;
-  description?: string;
-  agent?: string;
-  model?: string;
-  subtask?: boolean;
-}
 
 /**
  * Load all command files from knowledge-base/command/

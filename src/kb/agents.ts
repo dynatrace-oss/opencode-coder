@@ -3,18 +3,11 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import type { Logger } from "../core/logger";
 import { parseFrontmatter } from "./parser";
+import type { AgentDef } from "./types";
 
 // Get the directory where this plugin is located
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const KNOWLEDGE_BASE_DIR = join(__dirname, "..", "..", "knowledge-base");
-
-export interface AgentDef {
-  name: string;
-  description?: string;
-  prompt: string;
-  mode?: "subagent" | "primary" | "all";
-  model?: string;
-}
 
 /**
  * Load all agent files from knowledge-base/agent/

@@ -24,6 +24,8 @@ export interface KnowledgeBaseServiceOptions {
   loadCommands?: CommandsLoader;
   /** Custom agents loader (optional, for testing) */
   loadAgents?: AgentsLoader;
+  /** Whether beads integration is enabled (used to filter bd/* commands) */
+  beadsEnabled?: boolean;
 }
 
 export class KnowledgeBaseService {
@@ -32,6 +34,7 @@ export class KnowledgeBaseService {
   private basePath?: string;
   private commandsLoader: CommandsLoader;
   private agentsLoader: AgentsLoader;
+  private beadsEnabled: boolean;
 
   constructor(options: KnowledgeBaseServiceOptions) {
     this.coderConfig = options.coderConfig;
@@ -41,6 +44,26 @@ export class KnowledgeBaseService {
     }
     this.commandsLoader = options.loadCommands ?? loadCommands;
     this.agentsLoader = options.loadAgents ?? loadAgents;
+    this.beadsEnabled = options.beadsEnabled ?? false;
+  }
+
+  /**
+   * Filter commands based on beads integration status.
+   * If beads is not enabled, bd/* commands are excluded.
+   */
+  private filterCommands(commands: CommandDef[]): CommandDef[] {
+    if (this.beadsEnabled) {
+      return commands;
+    }
+    
+    const filtered = commands.filter(cmd => !cmd.name.startsWith("bd/"));
+    const skipped = commands.length - filtered.length;
+    
+    if (skipped > 0) {
+      this.logger.debug(`Filtered out ${skipped} bd/* commands (beads not enabled)`);
+    }
+    
+    return filtered;
   }
 
   /**
@@ -55,7 +78,8 @@ export class KnowledgeBaseService {
     }
 
     const loaderOptions = this.basePath ? { basePath: this.basePath } : undefined;
-    const commands = await this.commandsLoader(this.logger, loaderOptions);
+    const allCommands = await this.commandsLoader(this.logger, loaderOptions);
+    const commands = this.filterCommands(allCommands);
     const agents = await this.agentsLoader(this.logger, loaderOptions);
 
     this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);

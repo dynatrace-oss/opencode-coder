@@ -4,10 +4,22 @@ import { join } from "path";
 import type { Logger } from "./logger";
 
 /**
+ * Schema for beads integration configuration
+ */
+export const BeadsConfigSchema = z.object({
+  /** Enable beads integration (auto-detected if not specified) */
+  enabled: z.boolean().optional(),
+});
+
+export type BeadsConfig = z.infer<typeof BeadsConfigSchema>;
+
+/**
  * Schema for .coder/coder.json configuration file
  */
 export const CoderConfigSchema = z.object({
   active: z.boolean().default(true),
+  /** Beads issue tracking integration settings */
+  beads: BeadsConfigSchema.optional(),
 });
 
 export type CoderConfig = z.infer<typeof CoderConfigSchema>;

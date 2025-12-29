@@ -125,6 +125,58 @@ describe("loadConfig", () => {
       // Should only have the known fields
       expect(config).toEqual({ active: false });
     });
+
+    it("should load config with beads.enabled set to true", async () => {
+      const mockFs: FileSystem = {
+        readFile: async () => JSON.stringify({ 
+          active: true,
+          beads: { enabled: true },
+        }),
+      };
+
+      const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
+
+      expect(config).toEqual({ active: true, beads: { enabled: true } });
+    });
+
+    it("should load config with beads.enabled set to false", async () => {
+      const mockFs: FileSystem = {
+        readFile: async () => JSON.stringify({ 
+          active: true,
+          beads: { enabled: false },
+        }),
+      };
+
+      const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
+
+      expect(config).toEqual({ active: true, beads: { enabled: false } });
+    });
+
+    it("should load config with empty beads object", async () => {
+      const mockFs: FileSystem = {
+        readFile: async () => JSON.stringify({ 
+          active: true,
+          beads: {},
+        }),
+      };
+
+      const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
+
+      expect(config).toEqual({ active: true, beads: {} });
+    });
+
+    it("should load config without beads section", async () => {
+      const mockFs: FileSystem = {
+        readFile: async () => JSON.stringify({ 
+          active: true,
+        }),
+      };
+
+      const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
+
+      expect(config).toEqual({ active: true });
+      expect(config.beads).toBeUndefined();
+    });
   });
 
   describe("with real fixtures", () => {

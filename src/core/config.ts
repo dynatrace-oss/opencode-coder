@@ -6,28 +6,54 @@ import type { Logger } from "./logger";
 /**
  * Schema for .coder/coder.json configuration file
  */
-const CoderConfigSchema = z.object({
+export const CoderConfigSchema = z.object({
   active: z.boolean().default(true),
 });
 
 export type CoderConfig = z.infer<typeof CoderConfigSchema>;
 
-const DEFAULT_CONFIG: CoderConfig = {
+export const DEFAULT_CONFIG: CoderConfig = {
   active: true,
 };
 
 /**
- * Load configuration from .coder/coder.json in the current working directory
+ * File system interface for dependency injection
+ */
+export interface FileSystem {
+  readFile(path: string, encoding: BufferEncoding): Promise<string>;
+}
+
+/**
+ * Options for loadConfig function
+ */
+export interface LoadConfigOptions {
+  /** File system implementation (defaults to fs/promises) */
+  fs?: FileSystem;
+  /** Current working directory (defaults to process.cwd()) */
+  cwd?: string;
+}
+
+/**
+ * Default file system implementation using Node's fs/promises
+ */
+export const defaultFileSystem: FileSystem = {
+  readFile: (path: string, encoding: BufferEncoding) => readFile(path, encoding),
+};
+
+/**
+ * Load configuration from .coder/coder.json in the specified directory
  * 
  * @param log - Logger instance for reporting config status
+ * @param options - Optional configuration for DI
  * @returns Parsed and validated configuration, or defaults if file missing/invalid
  */
-export async function loadConfig(log: Logger): Promise<CoderConfig> {
-  const cwd = process.cwd();
+export async function loadConfig(log: Logger, options: LoadConfigOptions = {}): Promise<CoderConfig> {
+  const fs = options.fs ?? defaultFileSystem;
+  const cwd = options.cwd ?? process.cwd();
   const configPath = join(cwd, ".coder", "coder.json");
 
   try {
-    const content = await readFile(configPath, "utf-8");
+    const content = await fs.readFile(configPath, "utf-8");
     const json = JSON.parse(content);
     const result = CoderConfigSchema.safeParse(json);
 

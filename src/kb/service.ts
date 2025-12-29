@@ -1,21 +1,46 @@
 import type { Config } from "@opencode-ai/sdk";
 import type { CoderConfig } from "../core/config";
 import type { Logger } from "../core/logger";
-import { loadCommands } from "./commands";
-import { loadAgents } from "./agents";
+import { loadCommands, type LoadCommandsOptions } from "./commands";
+import { loadAgents, type LoadAgentsOptions } from "./agents";
+import type { CommandDef, AgentDef } from "./types";
+
+/**
+ * Loader function type for commands
+ */
+export type CommandsLoader = (log: Logger, options?: LoadCommandsOptions) => Promise<CommandDef[]>;
+
+/**
+ * Loader function type for agents
+ */
+export type AgentsLoader = (log: Logger, options?: LoadAgentsOptions) => Promise<AgentDef[]>;
 
 export interface KnowledgeBaseServiceOptions {
   coderConfig: CoderConfig;
   logger: Logger;
+  /** Base path for knowledge base directory (optional, for testing) */
+  basePath?: string;
+  /** Custom commands loader (optional, for testing) */
+  loadCommands?: CommandsLoader;
+  /** Custom agents loader (optional, for testing) */
+  loadAgents?: AgentsLoader;
 }
 
 export class KnowledgeBaseService {
   private coderConfig: CoderConfig;
   private logger: Logger;
+  private basePath?: string;
+  private commandsLoader: CommandsLoader;
+  private agentsLoader: AgentsLoader;
 
   constructor(options: KnowledgeBaseServiceOptions) {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
+    if (options.basePath !== undefined) {
+      this.basePath = options.basePath;
+    }
+    this.commandsLoader = options.loadCommands ?? loadCommands;
+    this.agentsLoader = options.loadAgents ?? loadAgents;
   }
 
   /**
@@ -29,8 +54,9 @@ export class KnowledgeBaseService {
       return;
     }
 
-    const commands = await loadCommands(this.logger);
-    const agents = await loadAgents(this.logger);
+    const loaderOptions = this.basePath ? { basePath: this.basePath } : undefined;
+    const commands = await this.commandsLoader(this.logger, loaderOptions);
+    const agents = await this.agentsLoader(this.logger, loaderOptions);
 
     this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
 

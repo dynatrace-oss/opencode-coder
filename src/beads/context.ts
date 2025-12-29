@@ -71,17 +71,20 @@ Use \`--json\` flag for structured output when parsing programmatically.`;
  */
 const BEADS_AGENT_GUIDANCE = `## Agent Delegation
 
-For complex beads work involving multiple commands or context gathering, consider using task agents.
-
-**Use CLI directly for single, atomic operations:**
-- Creating one issue: \`bd create --title="..." ...\`
-- Closing one issue: \`bd close <id>\`
-- Updating one field: \`bd update <id> --status ...\`
-
-**Consider agents for:**
-- Status overviews requiring multiple queries
+**Default to the agent.** For ANY beads work involving multiple commands or context gathering, use the \`task\` tool with \`subagent_type: "beads-task-agent"\`:
+- Status overviews ("what's next", "what's blocked", "show me progress")
+- Exploring the issue graph (ready + in-progress + blocked queries)
+- Finding and completing ready work
 - Working through multiple issues in sequence
-- Complex dependency analysis`;
+- Any request that would require 2+ bd commands
+
+**Use CLI directly ONLY for single, atomic operations:**
+- Creating exactly one issue: \`bd create --title="..." ...\`
+- Closing exactly one issue: \`bd close <id> ...\`
+- Updating one specific field: \`bd update <id> --status ...\`
+- When user explicitly requests a specific command
+
+**Why delegate?** The agent processes multiple commands internally and returns only a concise summary. Running bd commands directly dumps JSON into context, wasting tokens and making the conversation harder to follow.`;
 
 /**
  * Full beads guidance content

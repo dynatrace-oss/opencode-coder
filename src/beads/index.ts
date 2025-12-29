@@ -8,8 +8,8 @@ export {
 export {
   BeadsContext,
   defaultCommandExecutor,
+  BEADS_GUIDANCE,
   type CommandExecutor,
   type BeadsContextOptions,
-  type BeadsIssueSummary,
   type BeadsContextInfo,
 } from "./context";

@@ -1,8 +1,84 @@
-import { type Plugin, tool } from "@opencode-ai/plugin";
+import { type Plugin, type PluginInput, tool } from "@opencode-ai/plugin";
 import { stringify } from "yaml";
 import { createLogger, loadConfig, getVersionInfo } from "./core";
 import { KnowledgeBaseService } from "./kb";
 import { BeadsDetector, BeadsContext } from "./beads";
+
+type OpencodeClient = PluginInput["client"];
+
+/**
+ * Inject beads context into a session via synthetic message.
+ * Silently skips if bd prime fails or returns empty.
+ */
+async function injectBeadsContext(
+  client: OpencodeClient,
+  log: ReturnType<typeof createLogger>,
+  sessionID: string,
+  context?: { model?: { providerID: string; modelID: string }; agent?: string }
+): Promise<void> {
+  try {
+    const beadsContext = new BeadsContext({ logger: log });
+    const contextInfo = await beadsContext.getContext();
+
+    if (!contextInfo.available || !contextInfo.contextString) {
+      return;
+    }
+
+    // Inject via noReply + synthetic to avoid triggering response
+    // Pass model/agent to prevent mode switching
+    const body: {
+      noReply: boolean;
+      model?: { providerID: string; modelID: string };
+      agent?: string;
+      parts: { type: "text"; text: string; synthetic: boolean }[];
+    } = {
+      noReply: true,
+      parts: [{ type: "text", text: contextInfo.contextString, synthetic: true }],
+    };
+
+    if (context?.model) {
+      body.model = context.model;
+    }
+    if (context?.agent) {
+      body.agent = context.agent;
+    }
+
+    await client.session.prompt({
+      path: { id: sessionID },
+      body,
+    });
+
+    log.debug("Injected beads context into session", { sessionID });
+  } catch (error) {
+    log.debug("Failed to inject beads context", { error: String(error) });
+  }
+}
+
+/**
+ * Get session context (model/agent) for re-injection after compaction.
+ */
+async function getSessionContext(
+  client: OpencodeClient,
+  sessionID: string
+): Promise<{ model?: { providerID: string; modelID: string }; agent?: string } | undefined> {
+  try {
+    const response = await client.session.messages({
+      path: { id: sessionID },
+      query: { limit: 50 },
+    });
+
+    if (response.data) {
+      for (const msg of response.data) {
+        if (msg.info.role === "user" && "model" in msg.info && msg.info.model) {
+          return { model: msg.info.model, agent: (msg.info as any).agent };
+        }
+      }
+    }
+  } catch {
+    // On error, return undefined
+  }
+  return undefined;
+}
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
   const log = createLogger(client);
@@ -11,7 +87,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
 
   const coderConfig = await loadConfig(log);
   
-  // Initialize beads detector and context
+  // Initialize beads detector
   const beadsDetector = new BeadsDetector({ logger: log });
   const beadsEnabled = await beadsDetector.isBeadsEnabled(coderConfig);
   
@@ -21,20 +97,65 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
     beadsEnabled,
   });
 
+  // Track sessions where we've already injected beads context
+  const injectedSessions = new Set<string>();
+
   return {
     async config(config) {
       await kbService.apply(config);
     },
-    async "experimental.chat.system.transform"(_input, output) {
-      // Inject beads context into system prompt if enabled
-      if (beadsEnabled) {
-        const beadsContext = new BeadsContext({ logger: log });
-        const contextInfo = await beadsContext.getContext();
-        
-        if (contextInfo.available && contextInfo.contextString) {
-          output.system.push(contextInfo.contextString);
-          log.debug("Injected beads context into system prompt");
+
+    // Inject beads context on first message in a session
+    async "chat.message"(_input, output) {
+      if (!beadsEnabled) return;
+
+      const sessionID = output.message.sessionID;
+
+      // Skip if already injected this session
+      if (injectedSessions.has(sessionID)) return;
+
+      // Check if beads-context was already injected (handles plugin reload)
+      try {
+        const existing = await client.session.messages({
+          path: { id: sessionID },
+        });
+
+        if (existing.data) {
+          const hasBeadsContext = existing.data.some(msg => {
+            const parts = (msg as any).parts || (msg.info as any).parts;
+            if (!parts) return false;
+            return parts.some((part: any) =>
+              part.type === "text" && part.text?.includes("<beads-context>")
+            );
+          });
+
+          if (hasBeadsContext) {
+            injectedSessions.add(sessionID);
+            return;
+          }
         }
+      } catch {
+        // On error, proceed with injection
+      }
+
+      injectedSessions.add(sessionID);
+
+      // Inject with current model/agent to prevent mode switching
+      await injectBeadsContext(client, log, sessionID, {
+        model: output.message.model,
+        agent: output.message.agent,
+      });
+    },
+
+    // Re-inject beads context after session compaction
+    async event({ event }) {
+      if (!beadsEnabled) return;
+
+      if (event.type === "session.compacted") {
+        const sessionID = event.properties.sessionID;
+        const context = await getSessionContext(client, sessionID);
+        await injectBeadsContext(client, log, sessionID, context);
+        log.debug("Re-injected beads context after compaction", { sessionID });
       }
     },
     tool: {

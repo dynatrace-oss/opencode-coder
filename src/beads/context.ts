@@ -34,32 +34,64 @@ export interface BeadsContextOptions {
 }
 
 /**
- * Beads issue summary for context injection
- */
-export interface BeadsIssueSummary {
-  id: string;
-  title: string;
-  status: string;
-  priority: number;
-  issue_type: string;
-}
-
-/**
- * Beads context information for system prompt injection
+ * Beads context information for session injection
  */
 export interface BeadsContextInfo {
-  /** Whether beads is available and working */
+  /** Whether beads context is available */
   available: boolean;
-  /** List of ready issues (no blocking dependencies) */
-  readyIssues: BeadsIssueSummary[];
-  /** List of in-progress issues */
-  inProgressIssues: BeadsIssueSummary[];
-  /** Formatted context string for system prompt */
+  /** The prime output from bd prime */
+  primeOutput: string;
+  /** Full context string including guidance */
   contextString: string;
 }
 
 /**
- * Provides beads context information for system prompt injection
+ * CLI usage guidance for the model
+ */
+const BEADS_CLI_USAGE = `## CLI Usage
+
+Use the \`bd\` CLI via bash for beads operations:
+
+- \`bd ready\` - List ready tasks (no blockers)
+- \`bd show <id>\` - Show task details
+- \`bd create --title="title" --type=bug|feature|task --priority=0-4\` - Create issue
+- \`bd update <id> --status in_progress\` - Update status
+- \`bd close <id> --reason="message"\` - Close issue
+- \`bd close <id1> <id2> ...\` - Close multiple issues at once
+- \`bd list --status=open\` - List issues by status
+- \`bd blocked\` - Show blocked issues
+- \`bd stats\` - Show statistics
+- \`bd sync\` - Sync with git
+- \`bd dep add <issue> <depends-on>\` - Add dependency
+
+Use \`--json\` flag for structured output when parsing programmatically.`;
+
+/**
+ * Guidance on when to use agents vs CLI directly
+ */
+const BEADS_AGENT_GUIDANCE = `## Agent Delegation
+
+For complex beads work involving multiple commands or context gathering, consider using task agents.
+
+**Use CLI directly for single, atomic operations:**
+- Creating one issue: \`bd create --title="..." ...\`
+- Closing one issue: \`bd close <id>\`
+- Updating one field: \`bd update <id> --status ...\`
+
+**Consider agents for:**
+- Status overviews requiring multiple queries
+- Working through multiple issues in sequence
+- Complex dependency analysis`;
+
+/**
+ * Full beads guidance content
+ */
+export const BEADS_GUIDANCE = `${BEADS_CLI_USAGE}
+
+${BEADS_AGENT_GUIDANCE}`;
+
+/**
+ * Provides beads context information for session injection
  */
 export class BeadsContext {
   private readonly logger: Logger;
@@ -71,148 +103,60 @@ export class BeadsContext {
   }
 
   /**
-   * Check if bd command is available
+   * Get prime output from bd prime command
+   * Returns empty string if bd is not available or not initialized
    */
-  async isBdAvailable(): Promise<boolean> {
+  async getPrimeOutput(): Promise<string> {
     try {
-      const result = await this.executor.exec("bd --version");
-      return result.exitCode === 0;
-    } catch {
-      this.logger.debug("bd command not available");
-      return false;
-    }
-  }
-
-  /**
-   * Get ready issues (no blocking dependencies)
-   */
-  async getReadyIssues(): Promise<BeadsIssueSummary[]> {
-    try {
-      const result = await this.executor.exec("bd ready --json");
+      const result = await this.executor.exec("bd prime");
       if (result.exitCode !== 0) {
-        this.logger.debug("bd ready failed", { stderr: result.stderr });
-        return [];
+        this.logger.debug("bd prime failed", { stderr: result.stderr });
+        return "";
       }
-      const issues = JSON.parse(result.stdout) as BeadsIssueSummary[];
-      return issues;
+      return result.stdout.trim();
     } catch (error) {
-      this.logger.debug("Failed to get ready issues", { error: String(error) });
-      return [];
+      this.logger.debug("Failed to get prime output", { error: String(error) });
+      return "";
     }
   }
 
   /**
-   * Get in-progress issues
+   * Build the full context string for injection
    */
-  async getInProgressIssues(): Promise<BeadsIssueSummary[]> {
-    try {
-      const result = await this.executor.exec("bd list --status=in_progress --json");
-      if (result.exitCode !== 0) {
-        this.logger.debug("bd list failed", { stderr: result.stderr });
-        return [];
-      }
-      const issues = JSON.parse(result.stdout) as BeadsIssueSummary[];
-      return issues;
-    } catch (error) {
-      this.logger.debug("Failed to get in-progress issues", { error: String(error) });
-      return [];
-    }
-  }
-
-  /**
-   * Format priority number to string (P0=critical, P1=high, etc.)
-   */
-  private formatPriority(priority: number): string {
-    const labels: Record<number, string> = {
-      0: "P0-critical",
-      1: "P1-high",
-      2: "P2-medium",
-      3: "P3-low",
-      4: "P4-backlog",
-    };
-    return labels[priority] ?? `P${priority}`;
-  }
-
-  /**
-   * Format issues into a readable string
-   */
-  private formatIssues(issues: BeadsIssueSummary[], header: string): string {
-    if (issues.length === 0) return "";
-
-    const lines = [header];
-    for (const issue of issues) {
-      lines.push(`  - [${issue.id}] ${issue.title} (${this.formatPriority(issue.priority)}, ${issue.issue_type})`);
-    }
-    return lines.join("\n");
-  }
-
-  /**
-   * Build the full context string for system prompt injection
-   */
-  private buildContextString(
-    available: boolean,
-    readyIssues: BeadsIssueSummary[],
-    inProgressIssues: BeadsIssueSummary[]
-  ): string {
-    if (!available) {
+  private buildContextString(primeOutput: string): string {
+    if (!primeOutput) {
       return "";
     }
 
-    const parts: string[] = ["## Beads Issue Tracking Context"];
+    return `<beads-context>
+${primeOutput}
+</beads-context>
 
-    if (inProgressIssues.length > 0) {
-      parts.push(this.formatIssues(inProgressIssues, "\n### Currently In Progress:"));
-    }
-
-    if (readyIssues.length > 0) {
-      parts.push(this.formatIssues(readyIssues, "\n### Ready to Work On:"));
-    }
-
-    if (inProgressIssues.length === 0 && readyIssues.length === 0) {
-      parts.push("\nNo issues currently tracked. Use `bd create` to create new issues.");
-    }
-
-    parts.push("\n### Quick Commands:");
-    parts.push("  - `bd ready` - Show issues ready to work on");
-    parts.push("  - `bd show <id>` - View issue details");
-    parts.push("  - `bd update <id> --status in_progress` - Start working on an issue");
-    parts.push("  - `bd close <id>` - Complete an issue");
-
-    return parts.join("\n");
+${BEADS_GUIDANCE}`;
   }
 
   /**
-   * Get full beads context information
+   * Get beads context for session injection
    */
   async getContext(): Promise<BeadsContextInfo> {
-    const available = await this.isBdAvailable();
+    const primeOutput = await this.getPrimeOutput();
 
-    if (!available) {
-      this.logger.debug("Beads context not available - bd command not found");
+    if (!primeOutput) {
+      this.logger.debug("Beads context not available - bd prime returned empty");
       return {
         available: false,
-        readyIssues: [],
-        inProgressIssues: [],
+        primeOutput: "",
         contextString: "",
       };
     }
 
-    const [readyIssues, inProgressIssues] = await Promise.all([
-      this.getReadyIssues(),
-      this.getInProgressIssues(),
-    ]);
+    const contextString = this.buildContextString(primeOutput);
 
-    const contextString = this.buildContextString(available, readyIssues, inProgressIssues);
-
-    this.logger.debug("Beads context loaded", {
-      readyCount: readyIssues.length,
-      inProgressCount: inProgressIssues.length,
-    });
+    this.logger.debug("Beads context loaded via bd prime");
 
     return {
-      available,
-      readyIssues,
-      inProgressIssues,
+      available: true,
+      primeOutput,
       contextString,
     };
   }

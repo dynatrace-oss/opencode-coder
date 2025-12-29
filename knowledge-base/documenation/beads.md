@@ -17,6 +17,16 @@ This project uses two systems:
 | User-facing changes | Technical debt items |
 | Planned work | Discovered work ("oh by the way...") |
 
+## Getting Started
+
+To set up beads in a new project, use the coder plugin commands:
+
+```bash
+/coder/install        # Install beads CLI globally (one-time)
+/coder/init           # Initialize beads in current project
+/coder/doctor         # Check setup health
+```
+
 ## Quick Reference
 
 ```bash
@@ -34,15 +44,12 @@ These slash commands are available in OpenCode:
 
 | Command | Description |
 |---------|-------------|
-| `/bd-ready` | Find unblocked tasks |
-| `/bd-create` | Create new issue |
-| `/bd-show` | Show issue details |
-| `/bd-update` | Update an issue |
-| `/bd-close` | Close completed issue |
-| `/bd-blocked` | Show blocked issues |
-| `/bd-list` | List issues with filters |
-| `/bd-sync` | Sync with git |
-| `/bd-workflow` | Show workflow guide |
+| `/coder/install` | Install beads CLI globally |
+| `/coder/init` | Initialize beads in current project |
+| `/coder/doctor` | Check setup health |
+| `/bd/next` | Work on next beads issue |
+| `/bd/close` | Close a beads issue |
+| `/bd/overview` | Show beads project overview |
 
 ## Priority Levels
 
@@ -79,12 +86,12 @@ bd create "Implement login" --parent oc-epic-id
 
 ## Session Workflow
 
-1. **Start**: Check `/bd-ready` for available work
+1. **Start**: Run `/bd/next` or `bd ready` to find available work
 2. **Claim**: Update status to `in_progress`
 3. **Work**: Implement the change
 4. **Discover**: Create beads for any issues found
-5. **Complete**: Close with `/bd-close`
-6. **Sync**: Run `/bd-sync` at session end
+5. **Complete**: Close with `/bd/close` or `bd close <id>`
+6. **Sync**: Run `bd sync` at session end
 
 ## File Structure
 

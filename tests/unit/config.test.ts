@@ -136,7 +136,7 @@ describe("loadConfig", () => {
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
 
-      expect(config).toEqual({ active: true, beads: { enabled: true } });
+      expect(config).toEqual({ active: true, beads: { enabled: true, auto_approve_beads: true } });
     });
 
     it("should load config with beads.enabled set to false", async () => {
@@ -149,7 +149,7 @@ describe("loadConfig", () => {
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
 
-      expect(config).toEqual({ active: true, beads: { enabled: false } });
+      expect(config).toEqual({ active: true, beads: { enabled: false, auto_approve_beads: true } });
     });
 
     it("should load config with empty beads object", async () => {
@@ -162,7 +162,20 @@ describe("loadConfig", () => {
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
 
-      expect(config).toEqual({ active: true, beads: {} });
+      expect(config).toEqual({ active: true, beads: { auto_approve_beads: true } });
+    });
+
+    it("should load config with auto_approve_beads set to false", async () => {
+      const mockFs: FileSystem = {
+        readFile: async () => JSON.stringify({ 
+          active: true,
+          beads: { auto_approve_beads: false },
+        }),
+      };
+
+      const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
+
+      expect(config).toEqual({ active: true, beads: { auto_approve_beads: false } });
     });
 
     it("should load config without beads section", async () => {

@@ -102,6 +102,26 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
 
   return {
     async config(config) {
+      // Inject bd command permission when beads is enabled and auto-approve is not disabled
+      if (beadsEnabled && coderConfig.beads?.auto_approve_beads !== false) {
+        if (!config.permission) {
+          config.permission = {};
+        }
+
+        const currentBash = config.permission.bash;
+
+        if (typeof currentBash === "object" && currentBash !== null) {
+          // Already an object, add "bd *" if not present
+          if (!("bd *" in currentBash)) {
+            currentBash["bd *"] = "allow";
+          }
+        } else if (currentBash === undefined || currentBash === "ask") {
+          // Convert to object with "bd *" allowed
+          config.permission.bash = { "bd *": "allow" };
+        }
+        // If it's "allow" or "deny", leave it alone (user explicitly set it)
+      }
+
       await kbService.apply(config);
     },
 
@@ -158,6 +178,21 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
         log.debug("Re-injected beads context after compaction", { sessionID });
       }
     },
+
+    // Auto-approve bd CLI commands when beads is enabled
+    async "permission.ask"(input, output) {
+      // Skip if beads is not enabled
+      if (!beadsEnabled) return;
+
+      // Skip if user has opted out of auto-approval
+      if (coderConfig.beads?.auto_approve_beads === false) return;
+
+      // Auto-approve bd commands (beads CLI)
+      if (input.type === "bash" && input.title?.startsWith("bd ")) {
+        output.status = "allow";
+      }
+    },
+
     tool: {
       coder_status: tool({
         description: "Get the current status of the opencode-coder plugin including version, loaded commands, and agents",

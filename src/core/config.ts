@@ -9,6 +9,8 @@ import type { Logger } from "./logger";
 export const BeadsConfigSchema = z.object({
   /** Enable beads integration (auto-detected if not specified) */
   enabled: z.boolean().optional(),
+  /** Auto-approve bd CLI commands without prompting (default: true) */
+  auto_approve_beads: z.boolean().default(true),
 });
 
 export type BeadsConfig = z.infer<typeof BeadsConfigSchema>;

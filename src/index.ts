@@ -115,7 +115,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
               beads_commands: {
                 count: bdCommands.length,
                 commands: bdCommands.map(c => `/${c.name}`),
-                note: kbService.isBeadsEnabled() ? "enabled" : "disabled (no .beads directory)",
+                note: kbService.isBeadsEnabled() ? "beads initialized" : "run /bd/init to set up beads",
               },
               coder_commands: {
                 count: coderCommands.length,

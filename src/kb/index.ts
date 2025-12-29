@@ -1,5 +1,5 @@
 // Types
-export type { CommandDef, AgentDef, KnowledgeBase } from "./types";
+export type { CommandDef, AgentDef, KnowledgeBase, KbInfo, KbInfoType } from "./types";
 
 // Service
 export { KnowledgeBaseService } from "./service";

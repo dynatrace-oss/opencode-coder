@@ -358,4 +358,107 @@ describe("KnowledgeBaseService", () => {
       expect(mockLogger.hasLogged("info", "1 commands and 0 agents")).toBe(true);
     });
   });
+
+  describe("createKbInfo", () => {
+    it("should create KbInfo from a command with description", () => {
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+      });
+
+      const command: CommandDef = {
+        name: "story/next",
+        template: "Next story template",
+        description: "Work on the next story",
+      };
+
+      const info = service.createKbInfo("command", command);
+
+      expect(info.type).toBe("command");
+      expect(info.name).toBe("story/next");
+      expect(info.description).toBe("Work on the next story");
+      expect(info.source).toBe(command);
+    });
+
+    it("should create KbInfo from a command without description", () => {
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+      });
+
+      const command: CommandDef = {
+        name: "bug/fix",
+        template: "Fix bug template",
+      };
+
+      const info = service.createKbInfo("command", command);
+
+      expect(info.type).toBe("command");
+      expect(info.name).toBe("bug/fix");
+      expect(info.description).toBeUndefined();
+      expect(info.source).toBe(command);
+    });
+
+    it("should create KbInfo from an agent with description", () => {
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+      });
+
+      const agent: AgentDef = {
+        name: "code-reviewer",
+        prompt: "Review code for issues",
+        description: "Reviews code quality",
+      };
+
+      const info = service.createKbInfo("agent", agent);
+
+      expect(info.type).toBe("agent");
+      expect(info.name).toBe("code-reviewer");
+      expect(info.description).toBe("Reviews code quality");
+      expect(info.source).toBe(agent);
+    });
+
+    it("should create KbInfo from an agent without description", () => {
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+      });
+
+      const agent: AgentDef = {
+        name: "doc-writer",
+        prompt: "Write documentation",
+      };
+
+      const info = service.createKbInfo("agent", agent);
+
+      expect(info.type).toBe("agent");
+      expect(info.name).toBe("doc-writer");
+      expect(info.description).toBeUndefined();
+      expect(info.source).toBe(agent);
+    });
+
+    it("should preserve all source fields in the returned KbInfo", () => {
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+      });
+
+      const command: CommandDef = {
+        name: "full/command",
+        template: "Template content",
+        description: "Full description",
+        agent: "my-agent",
+        model: "gpt-4",
+        subtask: true,
+      };
+
+      const info = service.createKbInfo("command", command);
+
+      expect(info.source).toEqual(command);
+      expect((info.source as CommandDef).agent).toBe("my-agent");
+      expect((info.source as CommandDef).model).toBe("gpt-4");
+      expect((info.source as CommandDef).subtask).toBe(true);
+    });
+  });
 });

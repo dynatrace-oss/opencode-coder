@@ -28,3 +28,18 @@ export interface KnowledgeBase {
   commands: CommandDef[];
   agents: AgentDef[];
 }
+
+/**
+ * Type of knowledge base item
+ */
+export type KbInfoType = "command" | "agent";
+
+/**
+ * Unified info about a knowledge base item (command or agent)
+ */
+export interface KbInfo {
+  type: KbInfoType;
+  name: string;
+  description?: string;
+  source: CommandDef | AgentDef;
+}

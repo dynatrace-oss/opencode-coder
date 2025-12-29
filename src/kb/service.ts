@@ -3,7 +3,7 @@ import type { CoderConfig } from "../core/config";
 import type { Logger } from "../core/logger";
 import { loadCommands, type LoadCommandsOptions } from "./commands";
 import { loadAgents, type LoadAgentsOptions } from "./agents";
-import type { CommandDef, AgentDef } from "./types";
+import type { CommandDef, AgentDef, KbInfo, KbInfoType } from "./types";
 
 /**
  * Loader function type for commands
@@ -35,6 +35,8 @@ export class KnowledgeBaseService {
   private commandsLoader: CommandsLoader;
   private agentsLoader: AgentsLoader;
   private beadsEnabled: boolean;
+  private loadedCommands: CommandDef[] = [];
+  private loadedAgents: AgentDef[] = [];
 
   constructor(options: KnowledgeBaseServiceOptions) {
     this.coderConfig = options.coderConfig;
@@ -45,6 +47,34 @@ export class KnowledgeBaseService {
     this.commandsLoader = options.loadCommands ?? loadCommands;
     this.agentsLoader = options.loadAgents ?? loadAgents;
     this.beadsEnabled = options.beadsEnabled ?? false;
+  }
+
+  /**
+   * Get the loaded commands (after apply() has been called)
+   */
+  getCommands(): CommandDef[] {
+    return this.loadedCommands;
+  }
+
+  /**
+   * Get the loaded agents (after apply() has been called)
+   */
+  getAgents(): AgentDef[] {
+    return this.loadedAgents;
+  }
+
+  /**
+   * Check if beads integration is enabled
+   */
+  isBeadsEnabled(): boolean {
+    return this.beadsEnabled;
+  }
+
+  /**
+   * Check if the plugin is active
+   */
+  isActive(): boolean {
+    return this.coderConfig.active;
   }
 
   /**
@@ -82,6 +112,10 @@ export class KnowledgeBaseService {
     const commands = this.filterCommands(allCommands);
     const agents = await this.agentsLoader(this.logger, loaderOptions);
 
+    // Store loaded items for later access
+    this.loadedCommands = commands;
+    this.loadedAgents = agents;
+
     this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
 
     // Register commands
@@ -108,5 +142,20 @@ export class KnowledgeBaseService {
       };
       this.logger.debug(`Registered agent: @${agent.name}`);
     }
+  }
+
+  /**
+   * Create a KbInfo object from a command or agent definition.
+   * @param type - The type of knowledge base item ("command" or "agent")
+   * @param source - The source definition (CommandDef or AgentDef)
+   * @returns A unified KbInfo object
+   */
+  createKbInfo(type: KbInfoType, source: CommandDef | AgentDef): KbInfo {
+    return {
+      type,
+      name: source.name,
+      ...(source.description && { description: source.description }),
+      source,
+    };
   }
 }

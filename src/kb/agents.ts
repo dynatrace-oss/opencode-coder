@@ -1,4 +1,4 @@
-import { readdir, readFile } from "fs/promises";
+import { readdir, readFile, access } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import type { Logger } from "../core/logger";
@@ -7,7 +7,19 @@ import type { AgentDef } from "./types";
 
 // Get the directory where this plugin is located
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_KNOWLEDGE_BASE_DIR = join(__dirname, "..", "..", "knowledge-base");
+
+// Resolve knowledge-base directory - handles both source (src/kb/) and dist (dist/) layouts
+async function resolveKnowledgeBaseDir(): Promise<string> {
+  // Try dist layout first (../knowledge-base from dist/)
+  const distPath = join(__dirname, "..", "knowledge-base");
+  try {
+    await access(distPath);
+    return distPath;
+  } catch {
+    // Fall back to source layout (../../knowledge-base from src/kb/)
+    return join(__dirname, "..", "..", "knowledge-base");
+  }
+}
 
 /**
  * File system interface for dependency injection
@@ -45,7 +57,7 @@ export const defaultAgentsFileSystem: AgentsFileSystem = {
  */
 export async function loadAgents(log: Logger, options: LoadAgentsOptions = {}): Promise<AgentDef[]> {
   const fs = options.fs ?? defaultAgentsFileSystem;
-  const basePath = options.basePath ?? DEFAULT_KNOWLEDGE_BASE_DIR;
+  const basePath = options.basePath ?? await resolveKnowledgeBaseDir();
   const agents: AgentDef[] = [];
   const agentDir = join(basePath, "agent");
 

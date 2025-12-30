@@ -35,8 +35,6 @@ export interface KnowledgeBaseServiceOptions {
   coderConfig: CoderConfig;
   /** Logger for reporting status and errors */
   logger: Logger;
-  /** Whether beads integration is enabled */
-  beadsEnabled?: boolean;
   /** Override the knowledge base (for testing) */
   knowledgeBase?: KnowledgeBase;
 }
@@ -53,20 +51,18 @@ export interface KnowledgeBaseServiceOptions {
 export class KnowledgeBaseService {
   private coderConfig: CoderConfig;
   private logger: Logger;
-  private beadsEnabled: boolean;
   private knowledgeBase: KnowledgeBase | null;
   private loadErrors: string[] = [];
 
   constructor(options: KnowledgeBaseServiceOptions) {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
-    this.beadsEnabled = options.beadsEnabled ?? false;
     this.knowledgeBase = options.knowledgeBase ?? null;
   }
 
   /**
    * Build the composite knowledge base from config.
-   * Called lazily on first apply() if no knowledgeBase was injected.
+   * Called lazily on first processConfig() if no knowledgeBase was injected.
    */
   private async buildKnowledgeBase(): Promise<KnowledgeBase> {
     const knowledgeBases: KnowledgeBase[] = [];
@@ -101,24 +97,17 @@ export class KnowledgeBaseService {
   }
 
   /**
-   * Get the loaded commands (after apply() has been called)
+   * Get the loaded commands (after processConfig() has been called)
    */
   getCommands(): CommandDef[] {
     return this.knowledgeBase?.getCommands() ?? [];
   }
 
   /**
-   * Get the loaded agents (after apply() has been called)
+   * Get the loaded agents (after processConfig() has been called)
    */
   getAgents(): AgentDef[] {
     return this.knowledgeBase?.getAgents() ?? [];
-  }
-
-  /**
-   * Check if beads integration is enabled
-   */
-  isBeadsEnabled(): boolean {
-    return this.beadsEnabled;
   }
 
   /**
@@ -149,11 +138,11 @@ export class KnowledgeBaseService {
   }
 
   /**
-   * Apply the knowledge base to an OpenCode config.
+   * Process and apply the knowledge base to an OpenCode config.
    * If coderConfig.active is false, logs and returns without modification.
    * If active is true, loads commands/agents and mutates the config.
    */
-  async apply(config: Config): Promise<void> {
+  async processConfig(config: Config): Promise<void> {
     if (!this.coderConfig.active) {
       this.logger.info("OpencodeCoder plugin disabled via config (active: false)");
       return;

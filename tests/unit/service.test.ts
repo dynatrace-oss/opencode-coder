@@ -24,7 +24,7 @@ describe("KnowledgeBaseService", () => {
     mockConfig = {} as Config;
   });
 
-  describe("apply", () => {
+  describe("processConfig", () => {
     it("should not modify config when active is false", async () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: false },
@@ -32,7 +32,7 @@ describe("KnowledgeBaseService", () => {
         knowledgeBase: createMockKnowledgeBase([], []),
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockConfig.command).toBeUndefined();
       expect(mockConfig.agent).toBeUndefined();
@@ -51,7 +51,7 @@ describe("KnowledgeBaseService", () => {
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockConfig.command).toBeDefined();
       expect(mockConfig.command?.["story/next"]).toEqual({
@@ -76,7 +76,7 @@ describe("KnowledgeBaseService", () => {
         knowledgeBase: createMockKnowledgeBase([], mockAgents),
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockConfig.agent).toBeDefined();
       expect(mockConfig.agent?.["code-reviewer"]).toEqual({
@@ -107,7 +107,7 @@ describe("KnowledgeBaseService", () => {
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockConfig.command?.["full/command"]).toEqual({
         template: "Template",
@@ -135,7 +135,7 @@ describe("KnowledgeBaseService", () => {
         knowledgeBase: createMockKnowledgeBase([], mockAgents),
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockConfig.agent?.["full-agent"]).toEqual({
         prompt: "Prompt",
@@ -158,7 +158,7 @@ describe("KnowledgeBaseService", () => {
         ),
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockConfig.command?.["existing/cmd"]).toEqual({ template: "Existing" });
       expect(mockConfig.command?.["new/cmd"]).toEqual({ template: "New" });
@@ -179,7 +179,7 @@ describe("KnowledgeBaseService", () => {
         ),
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockLogger.hasLogged("info", "2 commands and 1 agents")).toBe(true);
     });
@@ -194,7 +194,7 @@ describe("KnowledgeBaseService", () => {
         ),
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockLogger.hasLogged("debug", "/story/next")).toBe(true);
       expect(mockLogger.hasLogged("debug", "@reviewer")).toBe(true);
@@ -210,13 +210,13 @@ describe("KnowledgeBaseService", () => {
       });
 
       // Should not throw
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
       expect(mockLogger.hasLogged("info", "disabled")).toBe(true);
     });
   });
 
   describe("beads commands", () => {
-    it("should always include bd/* commands regardless of beadsEnabled flag", async () => {
+    it("should always include bd/* commands", async () => {
       const mockCommands: CommandDef[] = [
         { name: "story/next", template: "Story template" },
         { name: "bd/init", template: "Init beads" },
@@ -228,34 +228,12 @@ describe("KnowledgeBaseService", () => {
         coderConfig: { active: true },
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
-        beadsEnabled: false,
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       expect(mockConfig.command?.["story/next"]).toBeDefined();
       expect(mockConfig.command?.["bug/fix"]).toBeDefined();
-      expect(mockConfig.command?.["bd/init"]).toBeDefined();
-      expect(mockConfig.command?.["bd/close"]).toBeDefined();
-    });
-
-    it("should include all commands when beadsEnabled is true", async () => {
-      const mockCommands: CommandDef[] = [
-        { name: "story/next", template: "Story template" },
-        { name: "bd/init", template: "Init beads" },
-        { name: "bd/close", template: "Close issue" },
-      ];
-
-      const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
-        logger: mockLogger,
-        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
-        beadsEnabled: true,
-      });
-
-      await service.apply(mockConfig);
-
-      expect(mockConfig.command?.["story/next"]).toBeDefined();
       expect(mockConfig.command?.["bd/init"]).toBeDefined();
       expect(mockConfig.command?.["bd/close"]).toBeDefined();
     });
@@ -272,10 +250,9 @@ describe("KnowledgeBaseService", () => {
         coderConfig: { active: true },
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
-        beadsEnabled: false,
       });
 
-      await service.apply(mockConfig);
+      await service.processConfig(mockConfig);
 
       // Should report all 4 commands (no filtering)
       expect(mockLogger.hasLogged("info", "4 commands and 0 agents")).toBe(true);

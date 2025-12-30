@@ -1,13 +1,14 @@
 // Types
 export type { CommandDef, AgentDef, KnowledgeBase, KbInfo, KbInfoType } from "./types";
 
-// Service
-export { KnowledgeBaseService } from "./service";
-export type { KnowledgeBaseServiceOptions, CommandsLoader, AgentsLoader } from "./service";
+// Loaders
+export { loadCommands, defaultCommandsFileSystem } from "./loaders/commands";
+export type { CommandsFileSystem, LoadCommandsOptions } from "./loaders/commands";
+export { loadAgents, defaultAgentsFileSystem } from "./loaders/agents";
+export type { AgentsFileSystem, LoadAgentsOptions } from "./loaders/agents";
 
-// Utilities
-export { parseFrontmatter } from "./parser";
-export { loadCommands, defaultCommandsFileSystem } from "./commands";
-export type { CommandsFileSystem, LoadCommandsOptions } from "./commands";
-export { loadAgents, defaultAgentsFileSystem } from "./agents";
-export type { AgentsFileSystem, LoadAgentsOptions } from "./agents";
+// KnowledgeBase implementations
+export { LoaderKnowledgeBase } from "./loader-kb";
+export type { LoaderKnowledgeBaseOptions, CommandsLoader, AgentsLoader } from "./loader-kb";
+export { CompositeKnowledgeBase } from "./composite-kb";
+export type { CompositeKnowledgeBaseOptions } from "./composite-kb";

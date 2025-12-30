@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "bun:test";
-import { loadConfig, DEFAULT_CONFIG, type FileSystem } from "../../src/core/config";
+import { loadConfig, DEFAULT_CONFIG, type FileSystem } from "../../src/config";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
 import { readFile } from "fs/promises";
 import { join } from "path";

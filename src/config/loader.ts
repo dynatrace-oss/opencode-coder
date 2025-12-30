@@ -1,34 +1,8 @@
-import { z } from "zod/v4";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import type { Logger } from "./logger";
-
-/**
- * Schema for beads integration configuration
- */
-export const BeadsConfigSchema = z.object({
-  /** Enable beads integration (auto-detected if not specified) */
-  enabled: z.boolean().optional(),
-  /** Auto-approve bd CLI commands without prompting (default: true) */
-  auto_approve_beads: z.boolean().default(true),
-});
-
-export type BeadsConfig = z.infer<typeof BeadsConfigSchema>;
-
-/**
- * Schema for .coder/coder.json configuration file
- */
-export const CoderConfigSchema = z.object({
-  active: z.boolean().default(true),
-  /** Beads issue tracking integration settings */
-  beads: BeadsConfigSchema.optional(),
-});
-
-export type CoderConfig = z.infer<typeof CoderConfigSchema>;
-
-export const DEFAULT_CONFIG: CoderConfig = {
-  active: true,
-};
+import type { Logger } from "../core/logger";
+import { CoderConfigSchema, DEFAULT_CONFIG, type CoderConfig } from "./schema";
+import { resolvePath, resolveEnvInObject } from "./resolver";
 
 /**
  * File system interface for dependency injection
@@ -55,8 +29,35 @@ export const defaultFileSystem: FileSystem = {
 };
 
 /**
- * Load configuration from .coder/coder.json in the specified directory
- * 
+ * Resolve all knowledge base paths in the config to absolute paths.
+ * Also resolves environment variables in the paths.
+ *
+ * @param config - The parsed config with potentially relative/unresolved paths
+ * @param cwd - Current working directory for resolving relative paths
+ * @returns Config with all KB paths resolved to absolute paths
+ */
+function resolveKnowledgeBasePaths(config: CoderConfig, cwd: string): CoderConfig {
+  if (!config.knowledgeBases || config.knowledgeBases.length === 0) {
+    return config;
+  }
+
+  return {
+    ...config,
+    knowledgeBases: config.knowledgeBases.map((kb) => ({
+      ...kb,
+      path: resolvePath(kb.path, cwd),
+    })),
+  };
+}
+
+/**
+ * Load configuration from .coder/coder.json in the specified directory.
+ *
+ * Features:
+ * - Resolves {env:VAR_NAME} patterns in all string values
+ * - Resolves ~ and relative paths in knowledgeBases[].path to absolute paths
+ * - Returns DEFAULT_CONFIG if file is missing or invalid
+ *
  * @param log - Logger instance for reporting config status
  * @param options - Optional configuration for DI
  * @returns Parsed and validated configuration, or defaults if file missing/invalid
@@ -69,7 +70,11 @@ export async function loadConfig(log: Logger, options: LoadConfigOptions = {}): 
   try {
     const content = await fs.readFile(configPath, "utf-8");
     const json = JSON.parse(content);
-    const result = CoderConfigSchema.safeParse(json);
+
+    // Resolve environment variables in all string values before validation
+    const resolvedJson = resolveEnvInObject(json);
+
+    const result = CoderConfigSchema.safeParse(resolvedJson);
 
     if (!result.success) {
       log.warn("Invalid coder.json config, using defaults", {
@@ -79,11 +84,15 @@ export async function loadConfig(log: Logger, options: LoadConfigOptions = {}): 
       return DEFAULT_CONFIG;
     }
 
+    // Resolve knowledge base paths to absolute paths
+    const configWithResolvedPaths = resolveKnowledgeBasePaths(result.data, cwd);
+
     log.debug("Loaded config from .coder/coder.json", {
       path: configPath,
-      config: result.data,
+      config: configWithResolvedPaths,
     });
-    return result.data;
+
+    return configWithResolvedPaths;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       log.debug("No .coder/coder.json found, using defaults", { path: configPath });

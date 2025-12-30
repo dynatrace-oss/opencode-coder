@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { parseFrontmatter } from "../../src/kb/parser";
+import { parseFrontmatter } from "../../src/core/parser";
 
 describe("parseFrontmatter", () => {
   it("should parse valid frontmatter with body", () => {
@@ -31,8 +31,8 @@ It has multiple lines.`;
 
   it("should handle frontmatter with colons in values", () => {
     const content = `---
-url: https://example.com/path
-time: 12:30:45
+url: "https://example.com/path"
+time: "12:30:45"
 ---
 Body content`;
 
@@ -57,38 +57,6 @@ key: value
     expect(result.body).toBe("");
   });
 
-  it("should ignore lines without colons in frontmatter", () => {
-    const content = `---
-valid: value
-invalid line without colon
-another: valid
----
-Body`;
-
-    const result = parseFrontmatter(content);
-
-    expect(result.frontmatter).toEqual({
-      valid: "value",
-      another: "valid",
-    });
-    expect(result.body).toBe("Body");
-  });
-
-  it("should trim whitespace from keys and values", () => {
-    const content = `---
-  key  :   value with spaces   
-another:value
----
-Body`;
-
-    const result = parseFrontmatter(content);
-
-    expect(result.frontmatter).toEqual({
-      key: "value with spaces",
-      another: "value",
-    });
-  });
-
   it("should handle empty content", () => {
     const result = parseFrontmatter("");
 
@@ -108,22 +76,7 @@ This line has no closing delimiter`;
     expect(result.body).toBe(content);
   });
 
-  it("should parse frontmatter even with non-key lines", () => {
-    // The regex will match frontmatter even with invalid lines inside
-    const content = `---
-key: value
-This line breaks the frontmatter
----
-Body`;
-
-    const result = parseFrontmatter(content);
-
-    // The parser still extracts key:value pairs and ignores invalid lines
-    expect(result.frontmatter).toEqual({ key: "value" });
-    expect(result.body).toBe("Body");
-  });
-
-  it("should handle boolean-like string values", () => {
+  it("should handle boolean values (YAML-parsed as actual booleans)", () => {
     const content = `---
 enabled: true
 disabled: false
@@ -132,26 +85,76 @@ Body`;
 
     const result = parseFrontmatter(content);
 
-    // Values are kept as strings, not converted to booleans
+    // YAML parser returns actual booleans
     expect(result.frontmatter).toEqual({
-      enabled: "true",
-      disabled: "false",
+      enabled: true,
+      disabled: false,
     });
   });
 
-  it("should handle numeric-like string values", () => {
+  it("should handle numeric values (YAML-parsed as actual numbers)", () => {
     const content = `---
 count: 42
-version: 1.0.0
+price: 19.99
 ---
 Body`;
 
     const result = parseFrontmatter(content);
 
-    // Values are kept as strings
+    // YAML parser returns actual numbers
     expect(result.frontmatter).toEqual({
-      count: "42",
+      count: 42,
+      price: 19.99,
+    });
+  });
+
+  it("should handle string values that look like versions", () => {
+    const content = `---
+version: "1.0.0"
+---
+Body`;
+
+    const result = parseFrontmatter(content);
+
+    expect(result.frontmatter).toEqual({
       version: "1.0.0",
+    });
+  });
+
+  it("should handle arrays in frontmatter", () => {
+    const content = `---
+tags:
+  - typescript
+  - opencode
+  - plugin
+---
+Body`;
+
+    const result = parseFrontmatter(content);
+
+    expect(result.frontmatter).toEqual({
+      tags: ["typescript", "opencode", "plugin"],
+    });
+  });
+
+  it("should handle nested objects in frontmatter", () => {
+    const content = `---
+config:
+  enabled: true
+  options:
+    timeout: 30
+---
+Body`;
+
+    const result = parseFrontmatter(content);
+
+    expect(result.frontmatter).toEqual({
+      config: {
+        enabled: true,
+        options: {
+          timeout: 30,
+        },
+      },
     });
   });
 
@@ -193,9 +196,59 @@ Review the current story and suggest next steps.
     expect(result.frontmatter).toEqual({
       description: "Shows next steps for the current story",
       agent: "story-reviewer",
-      subtask: "true",
+      subtask: true,
     });
     expect(result.body).toContain("Review the current story");
     expect(result.body).toContain("## Instructions");
+  });
+
+  it("should return empty frontmatter for invalid YAML", () => {
+    const content = `---
+key: [invalid yaml
+  - missing bracket
+---
+Body`;
+
+    const result = parseFrontmatter(content);
+
+    // Invalid YAML should return empty frontmatter
+    expect(result.frontmatter).toEqual({});
+    expect(result.body).toBe(content);
+  });
+
+  it("should handle CRLF line endings", () => {
+    const content = "---\r\nkey: value\r\n---\r\nBody content";
+
+    const result = parseFrontmatter(content);
+
+    expect(result.frontmatter).toEqual({ key: "value" });
+    expect(result.body).toBe("Body content");
+  });
+
+  it("should handle frontmatter that parses to non-object (null)", () => {
+    const content = `---
+null
+---
+Body`;
+
+    const result = parseFrontmatter(content);
+
+    // YAML null should result in empty object
+    expect(result.frontmatter).toEqual({});
+    expect(result.body).toBe("Body");
+  });
+
+  it("should handle frontmatter that parses to array", () => {
+    const content = `---
+- item1
+- item2
+---
+Body`;
+
+    const result = parseFrontmatter(content);
+
+    // YAML array at root should result in empty object (not valid frontmatter)
+    expect(result.frontmatter).toEqual({});
+    expect(result.body).toBe("Body");
   });
 });

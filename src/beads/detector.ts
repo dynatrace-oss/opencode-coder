@@ -1,7 +1,7 @@
 import { access, constants } from "fs/promises";
 import { join } from "path";
 import type { Logger } from "../core/logger";
-import type { CoderConfig } from "../core/config";
+import type { CoderConfig } from "../config/schema";
 
 /**
  * File system interface for dependency injection

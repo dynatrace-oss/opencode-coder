@@ -1,8 +1,19 @@
 import { describe, expect, it, beforeEach } from "bun:test";
-import { KnowledgeBaseService, type CommandsLoader, type AgentsLoader } from "../../src/kb/service";
+import { KnowledgeBaseService } from "../../src/service";
 import type { Config } from "@opencode-ai/sdk";
-import type { CommandDef, AgentDef } from "../../src/kb/types";
+import type { CommandDef, AgentDef, KnowledgeBase } from "../../src/kb/types";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
+
+/**
+ * Create a mock KnowledgeBase for testing
+ */
+function createMockKnowledgeBase(commands: CommandDef[], agents: AgentDef[]): KnowledgeBase {
+  return {
+    load: async () => {},
+    getCommands: () => commands,
+    getAgents: () => agents,
+  };
+}
 
 describe("KnowledgeBaseService", () => {
   let mockLogger: MockLogger;
@@ -18,6 +29,7 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: false },
         logger: mockLogger,
+        knowledgeBase: createMockKnowledgeBase([], []),
       });
 
       await service.apply(mockConfig);
@@ -33,14 +45,10 @@ describe("KnowledgeBaseService", () => {
         { name: "bug/fix", template: "Fix template", agent: "bug-fixer" },
       ];
 
-      const mockCommandsLoader: CommandsLoader = async () => mockCommands;
-      const mockAgentsLoader: AgentsLoader = async () => [];
-
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: mockCommandsLoader,
-        loadAgents: mockAgentsLoader,
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
       });
 
       await service.apply(mockConfig);
@@ -62,14 +70,10 @@ describe("KnowledgeBaseService", () => {
         { name: "doc-writer", prompt: "Write docs", mode: "subagent" },
       ];
 
-      const mockCommandsLoader: CommandsLoader = async () => [];
-      const mockAgentsLoader: AgentsLoader = async () => mockAgents;
-
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: mockCommandsLoader,
-        loadAgents: mockAgentsLoader,
+        knowledgeBase: createMockKnowledgeBase([], mockAgents),
       });
 
       await service.apply(mockConfig);
@@ -100,8 +104,7 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: async () => mockCommands,
-        loadAgents: async () => [],
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
       });
 
       await service.apply(mockConfig);
@@ -129,8 +132,7 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: async () => [],
-        loadAgents: async () => mockAgents,
+        knowledgeBase: createMockKnowledgeBase([], mockAgents),
       });
 
       await service.apply(mockConfig);
@@ -150,8 +152,10 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: async () => [{ name: "new/cmd", template: "New" }],
-        loadAgents: async () => [{ name: "new-agent", prompt: "New" }],
+        knowledgeBase: createMockKnowledgeBase(
+          [{ name: "new/cmd", template: "New" }],
+          [{ name: "new-agent", prompt: "New" }]
+        ),
       });
 
       await service.apply(mockConfig);
@@ -166,11 +170,13 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: async () => [
-          { name: "cmd1", template: "T1" },
-          { name: "cmd2", template: "T2" },
-        ],
-        loadAgents: async () => [{ name: "agent1", prompt: "P1" }],
+        knowledgeBase: createMockKnowledgeBase(
+          [
+            { name: "cmd1", template: "T1" },
+            { name: "cmd2", template: "T2" },
+          ],
+          [{ name: "agent1", prompt: "P1" }]
+        ),
       });
 
       await service.apply(mockConfig);
@@ -182,8 +188,10 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: async () => [{ name: "story/next", template: "T" }],
-        loadAgents: async () => [{ name: "reviewer", prompt: "P" }],
+        knowledgeBase: createMockKnowledgeBase(
+          [{ name: "story/next", template: "T" }],
+          [{ name: "reviewer", prompt: "P" }]
+        ),
       });
 
       await service.apply(mockConfig);
@@ -191,52 +199,10 @@ describe("KnowledgeBaseService", () => {
       expect(mockLogger.hasLogged("debug", "/story/next")).toBe(true);
       expect(mockLogger.hasLogged("debug", "@reviewer")).toBe(true);
     });
-
-    it("should pass basePath to loaders", async () => {
-      let capturedCommandsBasePath: string | undefined;
-      let capturedAgentsBasePath: string | undefined;
-
-      const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
-        logger: mockLogger,
-        basePath: "/custom/kb",
-        loadCommands: async (_log, options) => {
-          capturedCommandsBasePath = options?.basePath;
-          return [];
-        },
-        loadAgents: async (_log, options) => {
-          capturedAgentsBasePath = options?.basePath;
-          return [];
-        },
-      });
-
-      await service.apply(mockConfig);
-
-      expect(capturedCommandsBasePath).toBe("/custom/kb");
-      expect(capturedAgentsBasePath).toBe("/custom/kb");
-    });
-
-    it("should not pass basePath when not configured", async () => {
-      let capturedOptions: unknown;
-
-      const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
-        logger: mockLogger,
-        loadCommands: async (_log, options) => {
-          capturedOptions = options;
-          return [];
-        },
-        loadAgents: async () => [],
-      });
-
-      await service.apply(mockConfig);
-
-      expect(capturedOptions).toBeUndefined();
-    });
   });
 
   describe("constructor", () => {
-    it("should use default loaders when not provided", async () => {
+    it("should use default loaders when no knowledgeBase provided", async () => {
       // This tests that the service works with real loaders (integration-like)
       const service = new KnowledgeBaseService({
         coderConfig: { active: false },
@@ -261,8 +227,7 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: async () => mockCommands,
-        loadAgents: async () => [],
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
         beadsEnabled: false,
       });
 
@@ -284,8 +249,7 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: async () => mockCommands,
-        loadAgents: async () => [],
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
         beadsEnabled: true,
       });
 
@@ -307,8 +271,7 @@ describe("KnowledgeBaseService", () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
-        loadCommands: async () => mockCommands,
-        loadAgents: async () => [],
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
         beadsEnabled: false,
       });
 
@@ -419,6 +382,46 @@ describe("KnowledgeBaseService", () => {
       expect((info.source as CommandDef).agent).toBe("my-agent");
       expect((info.source as CommandDef).model).toBe("gpt-4");
       expect((info.source as CommandDef).subtask).toBe(true);
+    });
+  });
+
+  describe("getLoadErrors", () => {
+    it("should return empty array when no errors", () => {
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+        knowledgeBase: createMockKnowledgeBase([], []),
+      });
+
+      expect(service.getLoadErrors()).toEqual([]);
+    });
+  });
+
+  describe("getKnowledgeBaseCount", () => {
+    it("should return 1 for bundled KB only", () => {
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+      });
+
+      expect(service.getKnowledgeBaseCount()).toBe(1);
+    });
+
+    it("should count enabled user KBs", () => {
+      const service = new KnowledgeBaseService({
+        coderConfig: {
+          active: true,
+          knowledgeBases: [
+            { path: "/kb1", enabled: true },
+            { path: "/kb2", enabled: false },
+            { path: "/kb3", enabled: true },
+          ],
+        },
+        logger: mockLogger,
+      });
+
+      // 1 bundled + 2 enabled user KBs
+      expect(service.getKnowledgeBaseCount()).toBe(3);
     });
   });
 });

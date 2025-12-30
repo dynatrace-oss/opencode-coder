@@ -1,7 +1,8 @@
 import { type Plugin, type PluginInput, tool } from "@opencode-ai/plugin";
 import { stringify } from "yaml";
-import { createLogger, loadConfig, getVersionInfo } from "./core";
-import { KnowledgeBaseService } from "./kb";
+import { createLogger, getVersionInfo } from "./core";
+import { loadConfig } from "./config";
+import { KnowledgeBaseService } from "./service";
 import { BeadsDetector, BeadsContext } from "./beads";
 
 type OpencodeClient = PluginInput["client"];

@@ -1,14 +1,14 @@
 import { readdir, readFile, access } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import type { Logger } from "../core/logger";
-import { parseFrontmatter } from "./parser";
-import type { AgentDef } from "./types";
+import type { Logger } from "../../core/logger";
+import { parseFrontmatter } from "../../core/parser";
+import type { AgentDef } from "../types";
 
 // Get the directory where this plugin is located
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Resolve knowledge-base directory - handles both source (src/kb/) and dist (dist/) layouts
+// Resolve knowledge-base directory - handles both source (src/kb/loaders/) and dist (dist/) layouts
 async function resolveKnowledgeBaseDir(): Promise<string> {
   // Try dist layout first (../knowledge-base from dist/)
   const distPath = join(__dirname, "..", "knowledge-base");
@@ -16,8 +16,8 @@ async function resolveKnowledgeBaseDir(): Promise<string> {
     await access(distPath);
     return distPath;
   } catch {
-    // Fall back to source layout (../../knowledge-base from src/kb/)
-    return join(__dirname, "..", "..", "knowledge-base");
+    // Fall back to source layout (../../../knowledge-base from src/kb/loaders/)
+    return join(__dirname, "..", "..", "..", "knowledge-base");
   }
 }
 
@@ -50,14 +50,14 @@ export const defaultAgentsFileSystem: AgentsFileSystem = {
 /**
  * Load all agent files from knowledge-base/agent/
  * Structure: agent/<name>.md -> agent with name from frontmatter or filename
- * 
+ *
  * @param log - Logger instance for reporting status
  * @param options - Optional configuration for DI
  * @returns Array of agent definitions
  */
 export async function loadAgents(log: Logger, options: LoadAgentsOptions = {}): Promise<AgentDef[]> {
   const fs = options.fs ?? defaultAgentsFileSystem;
-  const basePath = options.basePath ?? await resolveKnowledgeBaseDir();
+  const basePath = options.basePath ?? (await resolveKnowledgeBaseDir());
   const agents: AgentDef[] = [];
   const agentDir = join(basePath, "agent");
 
@@ -72,15 +72,15 @@ export async function loadAgents(log: Logger, options: LoadAgentsOptions = {}): 
       const { frontmatter, body } = parseFrontmatter(content);
 
       // Use name from frontmatter, or derive from filename
-      const name = frontmatter["name"] || file.name.replace(".md", "");
+      const name = (frontmatter["name"] as string) || file.name.replace(".md", "");
 
       const agent: AgentDef = {
         name,
         prompt: body.trim(),
       };
 
-      if (frontmatter["description"]) agent["description"] = frontmatter["description"];
-      if (frontmatter["model"]) agent["model"] = frontmatter["model"];
+      if (frontmatter["description"]) agent["description"] = frontmatter["description"] as string;
+      if (frontmatter["model"]) agent["model"] = frontmatter["model"] as string;
       if (frontmatter["mode"]) {
         const mode = frontmatter["mode"] as "subagent" | "primary" | "all";
         if (["subagent", "primary", "all"].includes(mode)) {

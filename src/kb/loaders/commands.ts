@@ -1,14 +1,14 @@
 import { readdir, readFile, access } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import type { Logger } from "../core/logger";
-import { parseFrontmatter } from "./parser";
-import type { CommandDef } from "./types";
+import type { Logger } from "../../core/logger";
+import { parseFrontmatter } from "../../core/parser";
+import type { CommandDef } from "../types";
 
 // Get the directory where this plugin is located
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Resolve knowledge-base directory - handles both source (src/kb/) and dist (dist/) layouts
+// Resolve knowledge-base directory - handles both source (src/kb/loaders/) and dist (dist/) layouts
 async function resolveKnowledgeBaseDir(): Promise<string> {
   // Try dist layout first (../knowledge-base from dist/)
   const distPath = join(__dirname, "..", "knowledge-base");
@@ -16,8 +16,8 @@ async function resolveKnowledgeBaseDir(): Promise<string> {
     await access(distPath);
     return distPath;
   } catch {
-    // Fall back to source layout (../../knowledge-base from src/kb/)
-    return join(__dirname, "..", "..", "knowledge-base");
+    // Fall back to source layout (../../../knowledge-base from src/kb/loaders/)
+    return join(__dirname, "..", "..", "..", "knowledge-base");
   }
 }
 
@@ -25,7 +25,10 @@ async function resolveKnowledgeBaseDir(): Promise<string> {
  * File system interface for dependency injection
  */
 export interface CommandsFileSystem {
-  readdir(path: string, options: { withFileTypes: true }): Promise<{ name: string; isDirectory(): boolean; isFile(): boolean }[]>;
+  readdir(
+    path: string,
+    options: { withFileTypes: true }
+  ): Promise<{ name: string; isDirectory(): boolean; isFile(): boolean }[]>;
   readFile(path: string, encoding: BufferEncoding): Promise<string>;
 }
 
@@ -50,14 +53,14 @@ export const defaultCommandsFileSystem: CommandsFileSystem = {
 /**
  * Load all command files from knowledge-base/command/
  * Structure: command/<category>/<name>.md -> coder/<category>/<name>
- * 
+ *
  * @param log - Logger instance for reporting status
  * @param options - Optional configuration for DI
  * @returns Array of command definitions
  */
 export async function loadCommands(log: Logger, options: LoadCommandsOptions = {}): Promise<CommandDef[]> {
   const fs = options.fs ?? defaultCommandsFileSystem;
-  const basePath = options.basePath ?? await resolveKnowledgeBaseDir();
+  const basePath = options.basePath ?? (await resolveKnowledgeBaseDir());
   const commands: CommandDef[] = [];
   const commandDir = join(basePath, "command");
 
@@ -85,10 +88,10 @@ export async function loadCommands(log: Logger, options: LoadCommandsOptions = {
           template: body.trim(),
         };
 
-        if (frontmatter["description"]) cmd["description"] = frontmatter["description"];
-        if (frontmatter["agent"]) cmd["agent"] = frontmatter["agent"];
-        if (frontmatter["model"]) cmd["model"] = frontmatter["model"];
-        if (frontmatter["subtask"] === "true") cmd["subtask"] = true;
+        if (frontmatter["description"]) cmd["description"] = frontmatter["description"] as string;
+        if (frontmatter["agent"]) cmd["agent"] = frontmatter["agent"] as string;
+        if (frontmatter["model"]) cmd["model"] = frontmatter["model"] as string;
+        if (frontmatter["subtask"] === true || frontmatter["subtask"] === "true") cmd["subtask"] = true;
 
         commands.push(cmd);
       }

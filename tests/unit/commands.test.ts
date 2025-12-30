@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "bun:test";
-import { loadCommands, type CommandsFileSystem } from "../../src/kb/commands";
+import { loadCommands, type CommandsFileSystem } from "../../src/kb/loaders/commands";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
 import { join } from "path";
 

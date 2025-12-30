@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "bun:test";
-import { loadAgents, type AgentsFileSystem } from "../../src/kb/agents";
+import { loadAgents, type AgentsFileSystem } from "../../src/kb/loaders/agents";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
 import { join } from "path";
 

@@ -22,11 +22,28 @@ export interface AgentDef {
 }
 
 /**
- * The complete knowledge base containing all loaded commands and agents
+ * Interface for knowledge base implementations.
+ * All knowledge base sources (single directory, composite, etc.) must implement this.
  */
 export interface KnowledgeBase {
-  commands: CommandDef[];
-  agents: AgentDef[];
+  /**
+   * Load commands and agents from this knowledge base source.
+   * Should be called before accessing getCommands() or getAgents().
+   * Safe to call multiple times (should be idempotent).
+   */
+  load(): Promise<void>;
+
+  /**
+   * Get all loaded command definitions.
+   * Returns empty array if load() hasn't been called or no commands exist.
+   */
+  getCommands(): CommandDef[];
+
+  /**
+   * Get all loaded agent definitions.
+   * Returns empty array if load() hasn't been called or no agents exist.
+   */
+  getAgents(): AgentDef[];
 }
 
 /**

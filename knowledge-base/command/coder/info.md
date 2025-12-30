@@ -4,36 +4,40 @@ description: Show detailed opencode-coder plugin information
 
 # Plugin Information
 
-Display detailed information about the opencode-coder plugin, including configuration details and available features.
+## Package
 
-## Information to Display
+- **Name**: {{coder.version.name}}
+- **Version**: {{coder.version.version}}
+- **Description**: {{coder.version.description}}
 
-1. **Package Information**:
-   - Name: @hk9890/opencode-coder
-   - Version: Current version
-   - Description: Plugin description
+## Configuration
 
-2. **Configuration**:
-   - Config file location (if found)
-   - Active status
-   - Current settings
+- **Active**: {{#coder.config.active}}yes{{/coder.config.active}}{{^coder.config.active}}no{{/coder.config.active}}
+- **Working Directory**: `{{coder.cwd}}`
 
-3. **Knowledge Base**:
-   - Commands directory location
-   - Agents directory location
-   - Total commands loaded
-   - Total agents loaded
+## Beads Integration
 
-4. **Features**:
-   - Story-driven development commands (/story/*)
-   - Bug tracking commands (/bug/*)
-   - Beads integration commands (/bd/*) - if enabled
+- **Enabled**: {{#beads.enabled}}yes{{/beads.enabled}}{{^beads.enabled}}no{{/beads.enabled}}
 
-5. **Documentation**:
-   - Link to docs: docs/kb/README.md
-   - Story guide: docs/kb/story.md
-   - Bug guide: docs/kb/bug.md
+## Knowledge Base
 
-## Usage
+- **Total Commands**: {{knowledgeBase.commandCount}}
+- **Total Agents**: {{knowledgeBase.agentCount}}
 
-Run `/coder/info` to see comprehensive plugin information useful for debugging and understanding the plugin's capabilities.
+### Commands
+
+{{#knowledgeBase.commands}}
+- `/{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}
+{{/knowledgeBase.commands}}
+
+### Agents
+
+{{#knowledgeBase.agents}}
+- `@{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}{{#mode}} (mode: {{mode}}){{/mode}}
+{{/knowledgeBase.agents}}
+
+## Documentation
+
+- README: `docs/kb/README.md`
+- Story Guide: `docs/kb/story.md`
+- Bug Guide: `docs/kb/bug.md`

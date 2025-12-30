@@ -1,6 +1,6 @@
 {
   "name": "@hk9890/opencode-coder",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "OpenCode plugin for story-driven development with agents and commands",
   "author": "hk9890",
   "repository": {
@@ -47,11 +47,13 @@
   "license": "MIT",
   "dependencies": {
     "@opencode-ai/plugin": "^1.0.207",
+    "mustache": "^4.2.0",
     "yaml": "^2.7.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
     "@types/bun": "^1.1.14",
+    "@types/mustache": "^4.2.6",
     "typescript": "^5.7.2"
   }
 }

@@ -1,5 +1,6 @@
 import type { Logger } from "../core/logger";
 import type { KnowledgeBase, CommandDef, AgentDef } from "./types";
+import type { KnowledgeBaseDefinition } from "../template/types";
 
 /**
  * Options for CompositeKnowledgeBase
@@ -102,5 +103,15 @@ export class CompositeKnowledgeBase implements KnowledgeBase {
    */
   getKnowledgeBaseCount(): number {
     return this.knowledgeBases.length;
+  }
+
+  /**
+   * Create a definition object for template service registration.
+   */
+  createDefinition(): KnowledgeBaseDefinition {
+    return {
+      commands: () => this.getCommands(),
+      agents: () => this.getAgents(),
+    };
   }
 }

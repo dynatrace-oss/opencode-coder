@@ -12,6 +12,10 @@ function createMockKnowledgeBase(commands: CommandDef[], agents: AgentDef[]): Kn
     load: async () => {},
     getCommands: () => commands,
     getAgents: () => agents,
+    createDefinition: () => ({
+      commands: () => commands,
+      agents: () => agents,
+    }),
   };
 }
 

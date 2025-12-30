@@ -2,6 +2,7 @@ import type { Config } from "@opencode-ai/sdk";
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { KnowledgeBase, CommandDef, AgentDef, KbInfo, KbInfoType } from "../kb/types";
+import type { TemplateService } from "../template";
 import { LoaderKnowledgeBase } from "../kb/loader-kb";
 import { CompositeKnowledgeBase } from "../kb/composite-kb";
 import { dirname, join } from "path";
@@ -37,6 +38,8 @@ export interface KnowledgeBaseServiceOptions {
   logger: Logger;
   /** Override the knowledge base (for testing) */
   knowledgeBase?: KnowledgeBase;
+  /** Template service for rendering Mustache templates in commands/agents */
+  templateService?: TemplateService;
 }
 
 /**
@@ -52,12 +55,14 @@ export class KnowledgeBaseService {
   private coderConfig: CoderConfig;
   private logger: Logger;
   private knowledgeBase: KnowledgeBase | null;
+  private templateService: TemplateService | null;
   private loadErrors: string[] = [];
 
   constructor(options: KnowledgeBaseServiceOptions) {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
     this.knowledgeBase = options.knowledgeBase ?? null;
+    this.templateService = options.templateService ?? null;
   }
 
   /**
@@ -156,16 +161,25 @@ export class KnowledgeBaseService {
     // Load all knowledge bases
     await this.knowledgeBase.load();
 
+    // Register KB with template service so templates can access command/agent data
+    if (this.templateService) {
+      this.templateService.registerKnowledgeBase(this.knowledgeBase.createDefinition());
+    }
+
     const commands = this.knowledgeBase.getCommands();
     const agents = this.knowledgeBase.getAgents();
 
     this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
 
-    // Register commands
+    // Register commands (with template rendering)
     config.command = config.command ?? {};
     for (const cmd of commands) {
+      const renderedTemplate = this.templateService
+        ? this.templateService.render(cmd.template)
+        : cmd.template;
+
       config.command[cmd.name] = {
-        template: cmd.template,
+        template: renderedTemplate,
         ...(cmd.description && { description: cmd.description }),
         ...(cmd.agent && { agent: cmd.agent }),
         ...(cmd.model && { model: cmd.model }),
@@ -174,18 +188,21 @@ export class KnowledgeBaseService {
       this.logger.debug(`Registered command: /${cmd.name}`);
     }
 
-    // Register agents
+    // Register agents (with template rendering)
     config.agent = config.agent ?? {};
     for (const agent of agents) {
+      const renderedPrompt = this.templateService
+        ? this.templateService.render(agent.prompt)
+        : agent.prompt;
+
       config.agent[agent.name] = {
-        prompt: agent.prompt,
+        prompt: renderedPrompt,
         ...(agent.description && { description: agent.description }),
         ...(agent.mode && { mode: agent.mode }),
         ...(agent.model && { model: agent.model }),
       };
       this.logger.debug(`Registered agent: @${agent.name}`);
     }
-
   }
 
   /**

@@ -2,6 +2,7 @@ import type { Config } from "@opencode-ai/sdk";
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
+import type { BeadsDefinition } from "../template/types";
 import { BeadsContext } from "../beads";
 
 type OpencodeClient = PluginInput["client"];
@@ -265,5 +266,14 @@ export class BeadsService {
       // On error, return undefined
     }
     return undefined;
+  }
+
+  /**
+   * Create a definition object for template service registration.
+   */
+  createDefinition(): BeadsDefinition {
+    return {
+      enabled: () => this.beadsEnabled,
+    };
   }
 }

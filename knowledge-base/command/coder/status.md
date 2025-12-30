@@ -4,31 +4,22 @@ description: Show opencode-coder plugin status
 
 # Plugin Status
 
-Display the current status of the opencode-coder plugin.
+**{{coder.version.name}}** v{{coder.version.version}}
 
-## Information to Display
+## Configuration
 
-1. **Plugin Version**: Show the current version of opencode-coder
-2. **Configuration Status**: Whether the plugin is active or disabled
-3. **Loaded Commands**: Count and list of registered commands
-4. **Loaded Agents**: Count and list of registered agents
-5. **Beads Integration**: Whether beads (bd) commands are enabled
+- **Status**: {{#coder.config.active}}active{{/coder.config.active}}{{^coder.config.active}}inactive{{/coder.config.active}}
+- **Working Directory**: `{{coder.cwd}}`
+- **Beads Integration**: {{#beads.enabled}}enabled{{/beads.enabled}}{{^beads.enabled}}disabled{{/beads.enabled}}
 
-## Output Format
+## Commands ({{knowledgeBase.commandCount}})
 
-Present the information in a clear, readable format:
+{{#knowledgeBase.commands}}
+- `/{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}
+{{/knowledgeBase.commands}}
 
-```
-opencode-coder v{version}
-Status: {active/inactive}
+## Agents ({{knowledgeBase.agentCount}})
 
-Commands ({count}):
-  - /{command-name}: {description}
-  ...
-
-Agents ({count}):
-  - @{agent-name}: {description}
-  ...
-
-Beads Integration: {enabled/disabled}
-```
+{{#knowledgeBase.agents}}
+- `@{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}
+{{/knowledgeBase.agents}}

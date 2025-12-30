@@ -80,9 +80,9 @@ When running `bd doctor`, filter the output:
 |---------------------|--------|
 | Install git hooks | Report as issue with fix command |
 | Set upstream | Report as warning (not critical) |
-| Upgrade CLI (curl script) | **Ignore** - npm users should use `npm update -g beads` |
+| Upgrade CLI (curl script) | **Ignore** - npm users should use `npm install -g @beads/bd@latest` |
 
-**Important**: Never show the curl/bash upgrade suggestion. If an upgrade is needed, show: "Beads update available. Run: `npm update -g beads`"
+**Important**: Never show the curl/bash upgrade suggestion. If an upgrade is needed, show: "Beads update available. Run: `npm install -g @beads/bd@latest`"
 
 ## Exit Conditions
 

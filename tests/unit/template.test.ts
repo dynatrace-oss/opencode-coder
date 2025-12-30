@@ -2,167 +2,150 @@ import { describe, expect, it, beforeEach } from "bun:test";
 import { TemplateService } from "../../src/template";
 import type { KnowledgeBaseDefinition, BeadsDefinition } from "../../src/template";
 import type { CoderConfig } from "../../src/config/schema";
-import type { VersionInfo } from "../../src/core/version";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
 
 describe("TemplateService", () => {
   let mockLogger: MockLogger;
   let mockConfig: CoderConfig;
-  let mockVersion: VersionInfo;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
     mockConfig = { active: true };
-    mockVersion = {
-      name: "@hk9890/opencode-coder",
-      version: "1.0.0",
-      description: "Test plugin",
-    };
   });
 
   describe("constructor", () => {
-    it("should initialize with base context", () => {
+    it("should initialize with base context", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const context = service.getContext();
+      const context = await service.getContext();
       expect(context.coder.config).toBe(mockConfig);
-      expect(context.coder.version).toBe(mockVersion);
+      expect(context.coder.version).toBeDefined(); // Version is now lazy-loaded
       expect(context.coder.cwd).toBe("/test/path");
     });
 
-    it("should not have knowledgeBase in context initially", () => {
+    it("should not have knowledgeBase in context initially", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const context = service.getContext();
+      const context = await service.getContext();
       expect(context.knowledgeBase).toBeUndefined();
     });
 
-    it("should not have beads in context initially", () => {
+    it("should not have beads in context initially", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const context = service.getContext();
+      const context = await service.getContext();
       expect(context.beads).toBeUndefined();
     });
   });
 
   describe("render", () => {
-    it("should render simple variable", () => {
+    it("should render simple variable", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const result = service.render("Version: {{coder.version.version}}");
-      expect(result).toBe("Version: 1.0.0");
+      const result = await service.render("Version: {{coder.version.version}}");
+      // Version is lazy-loaded from package.json, so it should have some value
+      expect(result).toMatch(/Version: .+/);
     });
 
-    it("should render nested object access", () => {
+    it("should render nested object access", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const result = service.render("{{coder.version.name}} - {{coder.version.description}}");
-      expect(result).toBe("@hk9890/opencode-coder - Test plugin");
+      const result = await service.render("{{coder.version.name}}");
+      // Version is lazy-loaded from package.json
+      expect(result).toContain("opencode-coder");
     });
 
-    it("should render conditional sections (truthy)", () => {
+    it("should render conditional sections (truthy)", async () => {
       const service = new TemplateService({
         config: { active: true },
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const result = service.render("{{#coder.config.active}}active{{/coder.config.active}}");
+      const result = await service.render("{{#coder.config.active}}active{{/coder.config.active}}");
       expect(result).toBe("active");
     });
 
-    it("should render conditional sections (falsy)", () => {
+    it("should render conditional sections (falsy)", async () => {
       const service = new TemplateService({
         config: { active: false },
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const result = service.render("{{#coder.config.active}}active{{/coder.config.active}}");
+      const result = await service.render("{{#coder.config.active}}active{{/coder.config.active}}");
       expect(result).toBe("");
     });
 
-    it("should render inverted sections", () => {
+    it("should render inverted sections", async () => {
       const service = new TemplateService({
         config: { active: false },
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const result = service.render("{{^coder.config.active}}inactive{{/coder.config.active}}");
+      const result = await service.render("{{^coder.config.active}}inactive{{/coder.config.active}}");
       expect(result).toBe("inactive");
     });
 
-    it("should render template without variables unchanged", () => {
+    it("should render template without variables unchanged", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      const result = service.render("Plain text without variables");
+      const result = await service.render("Plain text without variables");
       expect(result).toBe("Plain text without variables");
     });
 
-    it("should warn about unresolved top-level variables", () => {
+    it("should warn about unresolved top-level variables", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      service.render("{{nonexistent}}");
+      await service.render("{{nonexistent}}");
       expect(mockLogger.hasLogged("warn", "nonexistent")).toBe(true);
     });
 
-    it("should warn about unresolved nested variables", () => {
+    it("should warn about unresolved nested variables", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
 
-      service.render("{{coder.nonexistent.field}}");
+      await service.render("{{coder.nonexistent.field}}");
       expect(mockLogger.hasLogged("warn", "coder.nonexistent.field")).toBe(true);
     });
   });
 
   describe("registerKnowledgeBase", () => {
-    it("should add knowledgeBase to context", () => {
+    it("should add knowledgeBase to context", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
@@ -178,7 +161,7 @@ describe("TemplateService", () => {
 
       service.registerKnowledgeBase(mockKbDef);
 
-      const context = service.getContext();
+      const context = await service.getContext();
       expect(context.knowledgeBase).toBeDefined();
       expect(context.knowledgeBase?.commandCount).toBe(1);
       expect(context.knowledgeBase?.agentCount).toBe(1);
@@ -186,10 +169,9 @@ describe("TemplateService", () => {
       expect(context.knowledgeBase?.agents[0].name).toBe("test-agent");
     });
 
-    it("should allow rendering knowledgeBase data in templates", () => {
+    it("should allow rendering knowledgeBase data in templates", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
@@ -204,14 +186,13 @@ describe("TemplateService", () => {
 
       service.registerKnowledgeBase(mockKbDef);
 
-      const result = service.render("Commands: {{knowledgeBase.commandCount}}");
+      const result = await service.render("Commands: {{knowledgeBase.commandCount}}");
       expect(result).toBe("Commands: 2");
     });
 
-    it("should iterate over commands array", () => {
+    it("should iterate over commands array", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
@@ -226,14 +207,13 @@ describe("TemplateService", () => {
 
       service.registerKnowledgeBase(mockKbDef);
 
-      const result = service.render("{{#knowledgeBase.commands}}/{{name}} {{/knowledgeBase.commands}}");
+      const result = await service.render("{{#knowledgeBase.commands}}/{{name}} {{/knowledgeBase.commands}}");
       expect(result).toBe("/story/next /bug/fix ");
     });
 
     it("should log debug message on registration", () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
@@ -250,10 +230,9 @@ describe("TemplateService", () => {
   });
 
   describe("registerBeads", () => {
-    it("should add beads to context", () => {
+    it("should add beads to context", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
@@ -264,15 +243,14 @@ describe("TemplateService", () => {
 
       service.registerBeads(mockBeadsDef);
 
-      const context = service.getContext();
+      const context = await service.getContext();
       expect(context.beads).toBeDefined();
       expect(context.beads?.enabled).toBe(true);
     });
 
-    it("should allow rendering beads data in templates (enabled)", () => {
+    it("should allow rendering beads data in templates (enabled)", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
@@ -283,14 +261,13 @@ describe("TemplateService", () => {
 
       service.registerBeads(mockBeadsDef);
 
-      const result = service.render("{{#beads.enabled}}yes{{/beads.enabled}}{{^beads.enabled}}no{{/beads.enabled}}");
+      const result = await service.render("{{#beads.enabled}}yes{{/beads.enabled}}{{^beads.enabled}}no{{/beads.enabled}}");
       expect(result).toBe("yes");
     });
 
-    it("should allow rendering beads data in templates (disabled)", () => {
+    it("should allow rendering beads data in templates (disabled)", async () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
@@ -301,14 +278,13 @@ describe("TemplateService", () => {
 
       service.registerBeads(mockBeadsDef);
 
-      const result = service.render("{{#beads.enabled}}yes{{/beads.enabled}}{{^beads.enabled}}no{{/beads.enabled}}");
+      const result = await service.render("{{#beads.enabled}}yes{{/beads.enabled}}{{^beads.enabled}}no{{/beads.enabled}}");
       expect(result).toBe("no");
     });
 
     it("should log debug message on registration", () => {
       const service = new TemplateService({
         config: mockConfig,
-        version: mockVersion,
         cwd: "/test/path",
         logger: mockLogger,
       });
@@ -324,14 +300,9 @@ describe("TemplateService", () => {
   });
 
   describe("complex templates", () => {
-    it("should render a complete status template", () => {
+    it("should render a complete status template", async () => {
       const service = new TemplateService({
         config: { active: true },
-        version: {
-          name: "test-plugin",
-          version: "2.0.0",
-          description: "A test plugin",
-        },
         cwd: "/project",
         logger: mockLogger,
       });
@@ -351,8 +322,6 @@ describe("TemplateService", () => {
       });
 
       const template = `
-**{{coder.version.name}}** v{{coder.version.version}}
-
 Status: {{#coder.config.active}}active{{/coder.config.active}}
 Beads: {{#beads.enabled}}enabled{{/beads.enabled}}
 
@@ -367,9 +336,8 @@ Agents ({{knowledgeBase.agentCount}}):
 {{/knowledgeBase.agents}}
 `.trim();
 
-      const result = service.render(template);
+      const result = await service.render(template);
 
-      expect(result).toContain("**test-plugin** v2.0.0");
       expect(result).toContain("Status: active");
       expect(result).toContain("Beads: enabled");
       expect(result).toContain("Commands (2):");

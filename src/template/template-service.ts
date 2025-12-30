@@ -1,5 +1,8 @@
 import Mustache from "mustache";
 import type { Logger } from "../core/logger";
+import type { VersionInfo } from "../core/version";
+import { getVersionInfo } from "../core/version";
+import type { CoderConfig } from "../config/schema";
 import type {
   TemplateContext,
   TemplateServiceOptions,
@@ -15,23 +18,43 @@ Mustache.escape = (text: string) => text;
  * Service for rendering Mustache templates with dynamic context data.
  *
  * The context is built incrementally via register functions:
- * - Base context (coder.config, coder.version, coder.cwd) set in constructor
+ * - Base context (coder.config, coder.cwd) set in constructor
+ * - coder.version is lazy-loaded on first render
  * - registerKnowledgeBase() adds knowledgeBase.* data
  * - registerBeads() adds beads.* data
  */
 export class TemplateService {
-  private context: TemplateContext;
+  private context: Omit<TemplateContext, "coder"> & {
+    coder: {
+      config: CoderConfig;
+      version?: VersionInfo;
+      cwd: string;
+    };
+  };
   private logger: Logger;
+  private versionLoaded: boolean = false;
 
   constructor(options: TemplateServiceOptions) {
     this.logger = options.logger;
     this.context = {
       coder: {
         config: options.config,
-        version: options.version,
         cwd: options.cwd,
       },
     };
+  }
+
+  /**
+   * Ensure version info is loaded (lazy loading).
+   */
+  private async ensureVersionLoaded(): Promise<void> {
+    if (this.versionLoaded) return;
+
+    this.context.coder.version = await getVersionInfo();
+    this.versionLoaded = true;
+    this.logger.debug("TemplateService: loaded version info", {
+      version: this.context.coder.version.version,
+    });
   }
 
   /**
@@ -72,11 +95,15 @@ export class TemplateService {
   /**
    * Render a Mustache template string with the current context.
    * Logs warnings for any unresolved template variables.
+   * Lazy-loads version info on first render.
    *
    * @param templateStr - The template string with {{variable}} placeholders
    * @returns The rendered string
    */
-  render(templateStr: string): string {
+  async render(templateStr: string): Promise<string> {
+    // Ensure version is loaded before rendering
+    await this.ensureVersionLoaded();
+
     // Check for unresolved variables before rendering
     this.warnUnresolvedVariables(templateStr);
 
@@ -147,8 +174,10 @@ export class TemplateService {
 
   /**
    * Get the current context (for testing/debugging purposes).
+   * Returns the full context after ensuring version is loaded.
    */
-  getContext(): TemplateContext {
-    return this.context;
+  async getContext(): Promise<TemplateContext> {
+    await this.ensureVersionLoaded();
+    return this.context as TemplateContext;
   }
 }

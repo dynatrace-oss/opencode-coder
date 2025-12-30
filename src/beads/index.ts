@@ -1,9 +1,5 @@
-export {
-  BeadsDetector,
-  defaultBeadsFileSystem,
-  type BeadsFileSystem,
-  type BeadsDetectorOptions,
-} from "./detector";
+// BeadsDetector is internal to BeadsService, not exported publicly
+export { BeadsDetector, type BeadsDetectorOptions } from "./detector";
 
 export {
   BeadsContext,

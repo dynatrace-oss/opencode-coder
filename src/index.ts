@@ -1,8 +1,7 @@
 import { type Plugin } from "@opencode-ai/plugin";
-import { createLogger, getVersionInfo } from "./core";
+import { createLogger } from "./core";
 import { loadConfig } from "./config";
 import { KnowledgeBaseService, BeadsService } from "./service";
-import { BeadsDetector } from "./beads";
 import { TemplateService } from "./template";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
@@ -13,33 +12,24 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   // 1. Load config
   const coderConfig = await loadConfig(log);
 
-  // 2. Get version info
-  const versionInfo = await getVersionInfo();
-
-  // 3. Create template service with base context
+  // 2. Create template service (version info lazy-loaded on first render)
   const templateService = new TemplateService({
     config: coderConfig,
-    version: versionInfo,
     cwd: process.cwd(),
     logger: log,
   });
 
-  // 4. Initialize beads detector
-  const beadsDetector = new BeadsDetector({ logger: log });
-  const beadsEnabled = await beadsDetector.isBeadsEnabled(coderConfig);
-
-  // 5. Create beads service
+  // 3. Create beads service (detection done internally)
   const beadsService = new BeadsService({
     coderConfig,
     logger: log,
-    beadsEnabled,
     client,
   });
 
-  // 6. Register beads with template service
+  // 4. Register beads with template service
   templateService.registerBeads(beadsService.createDefinition());
 
-  // 7. Create KB service with template service
+  // 5. Create KB service with template service
   const kbService = new KnowledgeBaseService({
     coderConfig,
     logger: log,

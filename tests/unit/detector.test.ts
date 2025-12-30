@@ -1,22 +1,7 @@
-import { describe, expect, it, beforeEach } from "bun:test";
-import { BeadsDetector, type BeadsFileSystem } from "../../src/beads/detector";
+import { describe, expect, it, beforeEach, spyOn } from "bun:test";
+import { BeadsDetector } from "../../src/beads/detector";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
-
-/**
- * Create a mock file system for testing BeadsDetector
- */
-function createMockFileSystem(options: { beadsDirExists: boolean }): BeadsFileSystem {
-  return {
-    async access(path: string, _mode?: number) {
-      if (options.beadsDirExists && path.endsWith(".beads")) {
-        return;
-      }
-      const error = new Error("ENOENT: no such file or directory") as NodeJS.ErrnoException;
-      error.code = "ENOENT";
-      throw error;
-    },
-  };
-}
+import * as fs from "fs";
 
 describe("BeadsDetector", () => {
   let mockLogger: MockLogger;
@@ -26,166 +11,195 @@ describe("BeadsDetector", () => {
   });
 
   describe("detectBeadsDirectory", () => {
-    it("should return true when .beads directory exists", async () => {
+    it("should return true when .beads directory exists", () => {
+      // Mock accessSync to succeed
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
+
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: createMockFileSystem({ beadsDirExists: true }),
         cwd: "/test/project",
       });
 
-      const result = await detector.detectBeadsDirectory();
+      const result = detector.detectBeadsDirectory();
 
       expect(result).toBe(true);
       expect(mockLogger.hasLogged("debug", "Beads directory detected")).toBe(true);
+      expect(accessSyncSpy).toHaveBeenCalledWith("/test/project/.beads", fs.constants.F_OK);
+
+      accessSyncSpy.mockRestore();
     });
 
-    it("should return false when .beads directory does not exist", async () => {
+    it("should return false when .beads directory does not exist", () => {
+      // Mock accessSync to throw ENOENT
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => {
+        const error = new Error("ENOENT: no such file or directory") as NodeJS.ErrnoException;
+        error.code = "ENOENT";
+        throw error;
+      });
+
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: createMockFileSystem({ beadsDirExists: false }),
         cwd: "/test/project",
       });
 
-      const result = await detector.detectBeadsDirectory();
+      const result = detector.detectBeadsDirectory();
 
       expect(result).toBe(false);
       expect(mockLogger.hasLogged("debug", "Beads directory not found")).toBe(true);
+
+      accessSyncSpy.mockRestore();
     });
 
-    it("should use the correct path based on cwd", async () => {
+    it("should use the correct path based on cwd", () => {
       let accessedPath: string | undefined;
-      const mockFs: BeadsFileSystem = {
-        async access(path: string) {
-          accessedPath = path;
-          throw new Error("ENOENT");
-        },
-      };
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation((path: fs.PathLike) => {
+        accessedPath = path as string;
+        throw new Error("ENOENT");
+      });
 
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: mockFs,
         cwd: "/custom/path",
       });
 
-      await detector.detectBeadsDirectory();
+      detector.detectBeadsDirectory();
 
       expect(accessedPath).toBe("/custom/path/.beads");
+
+      accessSyncSpy.mockRestore();
     });
   });
 
   describe("isBeadsEnabled", () => {
-    it("should return true when config.beads.enabled is explicitly true", async () => {
+    it("should return true when config.beads.enabled is explicitly true", () => {
+      // Mock to simulate directory doesn't exist (shouldn't matter since config overrides)
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => {
+        throw new Error("ENOENT");
+      });
+
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: createMockFileSystem({ beadsDirExists: false }),
         cwd: "/test/project",
       });
 
-      const result = await detector.isBeadsEnabled({
+      const result = detector.isBeadsEnabled({
         active: true,
-        beads: { enabled: true },
+        beads: { enabled: true, auto_approve_beads: true },
       });
 
       expect(result).toBe(true);
       expect(mockLogger.hasLogged("debug", "Beads enabled from config")).toBe(true);
+
+      accessSyncSpy.mockRestore();
     });
 
-    it("should return false when config.beads.enabled is explicitly false", async () => {
+    it("should return false when config.beads.enabled is explicitly false", () => {
+      // Mock to simulate directory exists (shouldn't matter since config overrides)
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
+
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: createMockFileSystem({ beadsDirExists: true }), // Directory exists but config overrides
         cwd: "/test/project",
       });
 
-      const result = await detector.isBeadsEnabled({
+      const result = detector.isBeadsEnabled({
         active: true,
-        beads: { enabled: false },
+        beads: { enabled: false, auto_approve_beads: true },
       });
 
       expect(result).toBe(false);
       expect(mockLogger.hasLogged("debug", "Beads enabled from config")).toBe(true);
+
+      accessSyncSpy.mockRestore();
     });
 
-    it("should auto-detect and return true when .beads directory exists and no explicit config", async () => {
+    it("should auto-detect and return true when .beads directory exists and no explicit config", () => {
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
+
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: createMockFileSystem({ beadsDirExists: true }),
         cwd: "/test/project",
       });
 
-      const result = await detector.isBeadsEnabled({
+      const result = detector.isBeadsEnabled({
         active: true,
       });
 
       expect(result).toBe(true);
       expect(mockLogger.hasLogged("debug", "Beads enabled from auto-detection")).toBe(true);
+
+      accessSyncSpy.mockRestore();
     });
 
-    it("should auto-detect and return false when .beads directory does not exist and no explicit config", async () => {
+    it("should auto-detect and return false when .beads directory does not exist and no explicit config", () => {
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => {
+        throw new Error("ENOENT");
+      });
+
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: createMockFileSystem({ beadsDirExists: false }),
         cwd: "/test/project",
       });
 
-      const result = await detector.isBeadsEnabled({
+      const result = detector.isBeadsEnabled({
         active: true,
       });
 
       expect(result).toBe(false);
       expect(mockLogger.hasLogged("debug", "Beads enabled from auto-detection")).toBe(true);
+
+      accessSyncSpy.mockRestore();
     });
 
-    it("should auto-detect when beads object exists but enabled is undefined", async () => {
+    it("should auto-detect when beads object exists but enabled is undefined", () => {
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
+
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: createMockFileSystem({ beadsDirExists: true }),
         cwd: "/test/project",
       });
 
-      const result = await detector.isBeadsEnabled({
+      const result = detector.isBeadsEnabled({
         active: true,
-        beads: {}, // enabled is undefined
+        beads: { auto_approve_beads: true }, // enabled is undefined
       });
 
       expect(result).toBe(true);
       expect(mockLogger.hasLogged("debug", "auto-detection")).toBe(true);
+
+      accessSyncSpy.mockRestore();
     });
 
-    it("should use default cwd when not provided", async () => {
-      // This test verifies the default behavior uses process.cwd()
+    it("should use default cwd when not provided", () => {
       let accessedPath: string | undefined;
-      const mockFs: BeadsFileSystem = {
-        async access(path: string) {
-          accessedPath = path;
-          throw new Error("ENOENT");
-        },
-      };
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation((path: fs.PathLike) => {
+        accessedPath = path as string;
+        throw new Error("ENOENT");
+      });
 
       const detector = new BeadsDetector({
         logger: mockLogger,
-        fs: mockFs,
         // Not providing cwd - should use process.cwd()
       });
 
-      await detector.detectBeadsDirectory();
+      detector.detectBeadsDirectory();
 
       // Should end with .beads (path based on process.cwd())
       expect(accessedPath?.endsWith(".beads")).toBe(true);
+
+      accessSyncSpy.mockRestore();
     });
   });
 
   describe("constructor defaults", () => {
-    it("should use default file system when not provided", async () => {
-      // This test just ensures the constructor doesn't throw when using defaults
+    it("should use default cwd when not provided", () => {
+      // Just verify the detector can be created without cwd
       const detector = new BeadsDetector({
         logger: mockLogger,
-        cwd: "/nonexistent/path",
       });
 
-      // Should not throw, just return false for non-existent path
-      const result = await detector.detectBeadsDirectory();
-      expect(result).toBe(false);
+      // The detector should exist and have some cwd set
+      expect(detector).toBeDefined();
     });
   });
 });

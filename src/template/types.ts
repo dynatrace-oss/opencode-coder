@@ -46,7 +46,6 @@ export interface TemplateContext {
  */
 export interface TemplateServiceOptions {
   config: CoderConfig;
-  version: VersionInfo;
   cwd: string;
   logger: Logger;
 }

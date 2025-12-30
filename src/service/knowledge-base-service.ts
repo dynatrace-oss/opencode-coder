@@ -175,7 +175,7 @@ export class KnowledgeBaseService {
     config.command = config.command ?? {};
     for (const cmd of commands) {
       const renderedTemplate = this.templateService
-        ? this.templateService.render(cmd.template)
+        ? await this.templateService.render(cmd.template)
         : cmd.template;
 
       config.command[cmd.name] = {
@@ -192,7 +192,7 @@ export class KnowledgeBaseService {
     config.agent = config.agent ?? {};
     for (const agent of agents) {
       const renderedPrompt = this.templateService
-        ? this.templateService.render(agent.prompt)
+        ? await this.templateService.render(agent.prompt)
         : agent.prompt;
 
       config.agent[agent.name] = {

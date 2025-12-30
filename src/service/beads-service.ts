@@ -3,7 +3,7 @@ import type { PluginInput } from "@opencode-ai/plugin";
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { BeadsDefinition } from "../template/types";
-import { BeadsContext } from "../beads";
+import { BeadsContext, BeadsDetector } from "../beads";
 
 type OpencodeClient = PluginInput["client"];
 
@@ -15,12 +15,12 @@ export interface BeadsServiceOptions {
   coderConfig: CoderConfig;
   /** Logger for reporting status and errors */
   logger: Logger;
-  /** Whether beads integration is enabled */
-  beadsEnabled: boolean;
   /** OpenCode client for session operations */
   client: OpencodeClient;
   /** Override BeadsContext (for testing) */
   beadsContext?: BeadsContext;
+  /** Override beads enabled state (for testing) */
+  beadsEnabled?: boolean;
 }
 
 /**
@@ -86,9 +86,16 @@ export class BeadsService {
   constructor(options: BeadsServiceOptions) {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
-    this.beadsEnabled = options.beadsEnabled;
     this.client = options.client;
     this.beadsContext = options.beadsContext ?? new BeadsContext({ logger: options.logger });
+
+    // Detect beads enabled state (can be overridden for testing)
+    if (options.beadsEnabled !== undefined) {
+      this.beadsEnabled = options.beadsEnabled;
+    } else {
+      const detector = new BeadsDetector({ logger: options.logger });
+      this.beadsEnabled = detector.isBeadsEnabled(options.coderConfig);
+    }
   }
 
   /**

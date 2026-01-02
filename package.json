@@ -35,8 +35,6 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run build",
     "typecheck": "bun x tsc --noEmit",
-    "mtest": "bun run build && cd manual-test && OPENCODE_DISABLE_DEFAULT_PLUGINS=true opencode --print-logs --log-level DEBUG",
-    "qtest": "bun run build && cd manual-test && OPENCODE_DISABLE_DEFAULT_PLUGINS=true opencode --print-logs run hallo",
     "opencode:dev": "bun run build && bun scripts/opencode-dev.ts",
     "opencode:dev:local": "bun run build && bun scripts/opencode-dev.ts --local"
   },

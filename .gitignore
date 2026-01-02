@@ -13,6 +13,9 @@ manual-test/docs/
 ~/
 .DS_Store
 
+# Local OpenCode config (for dev testing)
+.opencode/
+
 # Environment and secrets
 .env
 .env.*

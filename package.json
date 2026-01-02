@@ -36,7 +36,8 @@
     "prepublishOnly": "bun run build",
     "typecheck": "bun x tsc --noEmit",
     "mtest": "bun run build && cd manual-test && OPENCODE_DISABLE_DEFAULT_PLUGINS=true opencode --print-logs --log-level DEBUG",
-    "qtest": "bun run build && cd manual-test && OPENCODE_DISABLE_DEFAULT_PLUGINS=true opencode --print-logs run hallo"
+    "qtest": "bun run build && cd manual-test && OPENCODE_DISABLE_DEFAULT_PLUGINS=true opencode --print-logs run hallo",
+    "opencode:dev": "bun run build && OPENCODE_DISABLE_DEFAULT_PLUGINS=true opencode --print-logs --log-level DEBUG"
   },
   "keywords": [
     "opencode",

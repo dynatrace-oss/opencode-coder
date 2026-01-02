@@ -175,6 +175,8 @@ export class BeadsService {
     if (output.message.agent) {
       context.agent = output.message.agent;
     }
+    
+    this.logger.info("Injecting beads context for new session", { sessionID });
     await this.injectBeadsContext(sessionID, context);
   }
 
@@ -186,9 +188,9 @@ export class BeadsService {
 
     if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
       const sessionID = event.properties["sessionID"];
+      this.logger.info("Session compacted, re-injecting beads context", { sessionID });
       const context = await this.getSessionContext(sessionID);
       await this.injectBeadsContext(sessionID, context);
-      this.logger.debug("Re-injected beads context after compaction", { sessionID });
     }
   }
 
@@ -217,6 +219,7 @@ export class BeadsService {
       const contextInfo = await this.beadsContext.getContext();
 
       if (!contextInfo.available || !contextInfo.contextString) {
+        this.logger.info("Beads context not available, skipping injection", { sessionID });
         return;
       }
 
@@ -244,9 +247,16 @@ export class BeadsService {
         body,
       });
 
-      this.logger.debug("Injected beads context into session", { sessionID });
+      this.logger.info("Beads context injected successfully", { 
+        sessionID,
+        contentLength: contextInfo.contextString.length 
+      });
+      this.logger.debug("Beads context content", { 
+        sessionID,
+        content: contextInfo.contextString 
+      });
     } catch (error) {
-      this.logger.debug("Failed to inject beads context", { error: String(error) });
+      this.logger.error("Failed to inject beads context", { sessionID, error: String(error) });
     }
   }
 

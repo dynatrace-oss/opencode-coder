@@ -24,3 +24,6 @@ manual-test/docs/
 .secrets
 secrets.json
 credentials.json
+
+# bv (beads viewer) local config and caches
+.bv/

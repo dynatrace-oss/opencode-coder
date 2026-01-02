@@ -6,6 +6,7 @@ import { TemplateService } from "./template";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
   const log = createLogger(client);
+  const startTime = Date.now();
 
   log.info("OpencodeCoder plugin loading...");
 
@@ -36,10 +37,15 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
     templateService,
   });
 
+  // Log plugin load completion with timing
+  const loadDurationMs = Date.now() - startTime;
+  log.info("OpencodeCoder plugin loaded", { durationMs: loadDurationMs, beadsEnabled: beadsService.isBeadsEnabled() });
+
   return {
     async config(config) {
       await beadsService.processConfig(config);
       await kbService.processConfig(config);
+      log.debug("Final config after processing", { config: JSON.stringify(config, null, 2) });
     },
 
     async "chat.message"(input, output) {

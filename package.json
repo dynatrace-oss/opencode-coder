@@ -35,8 +35,8 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run build",
     "typecheck": "bun x tsc --noEmit",
-    "opencode:dev": "bun run build && bun scripts/opencode-dev.ts",
-    "opencode:dev:local": "bun run build && bun scripts/opencode-dev.ts --local"
+    "opencode:dev": "bun run build && OPENCODE_DISABLE_DEFAULT_PLUGINS=true opencode --log-level DEBUG",
+    "opencode:dev:local": "bun run build && OPENCODE_DISABLE_DEFAULT_PLUGINS=true /home/hans/dev/github/opencode/packages/opencode/dist/opencode-linux-x64/bin/opencode --log-level DEBUG"
   },
   "keywords": [
     "opencode",

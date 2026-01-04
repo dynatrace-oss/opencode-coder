@@ -12,6 +12,12 @@ Before initializing, verify:
 1. The project has git initialized (`git status` should work)
 2. The `bd` CLI is available (`bd --version`) - if not, suggest running `/coder/install` first
 
+## Important: DO NOT Create AGENTS.md
+
+**Do NOT create an AGENTS.md file.** The beads workflow context is automatically injected via hooks at session start - creating AGENTS.md would be redundant and pollutes the user's codebase.
+
+If the user specifically asks for AGENTS.md content, tell them to run `bd onboard` which outputs a minimal snippet.
+
 ## Tasks
 
 Perform each step, skipping if already done:

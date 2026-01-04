@@ -141,17 +141,9 @@ describe("BeadsContext", () => {
       const context = new BeadsContext({ logger: mockLogger, executor: mockExecutor });
       const info = await context.getContext();
 
-      // Check for CLI usage guidance
-      expect(info.contextString).toContain("## CLI Usage");
-      expect(info.contextString).toContain("bd ready");
-      expect(info.contextString).toContain("bd show <id>");
-      expect(info.contextString).toContain("bd create");
-      expect(info.contextString).toContain("bd update");
-      expect(info.contextString).toContain("bd close");
-      expect(info.contextString).toContain("bd sync");
-
-      // Check for agent delegation guidance
+      // Check for agent delegation guidance (CLI usage comes from bd prime, not our guidance)
       expect(info.contextString).toContain("## Agent Delegation");
+      expect(info.contextString).toContain("beads-task-agent");
     });
   });
 
@@ -161,15 +153,11 @@ describe("BeadsContext", () => {
       expect(typeof BEADS_GUIDANCE).toBe("string");
     });
 
-    it("should contain CLI usage section", () => {
-      expect(BEADS_GUIDANCE).toContain("## CLI Usage");
-      expect(BEADS_GUIDANCE).toContain("bd ready");
-      expect(BEADS_GUIDANCE).toContain("bd create");
-      expect(BEADS_GUIDANCE).toContain("bd close");
-    });
-
-    it("should contain agent delegation section", () => {
+    it("should contain agent delegation section (CLI usage comes from bd prime)", () => {
+      // We no longer include CLI usage - that comes from bd prime output
+      // We only add agent delegation guidance for our beads-task-agent
       expect(BEADS_GUIDANCE).toContain("## Agent Delegation");
+      expect(BEADS_GUIDANCE).toContain("beads-task-agent");
     });
   });
 });

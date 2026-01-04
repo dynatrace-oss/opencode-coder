@@ -46,47 +46,8 @@ export interface BeadsContextInfo {
 }
 
 /**
- * CLI usage guidance for the model
- */
-const BEADS_CLI_USAGE = `## CLI Usage
-
-Use the \`bd\` CLI via bash for beads operations:
-
-- \`bd ready\` - List ready tasks (no blockers)
-- \`bd show <id>\` - Show task details
-- \`bd create --title="title" --type=bug|feature|task --priority=0-4\` - Create issue
-- \`bd update <id> --status in_progress\` - Update status
-- \`bd close <id> --reason="message"\` - Close issue
-- \`bd close <id1> <id2> ...\` - Close multiple issues at once
-- \`bd list --status=open\` - List issues by status
-- \`bd blocked\` - Show blocked issues
-- \`bd stats\` - Show statistics
-- \`bd sync\` - Sync with git
-- \`bd dep add <issue> <depends-on>\` - Add dependency
-
-Use \`--json\` flag for structured output when parsing programmatically.`;
-
-/**
- * Guidance on when to create beads issues
- */
-const BEADS_TASK_CREATION = `## When to Create Beads Issues
-
-**IMPORTANT: Always create beads issues for discovered work.**
-
-Create a beads issue (\`bd create\`) when you encounter:
-- Bugs or errors that need fixing
-- TODO comments or incomplete implementations
-- Technical debt or refactoring opportunities
-- Missing tests or documentation
-- Follow-up work from the current task
-- Any work that might span multiple sessions
-
-**Do NOT rely on TodoWrite for work tracking.** TodoWrite is only for breaking down your immediate execution steps within the current task. Beads issues persist across sessions and track dependencies.
-
-**At session start:** Check \`bd ready\` to see if there's existing work to continue.`;
-
-/**
- * Guidance on when to use agents vs CLI directly
+ * Guidance on when to use our beads-task-agent vs CLI directly.
+ * This is specific to this plugin - beads itself doesn't provide an agent.
  */
 const BEADS_AGENT_GUIDANCE = `## Agent Delegation
 
@@ -106,13 +67,10 @@ const BEADS_AGENT_GUIDANCE = `## Agent Delegation
 **Why delegate?** The agent processes multiple commands internally and returns only a concise summary. Running bd commands directly dumps JSON into context, wasting tokens and making the conversation harder to follow.`;
 
 /**
- * Full beads guidance content
+ * Additional guidance specific to this plugin (agent delegation).
+ * The CLI usage is already provided by bd prime output.
  */
-export const BEADS_GUIDANCE = `${BEADS_TASK_CREATION}
-
-${BEADS_CLI_USAGE}
-
-${BEADS_AGENT_GUIDANCE}`;
+export const BEADS_GUIDANCE = BEADS_AGENT_GUIDANCE;
 
 /**
  * Provides beads context information for session injection

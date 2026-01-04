@@ -38,3 +38,34 @@ bd sync               # Sync with git
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 
+## Releases
+
+**MANDATORY: Use the GitHub Actions release workflow for all releases.**
+
+DO NOT manually:
+- Bump version in package.json
+- Create git tags
+- Run `npm publish`
+- Create GitHub releases
+
+### How to Release
+
+1. Go to **Actions** > **Release** > **Run workflow**
+2. Enter:
+   - **version**: Semver format (e.g., `0.8.0`)
+   - **release_notes**: Markdown release notes
+3. Click **Run workflow**
+
+The workflow will:
+1. Run full build and all tests
+2. Update `package.json` version
+3. Commit and create annotated git tag
+4. Publish to GitHub Packages npm registry
+5. Create GitHub Release with notes
+
+### Version Guidelines
+
+- **Patch** (0.0.X): Bug fixes, minor updates
+- **Minor** (0.X.0): New features, new commands, backward-compatible changes
+- **Major** (X.0.0): Breaking changes
+

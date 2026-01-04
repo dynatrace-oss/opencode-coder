@@ -215,17 +215,17 @@ describe("OpencodeCoder E2E Tests", () => {
       expect(commands).toBeDefined();
       expect(Array.isArray(commands)).toBe(true);
 
-      // Check for our plugin commands (story/* and bug/*)
-      const storyCommands = commands?.filter((cmd) => cmd.name?.startsWith("story/")) ?? [];
-      const bugCommands = commands?.filter((cmd) => cmd.name?.startsWith("bug/")) ?? [];
+      // Check for our plugin commands (bd/* and coder/*)
+      const bdCommands = commands?.filter((cmd) => cmd.name?.startsWith("bd/")) ?? [];
+      const coderCommands = commands?.filter((cmd) => cmd.name?.startsWith("coder/")) ?? [];
 
-      console.log(`Found ${storyCommands.length} story commands and ${bugCommands.length} bug commands`);
-      console.log("Story commands:", storyCommands.map((c) => c.name));
-      console.log("Bug commands:", bugCommands.map((c) => c.name));
+      console.log(`Found ${bdCommands.length} bd commands and ${coderCommands.length} coder commands`);
+      console.log("BD commands:", bdCommands.map((c) => c.name));
+      console.log("Coder commands:", coderCommands.map((c) => c.name));
 
-      // Our plugin should register story and bug commands from knowledge-base/
-      expect(storyCommands.length).toBeGreaterThan(0);
-      expect(bugCommands.length).toBeGreaterThan(0);
+      // Our plugin should register bd and coder commands from knowledge-base/
+      expect(bdCommands.length).toBeGreaterThan(0);
+      expect(coderCommands.length).toBeGreaterThan(0);
     });
 
     it("should register plugin agents", async () => {
@@ -242,13 +242,7 @@ describe("OpencodeCoder E2E Tests", () => {
 
       // Our expected agents from knowledge-base/agent/
       const expectedAgentNames = [
-        "story-reviewer",
-        "story-writer",
-        "code-reviewer",
-        "doc-writer",
-        "git-committer",
-        "qa-test-validator",
-        "bug-creator",
+        "beads-task-agent",
       ];
 
       // Check for our plugin agents
@@ -271,18 +265,18 @@ describe("OpencodeCoder E2E Tests", () => {
       const response = await client.command.list();
       const commands = response.data ?? [];
 
-      // Get our story/next command
-      const storyNextCmd = commands.find((cmd) => cmd.name === "story/next");
-      if (storyNextCmd) {
-        expect(storyNextCmd.template).toBeDefined();
-        expect(storyNextCmd.template?.length).toBeGreaterThan(0);
-        console.log("story/next command found with template length:", storyNextCmd.template?.length);
+      // Get our bd/next command
+      const bdNextCmd = commands.find((cmd) => cmd.name === "bd/next");
+      if (bdNextCmd) {
+        expect(bdNextCmd.template).toBeDefined();
+        expect(bdNextCmd.template?.length).toBeGreaterThan(0);
+        console.log("bd/next command found with template length:", bdNextCmd.template?.length);
       } else {
-        // If story/next isn't found, check if any story commands exist
-        const anyStoryCmd = commands.find((cmd) => cmd.name?.startsWith("story/"));
-        if (anyStoryCmd) {
-          console.log("Found story command:", anyStoryCmd.name);
-          expect(anyStoryCmd.template).toBeDefined();
+        // If bd/next isn't found, check if any bd commands exist
+        const anyBdCmd = commands.find((cmd) => cmd.name?.startsWith("bd/"));
+        if (anyBdCmd) {
+          console.log("Found bd command:", anyBdCmd.name);
+          expect(anyBdCmd.template).toBeDefined();
         }
       }
     });
@@ -299,10 +293,10 @@ describe("OpencodeCoder E2E Tests", () => {
       const response = await client.command.list();
       const commands = response.data ?? [];
       const pluginCommands = commands.filter(
-        (cmd) => cmd.name?.startsWith("story/") || cmd.name?.startsWith("bug/")
+        (cmd) => cmd.name?.startsWith("bd/") || cmd.name?.startsWith("coder/")
       );
 
-      console.log(`Total plugin commands (story/* + bug/*): ${pluginCommands.length}`);
+      console.log(`Total plugin commands (bd/* + coder/*): ${pluginCommands.length}`);
       expect(pluginCommands.length).toBeGreaterThan(0);
     });
   });

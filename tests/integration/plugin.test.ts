@@ -79,32 +79,32 @@ describe("OpencodeCoder Plugin Integration", () => {
   });
 
   describe("real knowledge base loading", () => {
-    it("should load story commands", async () => {
+    it("should load bd commands", async () => {
       const mockInput = createMockPluginInput();
       const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
 
       const config: Config = {};
       await hooks.config?.(config);
 
-      // Check for expected story commands from knowledge-base/command/story/
-      const storyCommands = Object.keys(config.command ?? {}).filter((k) =>
-        k.startsWith("story/")
+      // Check for expected bd commands from knowledge-base/command/bd/
+      const bdCommands = Object.keys(config.command ?? {}).filter((k) =>
+        k.startsWith("bd/")
       );
-      expect(storyCommands.length).toBeGreaterThan(0);
+      expect(bdCommands.length).toBeGreaterThan(0);
     });
 
-    it("should load bug commands", async () => {
+    it("should load coder commands", async () => {
       const mockInput = createMockPluginInput();
       const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
 
       const config: Config = {};
       await hooks.config?.(config);
 
-      // Check for expected bug commands from knowledge-base/command/bug/
-      const bugCommands = Object.keys(config.command ?? {}).filter((k) =>
-        k.startsWith("bug/")
+      // Check for expected coder commands from knowledge-base/command/coder/
+      const coderCommands = Object.keys(config.command ?? {}).filter((k) =>
+        k.startsWith("coder/")
       );
-      expect(bugCommands.length).toBeGreaterThan(0);
+      expect(coderCommands.length).toBeGreaterThan(0);
     });
 
     it("should load agents with proper configuration", async () => {

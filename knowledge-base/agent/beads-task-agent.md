@@ -5,21 +5,7 @@ mode: subagent
 
 You are a task-completion agent for beads. Your goal is to find ready work and complete it autonomously.
 
-## CLI Usage
-
-Use the `bd` CLI via bash for beads operations:
-
-- `bd ready --json` - Find unblocked tasks
-- `bd show <id>` - Get task details
-- `bd update <id> --status in_progress` - Claim task
-- `bd create --title="..." --type=task|bug|feature --priority=0-4` - Create new issue
-- `bd dep add <issue> <depends-on> --type discovered-from` - Link discovered work
-- `bd close <id> --reason="..."` - Complete task
-- `bd blocked` - Check blocked issues
-- `bd stats` - View project stats
-- `bd sync` - Sync with git
-
-Use `--json` flag for structured output when parsing programmatically.
+**Note**: Beads CLI reference is provided via injected context. Use `--json` flag for structured output when parsing programmatically.
 
 ## Agent Workflow
 

@@ -46,17 +46,36 @@ export interface BeadsContextInfo {
 }
 
 /**
- * Guidance on when to use our beads-task-agent vs CLI directly.
- * This is specific to this plugin - beads itself doesn't provide an agent.
+ * Guidance on the beads agent architecture and when to use each agent.
+ * This is specific to this plugin - beads itself doesn't provide agents.
  */
-const BEADS_AGENT_GUIDANCE = `## Agent Delegation
+const BEADS_AGENT_GUIDANCE = `## Beads Agent Architecture
 
-**Default to the agent.** For ANY beads work involving multiple commands or context gathering, use the \`task\` tool with \`subagent_type: "beads-task-agent"\`:
-- Status overviews ("what's next", "what's blocked", "show me progress")
-- Exploring the issue graph (ready + in-progress + blocked queries)
+This plugin provides three specialized agents for beads workflow:
+
+| Agent | Role | Can Edit Code | Use For |
+|-------|------|---------------|---------|
+| **beads-planner-agent** | Primary planning agent | No (read-only) | Planning sessions, creating issues, orchestrating work |
+| **beads-task-agent** | Task execution subagent | Yes | Implementing code, running tests, closing completed issues |
+| **beads-verify-agent** | Verification subagent | No (read-only) | Verifying acceptance criteria, checking completed work |
+
+### Agent Delegation
+
+**For planning and orchestration**, use \`beads-planner-agent\` as the primary agent. It will:
+- Research the codebase (read-only)
+- Create detailed beads issues with instructions
+- Spawn \`beads-task-agent\` for execution
+- Spawn \`beads-verify-agent\` to verify completion
+
+**For task execution**, use the \`task\` tool with \`subagent_type: "beads-task-agent"\`:
 - Finding and completing ready work
 - Working through multiple issues in sequence
-- Any request that would require 2+ bd commands
+- Any implementation work that requires code changes
+
+**For verification**, use the \`task\` tool with \`subagent_type: "beads-verify-agent"\`:
+- Checking acceptance criteria are met
+- Verifying code works as intended
+- Running tests and quality checks
 
 **Use CLI directly ONLY for single, atomic operations:**
 - Creating exactly one issue: \`bd create --title="..." ...\`
@@ -64,7 +83,7 @@ const BEADS_AGENT_GUIDANCE = `## Agent Delegation
 - Updating one specific field: \`bd update <id> --status ...\`
 - When user explicitly requests a specific command
 
-**Why delegate?** The agent processes multiple commands internally and returns only a concise summary. Running bd commands directly dumps JSON into context, wasting tokens and making the conversation harder to follow.`;
+**Why delegate?** The agents process multiple commands internally and return only concise summaries. Running bd commands directly dumps JSON into context, wasting tokens and making the conversation harder to follow.`;
 
 /**
  * Additional guidance specific to this plugin (agent delegation).

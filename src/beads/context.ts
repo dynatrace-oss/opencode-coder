@@ -51,39 +51,54 @@ export interface BeadsContextInfo {
  */
 const BEADS_AGENT_GUIDANCE = `## Beads Agent Architecture
 
-This plugin provides three specialized agents for beads workflow:
+This plugin provides four specialized agents for beads workflow:
 
-| Agent | Role | Can Edit Code | Use For |
+| Agent | Role | Can Edit Code | Trigger |
 |-------|------|---------------|---------|
-| **beads-planner-agent** | Primary planning agent | No (read-only) | Planning sessions, creating issues, orchestrating work |
-| **beads-task-agent** | Task execution subagent | Yes | Implementing code, running tests, closing completed issues |
-| **beads-verify-agent** | Verification subagent | No (read-only) | Verifying acceptance criteria, checking completed work |
+| **beads-planner-agent** | Planning, structure, orchestration | No (read-only) | User requests |
+| **beads-review-agent** | Reviews plans, not code | No (read-only) | \`need:review\` label |
+| **beads-task-agent** | Implements tasks | Yes | Ready tasks |
+| **beads-verify-agent** | Verifies outcomes, owns gates | No (read-only) | Gates, verification requests |
+
+### Workflow
+
+1. **Planner** creates epic + tasks + acceptance gate
+2. **Planner** adds \`need:review\` label where appropriate
+3. **Reviewer** reviews plans → creates tasks/gates/bugs if needed
+4. **Task agent** implements tasks → closes when implementation complete
+5. **Verifier** validates gates → closes gates or creates bugs/tasks
+6. Epic closes when all tasks and gates are closed
 
 ### Agent Delegation
 
-**For planning and orchestration**, use \`beads-planner-agent\` as the primary agent. It will:
-- Research the codebase (read-only)
-- Create detailed beads issues with instructions
-- Spawn \`beads-task-agent\` for execution
-- Spawn \`beads-verify-agent\` to verify completion
+**For planning**, use \`beads-planner-agent\` as primary agent:
+- Creates epics, tasks, gates with detailed instructions
+- Applies labels (\`need:review\`) for routing
+- Spawns other agents as needed
 
-**For task execution**, use the \`task\` tool with \`subagent_type: "beads-task-agent"\`:
-- Finding and completing ready work
-- Working through multiple issues in sequence
-- Any implementation work that requires code changes
+**For plan review**, use \`task\` tool with \`subagent_type: "beads-review-agent"\`:
+- Reviews structure, completeness, logic of plans
+- Outputs new beads (tasks, gates, bugs) - does NOT modify existing
 
-**For verification**, use the \`task\` tool with \`subagent_type: "beads-verify-agent"\`:
-- Checking acceptance criteria are met
-- Verifying code works as intended
-- Running tests and quality checks
+**For task execution**, use \`task\` tool with \`subagent_type: "beads-task-agent"\`:
+- Implements code changes per task instructions
+- Closes tasks when implementation complete (not perfect)
 
-**Use CLI directly ONLY for single, atomic operations:**
-- Creating exactly one issue: \`bd create --title="..." ...\`
-- Closing exactly one issue: \`bd close <id> ...\`
-- Updating one specific field: \`bd update <id> --status ...\`
-- When user explicitly requests a specific command
+**For verification**, use \`task\` tool with \`subagent_type: "beads-verify-agent"\`:
+- Owns and verifies gates
+- Closes gates when criteria met
+- Creates bugs/tasks if issues found
 
-**Why delegate?** The agents process multiple commands internally and return only concise summaries. Running bd commands directly dumps JSON into context, wasting tokens and making the conversation harder to follow.`;
+### Core Philosophy
+
+> Review and verification produce new work - they do not rewrite old work.
+
+- Closed work is NOT reopened - create new issues instead
+- Gates block, don't approve - they represent conditions to meet
+- Labels route work - \`need:review\` triggers review agent
+- History is immutable - agents are predictable
+
+**Use CLI directly ONLY for single, atomic operations.**`;
 
 /**
  * Additional guidance specific to this plugin (agent delegation).

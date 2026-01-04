@@ -118,7 +118,11 @@ export class TemplateService {
     // Parse the template to get the AST
     const tokens = Mustache.parse(templateStr);
 
-    const checkToken = (token: Mustache.TemplateSpans[number], path: string[] = []): void => {
+    const checkToken = (
+      token: Mustache.TemplateSpans[number],
+      path: string[] = [],
+      insideArraySection: boolean = false
+    ): void => {
       const type = token[0];
       const name = token[1];
 
@@ -126,23 +130,24 @@ export class TemplateService {
       if (type === "name" || type === "#" || type === "^") {
         const fullPath = path.length > 0 ? `${path.join(".")}.${name}` : name;
 
-        // For sections iterating over arrays, we check the array exists
-        // For simple variables, we check the value exists
-        if (!this.resolveValue(fullPath)) {
+        // Skip validation for variables inside array iteration sections
+        // since they reference array item properties that we can't validate statically
+        if (!insideArraySection && !this.resolveValue(fullPath)) {
           this.logger.warn(`Template variable not found: {{${fullPath}}}`);
         }
       }
 
       // Recurse into sections (token[4] contains nested tokens)
       if ((type === "#" || type === "^") && Array.isArray(token[4])) {
-        // When inside a section that iterates over an array,
-        // the context changes to the array item, so we don't append the section name to path
-        // for child lookups. However, we still want to warn about the section itself.
+        // Check if this section iterates over an array
+        const fullPath = path.length > 0 ? `${path.join(".")}.${name}` : name;
+        const sectionValue = this.resolveValueRaw(fullPath);
+        const isArraySection = Array.isArray(sectionValue);
+
         for (const childToken of token[4]) {
-          // Inside sections, variables might reference array item properties
-          // We can't fully validate these without knowing the array item structure
-          // So we only check top-level path for sections
-          checkToken(childToken, []);
+          // Inside array sections, variables reference array item properties
+          // which we can't validate without knowing the item structure
+          checkToken(childToken, [], insideArraySection || isArraySection);
         }
       }
     };
@@ -156,20 +161,28 @@ export class TemplateService {
    * Check if a dotted path resolves to a value in the context.
    */
   private resolveValue(path: string): boolean {
+    return this.resolveValueRaw(path) !== undefined;
+  }
+
+  /**
+   * Get the actual value at a dotted path in the context.
+   * Returns undefined if the path doesn't resolve.
+   */
+  private resolveValueRaw(path: string): unknown {
     const parts = path.split(".");
     let current: unknown = this.context;
 
     for (const part of parts) {
       if (current === undefined || current === null) {
-        return false;
+        return undefined;
       }
       if (typeof current !== "object") {
-        return false;
+        return undefined;
       }
       current = (current as Record<string, unknown>)[part];
     }
 
-    return current !== undefined;
+    return current;
   }
 
   /**

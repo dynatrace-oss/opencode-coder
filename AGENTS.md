@@ -50,11 +50,24 @@ DO NOT manually:
 
 ### How to Release
 
-1. Go to **Actions** > **Release** > **Run workflow**
-2. Enter:
-   - **version**: Semver format (e.g., `0.8.0`)
-   - **release_notes**: Markdown release notes
-3. Click **Run workflow**
+When the user asks for a release, trigger the workflow using the `gh` CLI:
+
+```bash
+gh workflow run release.yml \
+  -f version="0.8.0" \
+  -f release_notes="## Features
+- Feature description here
+
+## Bug Fixes
+- Fix description here"
+```
+
+Then monitor the workflow:
+
+```bash
+gh run list --workflow=release.yml --limit=1
+gh run watch  # Watch the latest run
+```
 
 The workflow will:
 1. Run full build and all tests

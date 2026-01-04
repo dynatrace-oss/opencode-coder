@@ -63,7 +63,7 @@ Verification and acceptance are handled by the verify agent. Your job is to impl
 5. **Handle Out-of-Scope Issues**
    If you encounter pre-existing problems NOT caused by your work:
    ```bash
-   bd create --title="Pre-existing: flaky test in auth suite" --type=bug --priority=3 << 'EOF'
+   cat << 'EOF' | bd create --title="Pre-existing: flaky test in auth suite" --type=bug --priority=3 --body-file -
    ## Description
    Found while working on beads-xxx. This is a pre-existing issue,
    not caused by current work.

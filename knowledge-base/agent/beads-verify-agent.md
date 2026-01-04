@@ -106,7 +106,7 @@ npm run build
 
 ```bash
 # Create a bug for the issue
-bd create --title="Auth: token not refreshed on expiry" --type=bug --priority=1 << 'EOF'
+cat << 'EOF' | bd create --title="Auth: token not refreshed on expiry" --type=bug --priority=1 --body-file -
 ## Description
 During verification of epic acceptance gate, found that JWT tokens
 are not being refreshed when they expire.
@@ -281,7 +281,8 @@ bd close beads-gate-001 --reason="All criteria verified: tasks closed, tests pas
 
 **If issues found**:
 ```bash
-bd create --title="Auth: Missing password validation" --type=bug --priority=1 << 'EOF'
+cat << 'EOF' | bd create --title="Auth: Missing password validation" --type=bug --priority=1 --body-file -
+## Description
 ...
 EOF
 # Gate stays open, linked to new bug

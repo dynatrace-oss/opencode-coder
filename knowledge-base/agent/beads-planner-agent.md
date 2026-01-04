@@ -65,11 +65,13 @@ Gates represent **blocking conditions**, not states:
 
 ## Creating Effective Issues
 
+> **Important**: Use `--body-file -` to read body content from stdin. Heredoc syntax (`<< 'EOF'`) alone does NOT work with `bd create`.
+
 ### Epic Structure
 
 ```bash
-# Create the epic
-bd create --title="User Authentication" --type=epic --priority=1 << 'EOF'
+# Create the epic (use --body-file - for multi-line body)
+cat << 'EOF' | bd create --title="User Authentication" --type=epic --priority=1 --body-file -
 ## Description
 Implement user authentication with JWT tokens.
 
@@ -84,7 +86,7 @@ Implement user authentication with JWT tokens.
 EOF
 
 # Create acceptance gate (every epic needs one)
-bd create --title="Epic Acceptance: User Authentication" --type=gate --priority=1 << 'EOF'
+cat << 'EOF' | bd create --title="Epic Acceptance: User Authentication" --type=gate --priority=1 --body-file -
 ## Gate Criteria
 - [ ] All tasks closed
 - [ ] Integration tested
@@ -101,7 +103,7 @@ bd dep add <epic-id> <gate-id>
 ### Task Structure
 
 ```bash
-bd create --title="Add JWT middleware" --type=task --priority=2 << 'EOF'
+cat << 'EOF' | bd create --title="Add JWT middleware" --type=task --priority=2 --body-file -
 ## Description
 What and why - context for the task.
 
@@ -126,12 +128,18 @@ Any gotchas, references, or context.
 EOF
 ```
 
+For simple issues, use `--description` directly:
+
+```bash
+bd create --title="Fix login bug" --type=bug --priority=1 --description="Users cannot login when email contains + character. Need to fix email validation regex."
+```
+
 ### Open Questions
 
 When requirements are unclear or decisions are needed, document them explicitly:
 
 ```bash
-bd create --title="Design auth token strategy" --type=task --priority=1 --label=has:open-questions << 'EOF'
+cat << 'EOF' | bd create --title="Design auth token strategy" --type=task --priority=1 --add-label=has:open-questions --body-file -
 ## Description
 Implement token refresh strategy.
 
@@ -153,7 +161,7 @@ When creating bugs from user/customer reports (not internal discovery), use `sou
 
 ```bash
 # Create the bug with source:external label
-bd create --title="Login fails for users with + in email" --type=bug --priority=1 --label=source:external << 'EOF'
+cat << 'EOF' | bd create --title="Login fails for users with + in email" --type=bug --priority=1 --add-label=source:external --body-file -
 ## Description
 User reported: login fails when email contains + character.
 
@@ -167,7 +175,7 @@ Customer ticket #1234
 EOF
 
 # Create linked post-mortem task
-bd create --title="Post-mortem: Login email validation bug" --type=task --priority=3 << 'EOF'
+cat << 'EOF' | bd create --title="Post-mortem: Login email validation bug" --type=task --priority=3 --body-file -
 ## Description
 Analyze how the email validation bug reached production.
 
@@ -277,7 +285,7 @@ Task(
 **You**:
 ```bash
 # Create epic
-bd create --title="User Authentication" --type=epic --priority=1 --label=need:review << 'EOF'
+cat << 'EOF' | bd create --title="User Authentication" --type=epic --priority=1 --add-label=need:review --body-file -
 ## Description
 JWT-based authentication for the application.
 
@@ -288,7 +296,7 @@ JWT-based authentication for the application.
 EOF
 
 # Create acceptance gate
-bd create --title="Epic Acceptance: User Auth" --type=gate --priority=1 << 'EOF'
+cat << 'EOF' | bd create --title="Epic Acceptance: User Auth" --type=gate --priority=1 --body-file -
 ## Gate Criteria
 - [ ] All auth tasks closed
 - [ ] Login/register flow tested
@@ -297,7 +305,7 @@ bd create --title="Epic Acceptance: User Auth" --type=gate --priority=1 << 'EOF'
 EOF
 
 # Create tasks
-bd create --title="Create User model" --type=task --priority=1 << 'EOF'
+cat << 'EOF' | bd create --title="Create User model" --type=task --priority=1 --body-file -
 ## Instructions
 1. Create src/models/User.ts
 2. Add fields: email, passwordHash, createdAt
@@ -307,7 +315,7 @@ bd create --title="Create User model" --type=task --priority=1 << 'EOF'
 - [ ] Password hashing works
 EOF
 
-bd create --title="Add JWT middleware" --type=task --priority=2 << 'EOF'
+cat << 'EOF' | bd create --title="Add JWT middleware" --type=task --priority=2 --body-file -
 ## Instructions
 1. Create src/middleware/auth.ts
 2. Verify JWT from Authorization header

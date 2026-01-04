@@ -75,7 +75,7 @@ bd comment <id> "Review feedback: Consider adding error handling for network fai
 Missing or improved work items.
 
 ```bash
-bd create --title="Add input validation" --type=task --priority=2 << 'EOF'
+cat << 'EOF' | bd create --title="Add input validation" --type=task --priority=2 --body-file -
 ## Description
 Review identified missing input validation.
 
@@ -95,7 +95,7 @@ bd dep add <new-task-id> <reviewed-task-id>
 Decision or constraint that must be resolved.
 
 ```bash
-bd create --title="Security review gate" --type=gate --priority=1 << 'EOF'
+cat << 'EOF' | bd create --title="Security review gate" --type=gate --priority=1 --body-file -
 ## Description
 Security review required before proceeding with auth implementation.
 
@@ -115,7 +115,7 @@ bd dep add <blocked-task-id> <gate-id>
 Planning inconsistencies or issues found.
 
 ```bash
-bd create --title="Conflicting requirements in auth flow" --type=bug --priority=1 << 'EOF'
+cat << 'EOF' | bd create --title="Conflicting requirements in auth flow" --type=bug --priority=1 --body-file -
 ## Description
 Task A says use JWT, Task B says use sessions. These conflict.
 

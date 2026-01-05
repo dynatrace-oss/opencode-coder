@@ -24,7 +24,9 @@ Project-specific commands and configuration that are NOT released:
 
 ## Releases
 
-**Use the `/internal/release-coder-plugin` command for all releases.**
+**Use the `release-coder-plugin` skill for all releases.**
 
-This command provides the full release workflow documentation.
+Load it with: `skill({ name: "release-coder-plugin" })`
+
+This skill provides the full release workflow documentation.
 

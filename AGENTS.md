@@ -22,6 +22,16 @@ Project-specific commands and configuration that are NOT released:
 
 **Rule**: If it only makes sense for opencode-coder development, it goes in `.opencode/`. If it's useful for any project using this plugin, it goes in `knowledge-base/`.
 
+## OpenCode Documentation References
+
+Key documentation for understanding OpenCode features:
+
+- [Commands](https://opencode.ai/docs/commands/) - Custom commands with arguments (`$ARGUMENTS`, `$1`, `$2`)
+- [Agents](https://opencode.ai/docs/agents/) - Agent configuration and modes
+- [Skills](https://opencode.ai/docs/skills/) - Agent skills (SKILL.md)
+- [Plugins](https://opencode.ai/docs/plugins/) - Plugin development
+- [SDK](https://opencode.ai/docs/sdk/) - TypeScript SDK reference
+
 ## Releases
 
 **Use the `release-coder-plugin` skill for all releases.**

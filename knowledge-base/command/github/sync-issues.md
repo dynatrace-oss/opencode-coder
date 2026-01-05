@@ -89,7 +89,7 @@ cat << 'EOF' | bd create --title="<GitHub issue title> (github:#<number>)" \
 <body from GitHub issue>
 
 ---
-*Imported from GitHub via /coder/sync-github-issues*
+*Imported from GitHub via /github/sync-issues*
 EOF
 ```
 
@@ -152,7 +152,7 @@ gh issue close <number> --repo $REPO --comment "Closed via beads sync.
 **Reason**: $CLOSE_REASON
 
 ---
-*Synced from beads issue <bead-id> via /coder/sync-github-issues*"
+*Synced from beads issue <bead-id> via /github/sync-issues*"
 ```
 
 ### Report Closure Results
@@ -323,7 +323,7 @@ Please wait and retry, or authenticate with `gh auth login` for higher limits.
 ## Example Session
 
 ```
-> /coder/sync-github-issues
+> /github/sync-issues
 
 ## Sync GitHub Issues
 

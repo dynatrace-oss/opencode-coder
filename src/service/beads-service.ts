@@ -1,9 +1,10 @@
-import type { Config } from "@opencode-ai/sdk";
+import type { Config } from "@opencode-ai/sdk/v2";
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { BeadsDefinition } from "../template/types";
 import { BeadsContext, BeadsDetector } from "../beads";
+import { execSync } from "child_process";
 
 type OpencodeClient = PluginInput["client"];
 
@@ -110,6 +111,10 @@ export class BeadsService {
    */
   async processConfig(config: Config): Promise<void> {
     if (!this.beadsEnabled) return;
+
+    // Set default agent to beads-planner-agent when beads is active
+    config.default_agent = "beads-planner-agent";
+
     if (this.coderConfig.beads?.auto_approve_beads === false) return;
 
     if (!config.permission) {
@@ -292,5 +297,83 @@ export class BeadsService {
     return {
       enabled: () => this.beadsEnabled,
     };
+  }
+
+  /**
+   * Check beads availability and show toast notification if something is missing.
+   * This helps users understand why beads features aren't working.
+   * 
+   * Shows warning toast if:
+   * - bd CLI is not installed
+   * - .beads directory is missing
+   * 
+   * Does NOT show toast if both conditions pass (beads is working).
+   */
+  async checkBeadsAvailability(): Promise<void> {
+    // Check if bd CLI is installed
+    const bdInstalled = this.isBdCliInstalled();
+    
+    // Check if .beads directory exists
+    const detector = new BeadsDetector({ logger: this.logger });
+    const beadsDirExists = detector.detectBeadsDirectory();
+
+    // Only show toast if something is missing
+    if (!bdInstalled) {
+      await this.showToast({
+        title: "Beads Not Available",
+        message: "Beads CLI not found. Install with: npm install -g beads",
+        variant: "warning",
+        duration: 8000,
+      });
+      this.logger.warn("Beads CLI not installed");
+      return;
+    }
+
+    if (!beadsDirExists) {
+      await this.showToast({
+        title: "Beads Not Initialized",
+        message: "Beads not initialized for this project. Run: bd init",
+        variant: "warning",
+        duration: 8000,
+      });
+      this.logger.warn("Beads directory not found");
+      return;
+    }
+
+    // Both conditions pass - no toast needed
+    this.logger.debug("Beads availability check passed");
+  }
+
+  /**
+   * Check if the bd CLI is installed by running 'command -v bd'
+   */
+  private isBdCliInstalled(): boolean {
+    try {
+      execSync("command -v bd", { stdio: "ignore" });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Show a toast notification via the OpenCode TUI
+   */
+  private async showToast(options: {
+    title: string;
+    message: string;
+    variant: "info" | "success" | "warning" | "error";
+    duration?: number;
+  }): Promise<void> {
+    try {
+      await (this.client as any).tui.showToast({
+        title: options.title,
+        message: options.message,
+        variant: options.variant,
+        duration: options.duration,
+      });
+    } catch (error) {
+      this.logger.error("Failed to show toast", { error: String(error) });
+    }
   }
 }

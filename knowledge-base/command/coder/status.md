@@ -1,10 +1,12 @@
 ---
-description: Show opencode-coder plugin status
+description: Show opencode-coder plugin status and information
 ---
 
 # Plugin Status
 
 **{{coder.version.name}}** v{{coder.version.version}}
+
+{{coder.version.description}}
 
 ## Configuration
 
@@ -12,14 +14,19 @@ description: Show opencode-coder plugin status
 - **Working Directory**: `{{coder.cwd}}`
 - **Beads Integration**: {{#beads.enabled}}enabled{{/beads.enabled}}{{^beads.enabled}}disabled{{/beads.enabled}}
 
-## Commands ({{knowledgeBase.commandCount}})
+## Knowledge Base
+
+- **Commands**: {{knowledgeBase.commandCount}}
+- **Agents**: {{knowledgeBase.agentCount}}
+
+### Commands
 
 {{#knowledgeBase.commands}}
 - `/{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}
 {{/knowledgeBase.commands}}
 
-## Agents ({{knowledgeBase.agentCount}})
+### Agents
 
 {{#knowledgeBase.agents}}
-- `@{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}
+- `@{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}{{#mode}} (mode: {{mode}}){{/mode}}
 {{/knowledgeBase.agents}}

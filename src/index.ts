@@ -37,6 +37,12 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
     templateService,
   });
 
+  // 6. Check beads availability and show toast if needed
+  // This runs in the background and doesn't block plugin loading
+  beadsService.checkBeadsAvailability().catch((err) => {
+    log.error("Failed to check beads availability", { error: String(err) });
+  });
+
   // Log plugin load completion with timing
   const loadDurationMs = Date.now() - startTime;
   log.info("OpencodeCoder plugin loaded", { durationMs: loadDurationMs, beadsEnabled: beadsService.isBeadsEnabled() });

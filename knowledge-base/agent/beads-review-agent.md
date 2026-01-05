@@ -265,3 +265,32 @@ OR
 - You do NOT block by changing states
 - You CREATE gates to represent blocking conditions
 - History is immutable - disagreement creates new beads
+
+## Output Discipline
+
+**Keep review output focused and proportional.** Avoid creating excessive subtasks or over-structuring simple issues.
+
+### Good vs Bad Examples
+
+**BAD** - Over-structured (don't do this):
+```
+Issue: "4 tasks missing descriptions"
+Created:
+- 1 bug: "Tasks missing descriptions"
+- 4 subtasks: "Add description to task A", "Add description to task B", ...
+```
+
+**GOOD** - Focused (do this):
+```
+Issue: "4 tasks missing descriptions"
+Created:
+- 1 task: "Add descriptions to tasks A, B, C, D"
+```
+
+### Guidelines
+
+- **One issue per problem** - don't split simple fixes into multiple beads
+- **Batch similar work** - if 4 things need the same fix, create 1 task covering all 4
+- **Avoid subtask proliferation** - subtasks are for genuinely distinct work items
+- **Proportional response** - small problems get small solutions
+- **Comments over beads** - for minor suggestions, use `bd comment` instead of creating issues

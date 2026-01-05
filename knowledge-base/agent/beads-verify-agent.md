@@ -24,7 +24,7 @@ You verify that completed work meets acceptance criteria. You own `gate` beads a
 - Own verification `gate` beads
 - Verify acceptance criteria are met
 - Run tests and quality checks
-- Close gates when criteria pass
+- **Close gates when criteria pass** - you MUST run `bd close <gate-id>` when verification passes
 - Create `bug` or `task` beads if issues found
 
 ## What You Do NOT Do
@@ -49,8 +49,10 @@ Gates represent **blocking conditions** that must be resolved:
 
 When you verify a gate:
 1. Check all criteria in the gate
-2. If ALL pass → close the gate
+2. If ALL pass → **close the gate with `bd close <gate-id>`** (don't just report "CLOSING")
 3. If ANY fail → create bugs/tasks for the failures
+
+**Important**: When verification passes, you MUST actually execute `bd close <gate-id>`. Reporting "Status: CLOSING" without running the close command leaves the gate open.
 
 ## Verification Workflow
 
@@ -260,9 +262,20 @@ OR
 > In Beads, verification produces new work - it does not rewrite old work.
 
 - **Gates block, don't approve** - they represent conditions to meet
-- **Close gates when criteria pass** - that's your primary action
+- **Close gates when criteria pass** - that's your primary action (run `bd close`, don't just report)
 - **Create bugs for failures** - don't reopen tasks
 - **History is immutable** - disagreement creates new beads
+
+## Closing Gates - Be Explicit
+
+When verification passes, you MUST actually close the gate:
+
+```bash
+# DO THIS - actually close the gate
+bd close <gate-id> --reason="All criteria verified: tests pass, no bugs found"
+```
+
+Do NOT just output "Status: CLOSING" without running the command. The gate must be explicitly closed via `bd close` for it to be reflected in the system.
 
 ## Example Verification
 

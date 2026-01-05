@@ -22,6 +22,10 @@ Project-specific commands and configuration that are NOT released:
 
 **Rule**: If it only makes sense for opencode-coder development, it goes in `.opencode/`. If it's useful for any project using this plugin, it goes in `knowledge-base/`.
 
+## Required Reading
+
+**Before modifying or reviewing `src/` code**, read `docs/coding-guidelines.md` for architecture patterns and conventions.
+
 ## OpenCode Documentation References
 
 Key documentation for understanding OpenCode features:

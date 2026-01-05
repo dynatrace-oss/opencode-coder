@@ -73,12 +73,12 @@ bd list --json | jq '.[] | select(.title | contains("github:#<number>") or .labe
 Create it with the `source:external` label:
 
 ```bash
-bd create --title="<GitHub issue title> (github:#<number>)" \
+cat << 'EOF' | bd create --title="<GitHub issue title> (github:#<number>)" \
   --type=bug \
   --priority=2 \
   --label="source:external" \
   --label="github:<number>" \
-  --body-file - <<'EOF'
+  --body-file -
 ## Original GitHub Issue
 
 **GitHub**: <repo>#<number>

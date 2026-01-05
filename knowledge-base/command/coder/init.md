@@ -4,6 +4,16 @@ description: Initialize project for opencode-coder plugin
 
 # Initialize Coder Project
 
+> **🚨 CRITICAL: DO NOT CREATE AGENTS.md 🚨**
+>
+> The plugin hooks automatically inject beads context via `bd prime` at session start - AGENTS.md is redundant and wastes tokens.
+>
+> - **Do NOT create AGENTS.md** - it's automatically handled
+> - **Do NOT add beads instructions** to any markdown file
+> - If user asks for AGENTS.md content, tell them to run `bd onboard` for a minimal snippet
+>
+> This is the #1 mistake to avoid during initialization.
+
 Your task is to initialize the current project for use with the opencode-coder plugin. This command is idempotent - it can be run multiple times safely and will only set up what's missing.
 
 ## Prerequisites
@@ -11,12 +21,6 @@ Your task is to initialize the current project for use with the opencode-coder p
 Before initializing, verify:
 1. The project has git initialized (`git status` should work)
 2. The `bd` CLI is available (`bd --version`) - if not, suggest running `/coder/install` first
-
-## Important: DO NOT Create AGENTS.md
-
-**Do NOT create an AGENTS.md file.** The beads workflow context is automatically injected via hooks at session start - creating AGENTS.md would be redundant and pollutes the user's codebase.
-
-If the user specifically asks for AGENTS.md content, tell them to run `bd onboard` which outputs a minimal snippet.
 
 ## Tasks
 

@@ -8,6 +8,7 @@ import type {
   TemplateServiceOptions,
   KnowledgeBaseDefinition,
   BeadsDefinition,
+  GitHubDefinition,
 } from "./types";
 
 // Disable HTML escaping since we're not generating HTML
@@ -89,6 +90,20 @@ export class TemplateService {
 
     this.logger.debug("TemplateService: registered beads", {
       enabled: this.context.beads.enabled,
+    });
+  }
+
+  /**
+   * Register GitHub definition to make its data available in templates.
+   * After calling this, templates can access {{github.enabled}}, etc.
+   */
+  registerGitHub(definition: GitHubDefinition): void {
+    this.context.github = {
+      enabled: definition.enabled(),
+    };
+
+    this.logger.debug("TemplateService: registered GitHub", {
+      enabled: this.context.github.enabled,
     });
   }
 

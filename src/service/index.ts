@@ -10,3 +10,6 @@ export type {
   PermissionAskInput,
   PermissionAskOutput,
 } from "./beads-service";
+
+export { GitHubService } from "./github-service";
+export type { GitHubServiceOptions } from "./github-service";

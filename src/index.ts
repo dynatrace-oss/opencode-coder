@@ -1,7 +1,7 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { createLogger } from "./core";
 import { loadConfig } from "./config";
-import { KnowledgeBaseService, BeadsService } from "./service";
+import { KnowledgeBaseService, BeadsService, GitHubService } from "./service";
 import { TemplateService } from "./template";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
@@ -30,14 +30,21 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   // 4. Register beads with template service
   templateService.registerBeads(beadsService.createDefinition());
 
-  // 5. Create KB service with template service
+  // 5. Create GitHub service and register with template service
+  const githubService = new GitHubService({
+    coderConfig,
+    logger: log,
+  });
+  templateService.registerGitHub(githubService.createDefinition());
+
+  // 6. Create KB service with template service
   const kbService = new KnowledgeBaseService({
     coderConfig,
     logger: log,
     templateService,
   });
 
-  // 6. Check beads availability and show toast if needed
+  // 7. Check beads availability and show toast if needed
   // This runs in the background and doesn't block plugin loading
   beadsService.checkBeadsAvailability().catch((err) => {
     log.error("Failed to check beads availability", { error: String(err) });

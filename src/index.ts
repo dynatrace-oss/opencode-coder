@@ -37,11 +37,14 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   templateService.registerGitHub(githubService.createDefinition());
 
-  // 6. Create KB service with template service
+  // 6. Create KB service with template service and feature flags
   const kbService = new KnowledgeBaseService({
     coderConfig,
     logger: log,
     templateService,
+    featureFlags: {
+      github: githubService.isGitHubEnabled(),
+    },
   });
 
   // 7. Check beads availability and show toast if needed

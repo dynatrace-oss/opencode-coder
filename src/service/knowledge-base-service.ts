@@ -29,6 +29,16 @@ async function resolveBundledKnowledgeBaseDir(): Promise<string> {
 }
 
 /**
++ * Feature flags that control which commands/agents are registered.
++ * Commands in feature-specific folders (e.g., github/*) are only
++ * registered when the corresponding feature is enabled.
++ */
+export interface FeatureFlags {
+  /** Whether GitHub integration is enabled */
+  github?: boolean;
+}
+
+/**
  * Options for KnowledgeBaseService
  */
 export interface KnowledgeBaseServiceOptions {
@@ -40,6 +50,8 @@ export interface KnowledgeBaseServiceOptions {
   knowledgeBase?: KnowledgeBase;
   /** Template service for rendering Mustache templates in commands/agents */
   templateService?: TemplateService;
+  /** Feature flags for filtering commands by feature availability */
+  featureFlags?: FeatureFlags;
 }
 
 /**
@@ -56,6 +68,7 @@ export class KnowledgeBaseService {
   private logger: Logger;
   private knowledgeBase: KnowledgeBase | null;
   private templateService: TemplateService | null;
+  private featureFlags: FeatureFlags;
   private loadErrors: string[] = [];
 
   constructor(options: KnowledgeBaseServiceOptions) {
@@ -63,6 +76,7 @@ export class KnowledgeBaseService {
     this.logger = options.logger;
     this.knowledgeBase = options.knowledgeBase ?? null;
     this.templateService = options.templateService ?? null;
+    this.featureFlags = options.featureFlags ?? {};
   }
 
   /**
@@ -143,6 +157,30 @@ export class KnowledgeBaseService {
   }
 
   /**
+   * Check if a command should be registered based on feature flags.
+   * Commands in feature-specific folders are filtered when the feature is disabled.
+   *
+   * Convention: commands in `{feature}/` folders require that feature to be enabled.
+   * Currently supported features:
+   * - `github/*` - requires github feature flag
+   *
+   * @param cmd - The command to check
+   * @returns true if the command should be registered
+   */
+  private shouldRegisterCommand(cmd: CommandDef): boolean {
+    // Extract folder from command name (e.g., "github/sync-issues" -> "github")
+    const folder = cmd.name.split("/")[0];
+
+    // Check feature-specific folders
+    if (folder === "github" && !this.featureFlags.github) {
+      this.logger.debug(`Skipping command /${cmd.name} (GitHub not available)`);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Process and apply the knowledge base to an OpenCode config.
    * If coderConfig.active is false, logs and returns without modification.
    * If active is true, loads commands/agents and mutates the config.
@@ -161,13 +199,20 @@ export class KnowledgeBaseService {
     // Load all knowledge bases
     await this.knowledgeBase.load();
 
-    // Register KB with template service so templates can access command/agent data
-    if (this.templateService) {
-      this.templateService.registerKnowledgeBase(this.knowledgeBase.createDefinition());
-    }
-
-    const commands = this.knowledgeBase.getCommands();
+    const allCommands = this.knowledgeBase.getCommands();
     const agents = this.knowledgeBase.getAgents();
+
+    // Filter commands based on feature availability
+    const commands = allCommands.filter((cmd) => this.shouldRegisterCommand(cmd));
+
+    // Register filtered KB with template service so templates can access command/agent data
+    // This ensures /coder/status shows only the commands that are actually registered
+    if (this.templateService) {
+      this.templateService.registerKnowledgeBase({
+        commands: () => commands,
+        agents: () => agents,
+      });
+    }
 
     this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
 

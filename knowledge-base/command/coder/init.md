@@ -26,19 +26,47 @@ Before initializing, verify:
 
 Perform each step, skipping if already done:
 
-### 1. Beads Setup
+### 1. Beads Mode Selection
 
-Check if `.beads/` directory exists.
-
-**If NOT initialized:**
-- Run `bd init` to create the `.beads/` directory and configuration
-- Run `bd hooks install` to set up git hooks
-- Add `.beads/beads.db` to `.gitignore` if not already present
+Check if `.beads/` directory already exists.
 
 **If already initialized:**
-- Report "Beads: already initialized"
+- Skip this step and report "Beads: already present"
+- Do NOT prompt for mode selection
 
-### 2. Coder Config Setup
+**If NOT initialized, ask the user:**
+
+```
+How would you like to initialize beads?
+
+**1. Stealth Mode (recommended)**
+- Beads files stay local to your machine
+- Won't affect git history or other team members  
+- Perfect for: personal use, OSS contributions, teams not using beads yet
+
+**2. Team Mode**
+- Beads files are committed and synced via git
+- Enables multi-device sync and team collaboration
+- Perfect for: teams adopting beads together
+
+Which mode? (1/2, default: 1)
+```
+
+Store the user's choice for the next step. If user enters nothing or "1", use stealth mode. If user enters "2", use team mode.
+
+### 2. Beads Setup
+
+**If already initialized (from step 1):**
+- Skip this step
+
+**If NOT initialized:**
+- If stealth mode selected: Run `bd init --stealth`
+- If team mode selected: Run `bd init`
+- Run `bd hooks install` to set up git hooks
+- **Note:** For stealth mode, `bd init --stealth` handles exclusions via `.git/info/exclude` - no `.gitignore` changes needed
+- For team mode: Add `.beads/beads.db` to `.gitignore` if not already present
+
+### 3. Coder Config Setup
 
 Check if `.coder/coder.json` exists.
 
@@ -49,16 +77,20 @@ Check if `.coder/coder.json` exists.
 **If already exists:**
 - Report "Coder config: already present"
 
-### 3. Commit Changes
+### 4. Commit Changes
 
-If any files were created or modified:
+**If team mode was used:**
 - Stage all new files (`.beads/`, `.coder/`, `.gitignore` changes)
 - Commit with message: "chore: initialize coder plugin"
 
-If nothing changed:
+**If stealth mode was used:**
+- Only stage `.coder/` directory (beads files are excluded from git)
+- Commit with message: "chore: initialize coder plugin" (if `.coder/` was created)
+
+**If nothing changed:**
 - Report "Project already fully initialized"
 
-### 4. Report Summary
+### 5. Report Summary
 
 Display a summary of what was done:
 
@@ -66,7 +98,7 @@ Display a summary of what was done:
 Coder Project Initialized
 
 Components:
-  Beads:        [initialized/already present]
+  Beads:        [initialized (stealth)/initialized (team)/already present]
   Git hooks:    [installed/already present]
   Coder config: [created/already present]
 

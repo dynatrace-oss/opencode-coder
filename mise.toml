@@ -1,0 +1,6 @@
+# Project environment configuration
+# Replaces the old envctl env.rc file
+
+[env]
+OPENCODE_DEFAULT_OPTIONS = "--log-level DEBUG"
+OPENCODE_LOG_RETENTION = "100"

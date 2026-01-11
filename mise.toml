@@ -4,3 +4,4 @@
 [env]
 OPENCODE_DEFAULT_OPTIONS = "--log-level DEBUG"
 OPENCODE_LOG_RETENTION = "100"
+DEBUG="opencode:coder"

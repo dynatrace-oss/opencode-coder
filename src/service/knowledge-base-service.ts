@@ -84,35 +84,40 @@ export class KnowledgeBaseService {
    * Called lazily on first processConfig() if no knowledgeBase was injected.
    */
   private async buildKnowledgeBase(): Promise<KnowledgeBase> {
-    const knowledgeBases: KnowledgeBase[] = [];
+    const start = Date.now();
+    try {
+      const knowledgeBases: KnowledgeBase[] = [];
 
-    // Always include bundled KB first (Option A: bundled first, user overrides)
-    const bundledPath = await resolveBundledKnowledgeBaseDir();
-    knowledgeBases.push(
-      new LoaderKnowledgeBase({
-        basePath: bundledPath,
-        logger: this.logger,
-      })
-    );
+      // Always include bundled KB first (Option A: bundled first, user overrides)
+      const bundledPath = await resolveBundledKnowledgeBaseDir();
+      knowledgeBases.push(
+        new LoaderKnowledgeBase({
+          basePath: bundledPath,
+          logger: this.logger,
+        })
+      );
 
-    // Add user-configured knowledge bases (enabled ones only)
-    if (this.coderConfig.knowledgeBases) {
-      for (const kbConfig of this.coderConfig.knowledgeBases) {
-        if (kbConfig.enabled) {
-          knowledgeBases.push(
-            new LoaderKnowledgeBase({
-              basePath: kbConfig.path,
-              logger: this.logger,
-            })
-          );
+      // Add user-configured knowledge bases (enabled ones only)
+      if (this.coderConfig.knowledgeBases) {
+        for (const kbConfig of this.coderConfig.knowledgeBases) {
+          if (kbConfig.enabled) {
+            knowledgeBases.push(
+              new LoaderKnowledgeBase({
+                basePath: kbConfig.path,
+                logger: this.logger,
+              })
+            );
+          }
         }
       }
-    }
 
-    return new CompositeKnowledgeBase({
-      knowledgeBases,
-      logger: this.logger,
-    });
+      return new CompositeKnowledgeBase({
+        knowledgeBases,
+        logger: this.logger,
+      });
+    } finally {
+      this.logger.debug("buildKnowledgeBase completed", { durationMs: Date.now() - start });
+    }
   }
 
   /**
@@ -186,67 +191,78 @@ export class KnowledgeBaseService {
    * If active is true, loads commands/agents and mutates the config.
    */
   async processConfig(config: Config): Promise<void> {
-    if (!this.coderConfig.active) {
-      this.logger.info("OpencodeCoder plugin disabled via config (active: false)");
-      return;
-    }
+    const start = Date.now();
+    try {
+      if (!this.coderConfig.active) {
+        this.logger.info("OpencodeCoder plugin disabled via config (active: false)");
+        return;
+      }
 
-    // Build knowledge base if not injected
-    if (!this.knowledgeBase) {
-      this.knowledgeBase = await this.buildKnowledgeBase();
-    }
+      // Build knowledge base if not injected
+      if (!this.knowledgeBase) {
+        this.knowledgeBase = await this.buildKnowledgeBase();
+      }
 
-    // Load all knowledge bases
-    await this.knowledgeBase.load();
+      // Load all knowledge bases
+      const loadStart = Date.now();
+      await this.knowledgeBase.load();
+      this.logger.debug("Knowledge base loaded", { durationMs: Date.now() - loadStart });
 
-    const allCommands = this.knowledgeBase.getCommands();
-    const agents = this.knowledgeBase.getAgents();
+      const allCommands = this.knowledgeBase.getCommands();
+      const agents = this.knowledgeBase.getAgents();
 
-    // Filter commands based on feature availability
-    const commands = allCommands.filter((cmd) => this.shouldRegisterCommand(cmd));
+      // Filter commands based on feature availability
+      const commands = allCommands.filter((cmd) => this.shouldRegisterCommand(cmd));
 
-    // Register filtered KB with template service so templates can access command/agent data
-    // This ensures /coder/status shows only the commands that are actually registered
-    if (this.templateService) {
-      this.templateService.registerKnowledgeBase({
-        commands: () => commands,
-        agents: () => agents,
-      });
-    }
+      // Register filtered KB with template service so templates can access command/agent data
+      // This ensures /coder/status shows only the commands that are actually registered
+      if (this.templateService) {
+        this.templateService.registerKnowledgeBase({
+          commands: () => commands,
+          agents: () => agents,
+        });
+      }
 
-    this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
+      this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
 
-    // Register commands (with template rendering)
-    config.command = config.command ?? {};
-    for (const cmd of commands) {
-      const renderedTemplate = this.templateService
-        ? await this.templateService.render(cmd.template)
-        : cmd.template;
+      // Register commands (with template rendering)
+      const cmdStart = Date.now();
+      config.command = config.command ?? {};
+      for (const cmd of commands) {
+        const renderedTemplate = this.templateService
+          ? await this.templateService.render(cmd.template)
+          : cmd.template;
 
-      config.command[cmd.name] = {
-        template: renderedTemplate,
-        ...(cmd.description && { description: cmd.description }),
-        ...(cmd.agent && { agent: cmd.agent }),
-        ...(cmd.model && { model: cmd.model }),
-        ...(cmd.subtask && { subtask: cmd.subtask }),
-      };
-      this.logger.debug(`Registered command: /${cmd.name}`);
-    }
+        config.command[cmd.name] = {
+          template: renderedTemplate,
+          ...(cmd.description && { description: cmd.description }),
+          ...(cmd.agent && { agent: cmd.agent }),
+          ...(cmd.model && { model: cmd.model }),
+          ...(cmd.subtask && { subtask: cmd.subtask }),
+        };
+        this.logger.debug(`Registered command: /${cmd.name}`);
+      }
+      this.logger.debug("Commands registered", { durationMs: Date.now() - cmdStart, count: commands.length });
 
-    // Register agents (with template rendering)
-    config.agent = config.agent ?? {};
-    for (const agent of agents) {
-      const renderedPrompt = this.templateService
-        ? await this.templateService.render(agent.prompt)
-        : agent.prompt;
+      // Register agents (with template rendering)
+      const agentStart = Date.now();
+      config.agent = config.agent ?? {};
+      for (const agent of agents) {
+        const renderedPrompt = this.templateService
+          ? await this.templateService.render(agent.prompt)
+          : agent.prompt;
 
-      config.agent[agent.name] = {
-        prompt: renderedPrompt,
-        ...(agent.description && { description: agent.description }),
-        ...(agent.mode && { mode: agent.mode }),
-        ...(agent.model && { model: agent.model }),
-      };
-      this.logger.debug(`Registered agent: @${agent.name}`);
+        config.agent[agent.name] = {
+          prompt: renderedPrompt,
+          ...(agent.description && { description: agent.description }),
+          ...(agent.mode && { mode: agent.mode }),
+          ...(agent.model && { model: agent.model }),
+        };
+        this.logger.debug(`Registered agent: @${agent.name}`);
+      }
+      this.logger.debug("Agents registered", { durationMs: Date.now() - agentStart, count: agents.length });
+    } finally {
+      this.logger.debug("processConfig completed", { durationMs: Date.now() - start });
     }
   }
 

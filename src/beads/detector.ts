@@ -33,6 +33,7 @@ export class BeadsDetector {
    * @returns true if .beads directory exists, false otherwise
    */
   detectBeadsDirectory(): boolean {
+    const start = Date.now();
     try {
       accessSync(this.beadsDir, constants.F_OK);
       this.logger.debug("Beads directory detected", { path: this.beadsDir });
@@ -40,6 +41,8 @@ export class BeadsDetector {
     } catch {
       this.logger.debug("Beads directory not found", { path: this.beadsDir });
       return false;
+    } finally {
+      this.logger.debug("detectBeadsDirectory completed", { durationMs: Date.now() - start });
     }
   }
 
@@ -54,15 +57,20 @@ export class BeadsDetector {
    * @returns true if beads should be enabled, false otherwise
    */
   isBeadsEnabled(config: CoderConfig): boolean {
-    // Check explicit config override first
-    if (config.beads?.enabled !== undefined) {
-      this.logger.debug("Beads enabled from config", { enabled: config.beads.enabled });
-      return config.beads.enabled;
-    }
+    const start = Date.now();
+    try {
+      // Check explicit config override first
+      if (config.beads?.enabled !== undefined) {
+        this.logger.debug("Beads enabled from config", { enabled: config.beads.enabled });
+        return config.beads.enabled;
+      }
 
-    // Fall back to auto-detection
-    const detected = this.detectBeadsDirectory();
-    this.logger.debug("Beads enabled from auto-detection", { enabled: detected });
-    return detected;
+      // Fall back to auto-detection
+      const detected = this.detectBeadsDirectory();
+      this.logger.debug("Beads enabled from auto-detection", { enabled: detected });
+      return detected;
+    } finally {
+      this.logger.debug("isBeadsEnabled completed", { durationMs: Date.now() - start });
+    }
   }
 }

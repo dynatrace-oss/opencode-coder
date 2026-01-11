@@ -34,6 +34,7 @@ export class GitHubDetector {
    * @returns true if .git directory exists, false otherwise
    */
   detectGitDirectory(): boolean {
+    const start = Date.now();
     try {
       accessSync(this.gitDir, constants.F_OK);
       this.logger.debug("Git directory detected", { path: this.gitDir });
@@ -41,6 +42,8 @@ export class GitHubDetector {
     } catch {
       this.logger.debug("Git directory not found", { path: this.gitDir });
       return false;
+    } finally {
+      this.logger.debug("detectGitDirectory completed", { durationMs: Date.now() - start });
     }
   }
 
@@ -49,6 +52,7 @@ export class GitHubDetector {
    * @returns true if a GitHub remote is configured, false otherwise
    */
   detectGitHubRemote(): boolean {
+    const start = Date.now();
     try {
       const output = execSync("git remote -v", {
         cwd: this.cwd,
@@ -65,6 +69,8 @@ export class GitHubDetector {
     } catch {
       this.logger.debug("Failed to detect git remotes", { cwd: this.cwd });
       return false;
+    } finally {
+      this.logger.debug("detectGitHubRemote completed", { durationMs: Date.now() - start });
     }
   }
 
@@ -73,6 +79,7 @@ export class GitHubDetector {
    * @returns true if gh CLI is available, false otherwise
    */
   isGhCliInstalled(): boolean {
+    const start = Date.now();
     try {
       execSync("command -v gh", {
         encoding: "utf-8",
@@ -83,6 +90,8 @@ export class GitHubDetector {
     } catch {
       this.logger.debug("gh CLI not found");
       return false;
+    } finally {
+      this.logger.debug("isGhCliInstalled completed", { durationMs: Date.now() - start });
     }
   }
 
@@ -100,34 +109,39 @@ export class GitHubDetector {
    * @returns true if GitHub integration should be enabled, false otherwise
    */
   isGitHubEnabled(config: CoderConfig): boolean {
-    // Check explicit config override first
-    if (config.github?.enabled !== undefined) {
-      this.logger.debug("GitHub enabled from config", {
-        enabled: config.github.enabled,
-      });
-      return config.github.enabled;
-    }
+    const start = Date.now();
+    try {
+      // Check explicit config override first
+      if (config.github?.enabled !== undefined) {
+        this.logger.debug("GitHub enabled from config", {
+          enabled: config.github.enabled,
+        });
+        return config.github.enabled;
+      }
 
-    // Fall back to auto-detection: all three conditions must be true
-    const hasGitDir = this.detectGitDirectory();
-    if (!hasGitDir) {
-      this.logger.debug("GitHub disabled: no git directory");
-      return false;
-    }
+      // Fall back to auto-detection: all three conditions must be true
+      const hasGitDir = this.detectGitDirectory();
+      if (!hasGitDir) {
+        this.logger.debug("GitHub disabled: no git directory");
+        return false;
+      }
 
-    const hasGitHubRemote = this.detectGitHubRemote();
-    if (!hasGitHubRemote) {
-      this.logger.debug("GitHub disabled: no GitHub remote");
-      return false;
-    }
+      const hasGitHubRemote = this.detectGitHubRemote();
+      if (!hasGitHubRemote) {
+        this.logger.debug("GitHub disabled: no GitHub remote");
+        return false;
+      }
 
-    const hasGhCli = this.isGhCliInstalled();
-    if (!hasGhCli) {
-      this.logger.debug("GitHub disabled: gh CLI not installed");
-      return false;
-    }
+      const hasGhCli = this.isGhCliInstalled();
+      if (!hasGhCli) {
+        this.logger.debug("GitHub disabled: gh CLI not installed");
+        return false;
+      }
 
-    this.logger.debug("GitHub enabled from auto-detection");
-    return true;
+      this.logger.debug("GitHub enabled from auto-detection");
+      return true;
+    } finally {
+      this.logger.debug("isGitHubEnabled completed", { durationMs: Date.now() - start });
+    }
   }
 }

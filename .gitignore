@@ -27,3 +27,6 @@ credentials.json
 
 # bv (beads viewer) local config and caches
 .bv/
+
+# Local mise config (machine-specific)
+mise.local.toml

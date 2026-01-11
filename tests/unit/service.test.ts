@@ -405,4 +405,106 @@ describe("KnowledgeBaseService", () => {
       expect(service.getKnowledgeBaseCount()).toBe(3);
     });
   });
+
+  describe("feature flags filtering", () => {
+    it("should filter out github/* commands when github feature is disabled", async () => {
+      const mockCommands: CommandDef[] = [
+        { name: "coder/status", template: "Status template" },
+        { name: "github/sync-issues", template: "Sync issues template" },
+        { name: "bd/init", template: "Init beads template" },
+      ];
+
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
+        featureFlags: { github: false },
+      });
+
+      await service.processConfig(mockConfig);
+
+      expect(mockConfig.command?.["coder/status"]).toBeDefined();
+      expect(mockConfig.command?.["bd/init"]).toBeDefined();
+      expect(mockConfig.command?.["github/sync-issues"]).toBeUndefined();
+    });
+
+    it("should include github/* commands when github feature is enabled", async () => {
+      const mockCommands: CommandDef[] = [
+        { name: "coder/status", template: "Status template" },
+        { name: "github/sync-issues", template: "Sync issues template" },
+        { name: "bd/init", template: "Init beads template" },
+      ];
+
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
+        featureFlags: { github: true },
+      });
+
+      await service.processConfig(mockConfig);
+
+      expect(mockConfig.command?.["coder/status"]).toBeDefined();
+      expect(mockConfig.command?.["bd/init"]).toBeDefined();
+      expect(mockConfig.command?.["github/sync-issues"]).toBeDefined();
+    });
+
+    it("should filter github/* commands by default when featureFlags not provided", async () => {
+      const mockCommands: CommandDef[] = [
+        { name: "coder/status", template: "Status template" },
+        { name: "github/sync-issues", template: "Sync issues template" },
+      ];
+
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
+        // No featureFlags provided - defaults to {}
+      });
+
+      await service.processConfig(mockConfig);
+
+      expect(mockConfig.command?.["coder/status"]).toBeDefined();
+      expect(mockConfig.command?.["github/sync-issues"]).toBeUndefined();
+    });
+
+    it("should log debug message when skipping filtered commands", async () => {
+      const mockCommands: CommandDef[] = [
+        { name: "github/sync-issues", template: "Sync issues template" },
+      ];
+
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
+        featureFlags: { github: false },
+      });
+
+      await service.processConfig(mockConfig);
+
+      expect(mockLogger.hasLogged("debug", "Skipping command /github/sync-issues")).toBe(true);
+      expect(mockLogger.hasLogged("debug", "GitHub not available")).toBe(true);
+    });
+
+    it("should report correct count after filtering", async () => {
+      const mockCommands: CommandDef[] = [
+        { name: "coder/status", template: "Status template" },
+        { name: "github/sync-issues", template: "Sync issues template" },
+        { name: "github/create-pr", template: "Create PR template" },
+        { name: "bd/init", template: "Init beads template" },
+      ];
+
+      const service = new KnowledgeBaseService({
+        coderConfig: { active: true },
+        logger: mockLogger,
+        knowledgeBase: createMockKnowledgeBase(mockCommands, []),
+        featureFlags: { github: false },
+      });
+
+      await service.processConfig(mockConfig);
+
+      // Should report 2 commands (coder/status and bd/init), not 4
+      expect(mockLogger.hasLogged("info", "2 commands and 0 agents")).toBe(true);
+    });
+  });
 });

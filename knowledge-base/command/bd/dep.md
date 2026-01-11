@@ -46,6 +46,18 @@ The `--format mermaid` option outputs the dependency tree as a Mermaid.js flowch
 bd dep tree bd-1 --format mermaid
 ```
 
+Output can be embedded in markdown:
+
+````markdown
+```mermaid
+flowchart TD
+  bd-1["bd-1: Main task"]
+  bd-2["bd-2: Subtask"]
+
+  bd-1 --> bd-2
+```
+````
+
 **Status Indicators:**
 
 Each node includes a symbol indicator for quick visual status identification:
@@ -54,6 +66,8 @@ Each node includes a symbol indicator for quick visual status identification:
 - In Progress - Currently being worked on (half-filled box)
 - Blocked - Waiting on something (warning sign)
 - Closed - Completed! (checked checkbox)
+
+The diagram colors are determined by your Mermaid theme (default, dark, forest, neutral, or base). Mermaid diagrams render natively in GitHub, GitLab, VSCode markdown preview, and can be imported to Miro.
 
 ## Examples
 
@@ -78,3 +92,10 @@ The `--reverse` flag inverts the tree direction to show **dependents** instead o
 - Answers: "What work was discovered while working on this?"
 - Tree flows **DOWN** from goal to discovered tasks
 - Perfect for visualizing work breakdown and discovery chains
+
+**Use Cases:**
+- Document project evolution and how work expanded from initial goal
+- Share "how we got here" context with stakeholders
+- Visualize work breakdown structure from epics
+- Track discovery chains (what led to what)
+- Show yak shaving journeys in retrospectives

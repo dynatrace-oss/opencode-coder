@@ -110,92 +110,106 @@ export class BeadsService {
    * Process config hook - inject bd command permission when beads is enabled
    */
   async processConfig(config: Config): Promise<void> {
-    if (!this.beadsEnabled) return;
+    const start = Date.now();
+    try {
+      if (!this.beadsEnabled) return;
 
-    // Set default agent to beads-planner-agent when beads is active
-    config.default_agent = "beads-planner-agent";
+      // Set default agent to beads-planner-agent when beads is active
+      config.default_agent = "beads-planner-agent";
 
-    if (this.coderConfig.beads?.auto_approve_beads === false) return;
+      if (this.coderConfig.beads?.auto_approve_beads === false) return;
 
-    if (!config.permission) {
-      config.permission = {};
-    }
-
-    const currentBash = config.permission.bash;
-
-    if (typeof currentBash === "object" && currentBash !== null) {
-      // Already an object, add "bd *" if not present
-      if (!("bd *" in currentBash)) {
-        currentBash["bd *"] = "allow";
+      if (!config.permission) {
+        config.permission = {};
       }
-    } else if (currentBash === undefined || currentBash === "ask") {
-      // Convert to object with "bd *" allowed
-      config.permission.bash = { "bd *": "allow" };
+
+      const currentBash = config.permission.bash;
+
+      if (typeof currentBash === "object" && currentBash !== null) {
+        // Already an object, add "bd *" if not present
+        if (!("bd *" in currentBash)) {
+          currentBash["bd *"] = "allow";
+        }
+      } else if (currentBash === undefined || currentBash === "ask") {
+        // Convert to object with "bd *" allowed
+        config.permission.bash = { "bd *": "allow" };
+      }
+      // If it's "allow" or "deny", leave it alone (user explicitly set it)
+    } finally {
+      this.logger.debug("processConfig completed", { durationMs: Date.now() - start });
     }
-    // If it's "allow" or "deny", leave it alone (user explicitly set it)
   }
 
   /**
    * Process chat.message hook - inject beads context on first message in a session
    */
   async processChatMessage(_input: ChatMessageInput, output: ChatMessageOutput): Promise<void> {
-    if (!this.beadsEnabled) return;
-
+    const start = Date.now();
     const sessionID = output.message.sessionID;
-
-    // Skip if already injected this session
-    if (this.injectedSessions.has(sessionID)) return;
-
-    // Check if beads-context was already injected (handles plugin reload)
     try {
-      const existing = await this.client.session.messages({
-        path: { id: sessionID },
-      });
+      if (!this.beadsEnabled) return;
 
-      if (existing.data) {
-        const hasBeadsContext = existing.data.some((msg) => {
-          const parts = (msg as any).parts || (msg.info as any).parts;
-          if (!parts) return false;
-          return parts.some(
-            (part: any) => part.type === "text" && part.text?.includes("<beads-context>")
-          );
+      // Skip if already injected this session
+      if (this.injectedSessions.has(sessionID)) return;
+
+      // Check if beads-context was already injected (handles plugin reload)
+      try {
+        const existing = await this.client.session.messages({
+          path: { id: sessionID },
         });
 
-        if (hasBeadsContext) {
-          this.injectedSessions.add(sessionID);
-          return;
+        if (existing.data) {
+          const hasBeadsContext = existing.data.some((msg) => {
+            const parts = (msg as any).parts || (msg.info as any).parts;
+            if (!parts) return false;
+            return parts.some(
+              (part: any) => part.type === "text" && part.text?.includes("<beads-context>")
+            );
+          });
+
+          if (hasBeadsContext) {
+            this.injectedSessions.add(sessionID);
+            return;
+          }
         }
+      } catch {
+        // On error, proceed with injection
       }
-    } catch {
-      // On error, proceed with injection
-    }
 
-    this.injectedSessions.add(sessionID);
+      this.injectedSessions.add(sessionID);
 
-    // Inject with current model/agent to prevent mode switching
-    const context: { model?: { providerID: string; modelID: string }; agent?: string } = {};
-    if (output.message.model) {
-      context.model = output.message.model;
+      // Inject with current model/agent to prevent mode switching
+      const context: { model?: { providerID: string; modelID: string }; agent?: string } = {};
+      if (output.message.model) {
+        context.model = output.message.model;
+      }
+      if (output.message.agent) {
+        context.agent = output.message.agent;
+      }
+      
+      this.logger.info("Injecting beads context for new session", { sessionID });
+      await this.injectBeadsContext(sessionID, context);
+    } finally {
+      this.logger.debug("processChatMessage completed", { durationMs: Date.now() - start, sessionID });
     }
-    if (output.message.agent) {
-      context.agent = output.message.agent;
-    }
-    
-    this.logger.info("Injecting beads context for new session", { sessionID });
-    await this.injectBeadsContext(sessionID, context);
   }
 
   /**
    * Process event hook - re-inject beads context after session compaction
    */
   async processEvent(event: GenericEvent): Promise<void> {
-    if (!this.beadsEnabled) return;
+    const start = Date.now();
+    try {
+      if (!this.beadsEnabled) return;
 
-    if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
-      const sessionID = event.properties["sessionID"];
-      this.logger.info("Session compacted, re-injecting beads context", { sessionID });
-      const context = await this.getSessionContext(sessionID);
-      await this.injectBeadsContext(sessionID, context);
+      if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
+        const sessionID = event.properties["sessionID"];
+        this.logger.info("Session compacted, re-injecting beads context", { sessionID });
+        const context = await this.getSessionContext(sessionID);
+        await this.injectBeadsContext(sessionID, context);
+      }
+    } finally {
+      this.logger.debug("processEvent completed", { durationMs: Date.now() - start, eventType: event.type });
     }
   }
 
@@ -203,12 +217,17 @@ export class BeadsService {
    * Process permission.ask hook - auto-approve bd CLI commands
    */
   processPermissionAsk(input: PermissionAskInput, output: PermissionAskOutput): void {
-    if (!this.beadsEnabled) return;
-    if (this.coderConfig.beads?.auto_approve_beads === false) return;
+    const start = Date.now();
+    try {
+      if (!this.beadsEnabled) return;
+      if (this.coderConfig.beads?.auto_approve_beads === false) return;
 
-    // Auto-approve bd commands (beads CLI)
-    if (input.type === "bash" && input.title?.startsWith("bd ")) {
-      output.status = "allow";
+      // Auto-approve bd commands (beads CLI)
+      if (input.type === "bash" && input.title?.startsWith("bd ")) {
+        output.status = "allow";
+      }
+    } finally {
+      this.logger.debug("processPermissionAsk completed", { durationMs: Date.now() - start });
     }
   }
 
@@ -220,6 +239,7 @@ export class BeadsService {
     sessionID: string,
     context?: { model?: { providerID: string; modelID: string }; agent?: string }
   ): Promise<void> {
+    const start = Date.now();
     try {
       const contextInfo = await this.beadsContext.getContext();
 
@@ -262,6 +282,8 @@ export class BeadsService {
       });
     } catch (error) {
       this.logger.error("Failed to inject beads context", { sessionID, error: String(error) });
+    } finally {
+      this.logger.debug("injectBeadsContext completed", { durationMs: Date.now() - start, sessionID });
     }
   }
 
@@ -310,38 +332,43 @@ export class BeadsService {
    * Does NOT show toast if both conditions pass (beads is working).
    */
   async checkBeadsAvailability(): Promise<void> {
-    // Check if bd CLI is installed
-    const bdInstalled = this.isBdCliInstalled();
-    
-    // Check if .beads directory exists
-    const detector = new BeadsDetector({ logger: this.logger });
-    const beadsDirExists = detector.detectBeadsDirectory();
+    const start = Date.now();
+    try {
+      // Check if bd CLI is installed
+      const bdInstalled = this.isBdCliInstalled();
+      
+      // Check if .beads directory exists
+      const detector = new BeadsDetector({ logger: this.logger });
+      const beadsDirExists = detector.detectBeadsDirectory();
 
-    // Only show toast if something is missing
-    if (!bdInstalled) {
-      await this.showToast({
-        title: "Beads Not Available",
-        message: "Beads CLI not found. Install with: npm install -g beads",
-        variant: "warning",
-        duration: 8000,
-      });
-      this.logger.warn("Beads CLI not installed");
-      return;
+      // Only show toast if something is missing
+      if (!bdInstalled) {
+        await this.showToast({
+          title: "Beads Not Available",
+          message: "Beads CLI not found. Install with: npm install -g beads",
+          variant: "warning",
+          duration: 8000,
+        });
+        this.logger.warn("Beads CLI not installed");
+        return;
+      }
+
+      if (!beadsDirExists) {
+        await this.showToast({
+          title: "Beads Not Initialized",
+          message: "Beads not initialized for this project. Run: bd init",
+          variant: "warning",
+          duration: 8000,
+        });
+        this.logger.warn("Beads directory not found");
+        return;
+      }
+
+      // Both conditions pass - no toast needed
+      this.logger.debug("Beads availability check passed");
+    } finally {
+      this.logger.debug("checkBeadsAvailability completed", { durationMs: Date.now() - start });
     }
-
-    if (!beadsDirExists) {
-      await this.showToast({
-        title: "Beads Not Initialized",
-        message: "Beads not initialized for this project. Run: bd init",
-        variant: "warning",
-        duration: 8000,
-      });
-      this.logger.warn("Beads directory not found");
-      return;
-    }
-
-    // Both conditions pass - no toast needed
-    this.logger.debug("Beads availability check passed");
   }
 
   /**

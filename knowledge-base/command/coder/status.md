@@ -13,6 +13,7 @@ description: Show opencode-coder plugin status and information
 - **Status**: {{#coder.config.active}}active{{/coder.config.active}}{{^coder.config.active}}inactive{{/coder.config.active}}
 - **Working Directory**: `{{coder.cwd}}`
 - **Beads Integration**: {{#beads.enabled}}enabled{{/beads.enabled}}{{^beads.enabled}}disabled{{/beads.enabled}}
+- **GitHub Integration**: {{#github.enabled}}enabled{{/github.enabled}}{{^github.enabled}}disabled{{/github.enabled}}
 
 ## Knowledge Base
 

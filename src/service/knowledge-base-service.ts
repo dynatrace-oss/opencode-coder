@@ -29,6 +29,16 @@ async function resolveBundledKnowledgeBaseDir(): Promise<string> {
 }
 
 /**
++ * Feature flags that control which commands/agents are registered.
++ * Commands in feature-specific folders (e.g., github/*) are only
++ * registered when the corresponding feature is enabled.
++ */
+export interface FeatureFlags {
+  /** Whether GitHub integration is enabled */
+  github?: boolean;
+}
+
+/**
  * Options for KnowledgeBaseService
  */
 export interface KnowledgeBaseServiceOptions {
@@ -40,6 +50,8 @@ export interface KnowledgeBaseServiceOptions {
   knowledgeBase?: KnowledgeBase;
   /** Template service for rendering Mustache templates in commands/agents */
   templateService?: TemplateService;
+  /** Feature flags for filtering commands by feature availability */
+  featureFlags?: FeatureFlags;
 }
 
 /**
@@ -56,6 +68,7 @@ export class KnowledgeBaseService {
   private logger: Logger;
   private knowledgeBase: KnowledgeBase | null;
   private templateService: TemplateService | null;
+  private featureFlags: FeatureFlags;
   private loadErrors: string[] = [];
 
   constructor(options: KnowledgeBaseServiceOptions) {
@@ -63,6 +76,7 @@ export class KnowledgeBaseService {
     this.logger = options.logger;
     this.knowledgeBase = options.knowledgeBase ?? null;
     this.templateService = options.templateService ?? null;
+    this.featureFlags = options.featureFlags ?? {};
   }
 
   /**
@@ -70,35 +84,40 @@ export class KnowledgeBaseService {
    * Called lazily on first processConfig() if no knowledgeBase was injected.
    */
   private async buildKnowledgeBase(): Promise<KnowledgeBase> {
-    const knowledgeBases: KnowledgeBase[] = [];
+    const start = Date.now();
+    try {
+      const knowledgeBases: KnowledgeBase[] = [];
 
-    // Always include bundled KB first (Option A: bundled first, user overrides)
-    const bundledPath = await resolveBundledKnowledgeBaseDir();
-    knowledgeBases.push(
-      new LoaderKnowledgeBase({
-        basePath: bundledPath,
-        logger: this.logger,
-      })
-    );
+      // Always include bundled KB first (Option A: bundled first, user overrides)
+      const bundledPath = await resolveBundledKnowledgeBaseDir();
+      knowledgeBases.push(
+        new LoaderKnowledgeBase({
+          basePath: bundledPath,
+          logger: this.logger,
+        })
+      );
 
-    // Add user-configured knowledge bases (enabled ones only)
-    if (this.coderConfig.knowledgeBases) {
-      for (const kbConfig of this.coderConfig.knowledgeBases) {
-        if (kbConfig.enabled) {
-          knowledgeBases.push(
-            new LoaderKnowledgeBase({
-              basePath: kbConfig.path,
-              logger: this.logger,
-            })
-          );
+      // Add user-configured knowledge bases (enabled ones only)
+      if (this.coderConfig.knowledgeBases) {
+        for (const kbConfig of this.coderConfig.knowledgeBases) {
+          if (kbConfig.enabled) {
+            knowledgeBases.push(
+              new LoaderKnowledgeBase({
+                basePath: kbConfig.path,
+                logger: this.logger,
+              })
+            );
+          }
         }
       }
-    }
 
-    return new CompositeKnowledgeBase({
-      knowledgeBases,
-      logger: this.logger,
-    });
+      return new CompositeKnowledgeBase({
+        knowledgeBases,
+        logger: this.logger,
+      });
+    } finally {
+      this.logger.debug("buildKnowledgeBase completed", { durationMs: Date.now() - start });
+    }
   }
 
   /**
@@ -143,65 +162,107 @@ export class KnowledgeBaseService {
   }
 
   /**
+   * Check if a command should be registered based on feature flags.
+   * Commands in feature-specific folders are filtered when the feature is disabled.
+   *
+   * Convention: commands in `{feature}/` folders require that feature to be enabled.
+   * Currently supported features:
+   * - `github/*` - requires github feature flag
+   *
+   * @param cmd - The command to check
+   * @returns true if the command should be registered
+   */
+  private shouldRegisterCommand(cmd: CommandDef): boolean {
+    // Extract folder from command name (e.g., "github/sync-issues" -> "github")
+    const folder = cmd.name.split("/")[0];
+
+    // Check feature-specific folders
+    if (folder === "github" && !this.featureFlags.github) {
+      this.logger.debug(`Skipping command /${cmd.name} (GitHub not available)`);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Process and apply the knowledge base to an OpenCode config.
    * If coderConfig.active is false, logs and returns without modification.
    * If active is true, loads commands/agents and mutates the config.
    */
   async processConfig(config: Config): Promise<void> {
-    if (!this.coderConfig.active) {
-      this.logger.info("OpencodeCoder plugin disabled via config (active: false)");
-      return;
-    }
+    const start = Date.now();
+    try {
+      if (!this.coderConfig.active) {
+        this.logger.info("OpencodeCoder plugin disabled via config (active: false)");
+        return;
+      }
 
-    // Build knowledge base if not injected
-    if (!this.knowledgeBase) {
-      this.knowledgeBase = await this.buildKnowledgeBase();
-    }
+      // Build knowledge base if not injected
+      if (!this.knowledgeBase) {
+        this.knowledgeBase = await this.buildKnowledgeBase();
+      }
 
-    // Load all knowledge bases
-    await this.knowledgeBase.load();
+      // Load all knowledge bases
+      const loadStart = Date.now();
+      await this.knowledgeBase.load();
+      this.logger.debug("Knowledge base loaded", { durationMs: Date.now() - loadStart });
 
-    // Register KB with template service so templates can access command/agent data
-    if (this.templateService) {
-      this.templateService.registerKnowledgeBase(this.knowledgeBase.createDefinition());
-    }
+      const allCommands = this.knowledgeBase.getCommands();
+      const agents = this.knowledgeBase.getAgents();
 
-    const commands = this.knowledgeBase.getCommands();
-    const agents = this.knowledgeBase.getAgents();
+      // Filter commands based on feature availability
+      const commands = allCommands.filter((cmd) => this.shouldRegisterCommand(cmd));
 
-    this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
+      // Register filtered KB with template service so templates can access command/agent data
+      // This ensures /coder/status shows only the commands that are actually registered
+      if (this.templateService) {
+        this.templateService.registerKnowledgeBase({
+          commands: () => commands,
+          agents: () => agents,
+        });
+      }
 
-    // Register commands (with template rendering)
-    config.command = config.command ?? {};
-    for (const cmd of commands) {
-      const renderedTemplate = this.templateService
-        ? await this.templateService.render(cmd.template)
-        : cmd.template;
+      this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
 
-      config.command[cmd.name] = {
-        template: renderedTemplate,
-        ...(cmd.description && { description: cmd.description }),
-        ...(cmd.agent && { agent: cmd.agent }),
-        ...(cmd.model && { model: cmd.model }),
-        ...(cmd.subtask && { subtask: cmd.subtask }),
-      };
-      this.logger.debug(`Registered command: /${cmd.name}`);
-    }
+      // Register commands (with template rendering)
+      const cmdStart = Date.now();
+      config.command = config.command ?? {};
+      for (const cmd of commands) {
+        const renderedTemplate = this.templateService
+          ? await this.templateService.render(cmd.template)
+          : cmd.template;
 
-    // Register agents (with template rendering)
-    config.agent = config.agent ?? {};
-    for (const agent of agents) {
-      const renderedPrompt = this.templateService
-        ? await this.templateService.render(agent.prompt)
-        : agent.prompt;
+        config.command[cmd.name] = {
+          template: renderedTemplate,
+          ...(cmd.description && { description: cmd.description }),
+          ...(cmd.agent && { agent: cmd.agent }),
+          ...(cmd.model && { model: cmd.model }),
+          ...(cmd.subtask && { subtask: cmd.subtask }),
+        };
+        this.logger.debug(`Registered command: /${cmd.name}`);
+      }
+      this.logger.debug("Commands registered", { durationMs: Date.now() - cmdStart, count: commands.length });
 
-      config.agent[agent.name] = {
-        prompt: renderedPrompt,
-        ...(agent.description && { description: agent.description }),
-        ...(agent.mode && { mode: agent.mode }),
-        ...(agent.model && { model: agent.model }),
-      };
-      this.logger.debug(`Registered agent: @${agent.name}`);
+      // Register agents (with template rendering)
+      const agentStart = Date.now();
+      config.agent = config.agent ?? {};
+      for (const agent of agents) {
+        const renderedPrompt = this.templateService
+          ? await this.templateService.render(agent.prompt)
+          : agent.prompt;
+
+        config.agent[agent.name] = {
+          prompt: renderedPrompt,
+          ...(agent.description && { description: agent.description }),
+          ...(agent.mode && { mode: agent.mode }),
+          ...(agent.model && { model: agent.model }),
+        };
+        this.logger.debug(`Registered agent: @${agent.name}`);
+      }
+      this.logger.debug("Agents registered", { durationMs: Date.now() - agentStart, count: agents.length });
+    } finally {
+      this.logger.debug("processConfig completed", { durationMs: Date.now() - start });
     }
   }
 

@@ -21,6 +21,14 @@ export interface BeadsDefinition {
 }
 
 /**
+ * Definition interface for GitHub data.
+ * Used to provide GitHub status to the template context.
+ */
+export interface GitHubDefinition {
+  enabled(): boolean;
+}
+
+/**
  * Template context structure for Mustache rendering.
  * This object is available to all templates.
  */
@@ -37,6 +45,9 @@ export interface TemplateContext {
     agentCount: number;
   };
   beads?: {
+    enabled: boolean;
+  };
+  github?: {
     enabled: boolean;
   };
 }

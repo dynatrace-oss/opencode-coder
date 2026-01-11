@@ -13,6 +13,16 @@ export const BeadsConfigSchema = z.object({
 export type BeadsConfig = z.infer<typeof BeadsConfigSchema>;
 
 /**
+ * Schema for GitHub integration configuration
+ */
+export const GithubConfigSchema = z.object({
+  /** Explicitly enable/disable GitHub integration (auto-detected by default) */
+  enabled: z.boolean().optional(),
+});
+
+export type GithubConfig = z.infer<typeof GithubConfigSchema>;
+
+/**
  * Schema for a single knowledge base location
  */
 export const KnowledgeBaseLocationSchema = z.object({
@@ -32,6 +42,8 @@ export const CoderConfigSchema = z.object({
   active: z.boolean().default(true),
   /** Beads issue tracking integration settings */
   beads: BeadsConfigSchema.optional(),
+  /** GitHub integration settings */
+  github: GithubConfigSchema.optional(),
   /** Array of knowledge base locations to load */
   knowledgeBases: z.array(KnowledgeBaseLocationSchema).optional(),
 });

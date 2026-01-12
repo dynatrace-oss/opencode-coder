@@ -4,7 +4,7 @@ OpenCode plugin for story-driven development with agents and commands.
 
 ## Features
 
-- **Beads Integration** - Local-first issue tracking with `bd` CLI
+- **Beads Integration (Optional)** - Local-first issue tracking with stealth mode (local-only) or team mode (git-synced)
 - **Custom Agents** - Four specialized agents for planning, review, task execution, and verification
 - **Knowledge Base Commands** - Rich command library for issue management (`bd/*`) and project setup (`coder/*`)
 - **Template Support** - Customizable workflows and issue templates
@@ -17,13 +17,7 @@ OpenCode plugin for story-driven development with agents and commands.
 
 ## Installation
 
-### 1. Install the beads CLI
-
-```bash
-npm install -g beads
-```
-
-### 2. Configure the plugin
+### 1. Configure the plugin
 
 Add the plugin to your OpenCode configuration (`~/.config/opencode/config.json`):
 
@@ -39,7 +33,7 @@ Since this package is published to GitHub Packages, you may need to configure np
 @hk9890:registry=https://npm.pkg.github.com
 ```
 
-### 3. Verify installation
+### 2. Verify installation
 
 Run the install command to verify dependencies:
 
@@ -47,7 +41,7 @@ Run the install command to verify dependencies:
 /coder/install
 ```
 
-### 4. Initialize your project
+### 3. Initialize your project
 
 In your project directory:
 
@@ -56,39 +50,74 @@ In your project directory:
 ```
 
 This sets up:
-- `.beads/` - Local issue tracking
 - `.coder/` - Plugin configuration
-- Git hooks for beads sync
+- `.beads/` - Local issue tracking (if beads mode selected)
+- Git hooks for beads sync (team mode only)
+
+## Using with Beads
+
+Beads integration is optional. When you run `/coder/init`, you'll be prompted to choose a beads mode.
+
+### Stealth Mode (Recommended default)
+
+- Beads files stay local to your machine (gitignored)
+- Won't affect git history or other team members
+- Perfect for: personal use, OSS contributions, teams not using beads yet
+- `/coder/init` prompts and defaults to this mode
+
+### Team Mode
+
+- Beads files are committed and synced via git
+- Enables multi-device sync and team collaboration
+- Perfect for: teams adopting beads together
+
+### No Beads
+
+You can use the plugin without beads at all. The `coder/*` commands work independently.
 
 ## Quick Start
 
-### Create your first issue
+### Basic Plugin Usage
+
+```
+/coder/install    # Verify dependencies
+/coder/init       # Initialize your project
+/coder/status     # Check plugin status
+```
+
+### With Beads
+
+Once beads is initialized, you can track issues:
 
 ```bash
+# Create your first issue
 bd create "Setup project structure" --type task --priority 2
-```
 
-### Find available work
-
-```bash
+# Find available work
 bd ready
-```
 
-### Start working on a task
-
-```bash
+# Start working on a task
 bd update <id> --status in_progress
-```
 
-### Close a completed task
-
-```bash
+# Close a completed task
 bd close <id>
 ```
 
 ## Available Commands
 
-### bd/* - Beads Issue Management
+### coder/* - Project Management
+
+| Command | Description |
+|---------|-------------|
+| `/coder/install` | Install global dependencies |
+| `/coder/init` | Initialize project for coder plugin |
+| `/coder/doctor` | Check project health |
+| `/coder/status` | Show plugin status |
+| `/coder/feedback` | Submit feedback |
+
+### bd/* - Beads Issue Management (requires beads)
+
+These commands require beads to be initialized in your project.
 
 | Command | Description |
 |---------|-------------|
@@ -104,16 +133,6 @@ bd close <id>
 | `/bd/dep` | Manage dependencies |
 | `/bd/epic` | Create an epic with tasks |
 | `/bd/template` | Manage issue templates |
-
-### coder/* - Project Management
-
-| Command | Description |
-|---------|-------------|
-| `/coder/install` | Install global dependencies |
-| `/coder/init` | Initialize project for coder plugin |
-| `/coder/doctor` | Check project health |
-| `/coder/status` | Show plugin status |
-| `/coder/feedback` | Submit feedback |
 
 ## Available Agents
 

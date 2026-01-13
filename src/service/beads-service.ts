@@ -117,6 +117,31 @@ export class BeadsService {
       // Set default agent to beads-planner-agent when beads is active
       config.default_agent = "beads-planner-agent";
 
+      // Configure beads-planner-agent permissions
+      if (!config.agent) {
+        config.agent = {};
+      }
+      if (!config.agent["beads-planner-agent"]) {
+        config.agent["beads-planner-agent"] = {};
+      }
+      if (!config.agent["beads-planner-agent"].permission) {
+        config.agent["beads-planner-agent"].permission = {};
+      }
+
+      // Enable question tool (for structured user questions during planning)
+      // Note: question permission not in SDK types yet, but supported at runtime
+      (config.agent["beads-planner-agent"].permission as any).question = "allow";
+
+      // Enforce read-only mode for code (deny all edit operations)
+      // Note: SDK types show edit as string, but it supports object syntax at runtime
+      (config.agent["beads-planner-agent"].permission as any).edit = { "*": "deny" };
+
+      // Debug: Log the permission configuration
+      this.logger.info("Configured beads-planner-agent permissions", {
+        question: (config.agent["beads-planner-agent"].permission as any).question,
+        edit: (config.agent["beads-planner-agent"].permission as any).edit,
+      });
+
       if (this.coderConfig.beads?.auto_approve_beads === false) return;
 
       if (!config.permission) {

@@ -63,7 +63,8 @@ Store the user's choice for the next step. If user enters nothing or "1", use st
 - If stealth mode selected: Run `bd init --stealth`
 - If team mode selected: Run `bd init`
 - Run `bd hooks install` to set up git hooks
-- **Note:** For stealth mode, `bd init --stealth` handles exclusions via `.git/info/exclude` - no `.gitignore` changes needed
+- **Note:** For stealth mode, `bd init --stealth` handles `.beads/` exclusion via `.git/info/exclude`
+- For stealth mode: Also add `.coder/` and `.opencode/` to `.git/info/exclude` if not already present
 - For team mode: Add `.beads/beads.db` to `.gitignore` if not already present
 
 ### 3. Coder Config Setup
@@ -84,8 +85,8 @@ Check if `.coder/coder.json` exists.
 - Commit with message: "chore: initialize coder plugin"
 
 **If stealth mode was used:**
-- Only stage `.coder/` directory (beads files are excluded from git)
-- Commit with message: "chore: initialize coder plugin" (if `.coder/` was created)
+- **Skip commit entirely** - all generated files are excluded from git via `.git/info/exclude`
+- Report "Stealth mode: no commit needed (files excluded from git)"
 
 **If nothing changed:**
 - Report "Project already fully initialized"
@@ -101,6 +102,7 @@ Components:
   Beads:        [initialized (stealth)/initialized (team)/already present]
   Git hooks:    [installed/already present]
   Coder config: [created/already present]
+  Git exclusions: [stealth: .beads/, .coder/, and .opencode/ added to .git/info/exclude]
 
 Files created:
   .beads/
@@ -110,6 +112,9 @@ Files created:
     metadata.json
   .coder/
     coder.json
+
+[Stealth mode: No commit - all files excluded from git]
+[Team mode: Committed as "chore: initialize coder plugin"]
 
 Next steps:
   - Create first issue: bd create "Setup project" --type task

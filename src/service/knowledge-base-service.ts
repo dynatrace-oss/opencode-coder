@@ -257,12 +257,8 @@ export class KnowledgeBaseService {
           ...(agent.description && { description: agent.description }),
           ...(agent.mode && { mode: agent.mode }),
           ...(agent.model && { model: agent.model }),
-          ...(agent.permission && { permission: agent.permission }),
         };
-        this.logger.debug(`Registered agent: @${agent.name}`, {
-          hasPermission: !!agent.permission,
-          permission: agent.permission,
-        });
+        this.logger.debug(`Registered agent: @${agent.name}`);
       }
       this.logger.debug("Agents registered", { durationMs: Date.now() - agentStart, count: agents.length });
     } finally {

@@ -88,6 +88,11 @@ export async function loadAgents(log: Logger, options: LoadAgentsOptions = {}): 
         }
       }
 
+      // Add permission parsing
+      if (frontmatter["permission"]) {
+        agent["permission"] = frontmatter["permission"] as Record<string, any>;
+      }
+
       agents.push(agent);
     }
   } catch (error) {

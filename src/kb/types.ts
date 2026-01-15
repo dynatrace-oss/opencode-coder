@@ -21,6 +21,7 @@ export interface AgentDef {
   prompt: string;
   mode?: "subagent" | "primary" | "all";
   model?: string;
+  permission?: Record<string, any>;
 }
 
 /**

@@ -4,16 +4,6 @@ description: Initialize project for opencode-coder plugin
 
 # Initialize Coder Project
 
-> **🚨 CRITICAL: DO NOT CREATE AGENTS.md 🚨**
->
-> The plugin hooks automatically inject beads context via `bd prime` at session start - AGENTS.md is redundant and wastes tokens.
->
-> - **Do NOT create AGENTS.md** - it's automatically handled
-> - **Do NOT add beads instructions** to any markdown file
-> - If user asks for AGENTS.md content, tell them to run `bd onboard` for a minimal snippet
->
-> This is the #1 mistake to avoid during initialization.
-
 Your task is to initialize the current project for use with the opencode-coder plugin. This command is idempotent - it can be run multiple times safely and will only set up what's missing.
 
 ## Prerequisites
@@ -63,6 +53,7 @@ Store the user's choice for the next step. If user enters nothing or "1", use st
 - If stealth mode selected: Run `bd init --stealth`
 - If team mode selected: Run `bd init`
 - Run `bd hooks install` to set up git hooks
+- **Note:** `bd init` will create a minimal `AGENTS.md` with beads quick reference - this is harmless and serves as human-readable documentation
 - **Note:** For stealth mode, `bd init --stealth` handles `.beads/` exclusion via `.git/info/exclude`
 - For stealth mode: Also add `.coder/` and `.opencode/` to `.git/info/exclude` if not already present
 - For team mode: Add `.beads/beads.db` to `.gitignore` if not already present
@@ -81,7 +72,7 @@ Check if `.coder/coder.json` exists.
 ### 4. Commit Changes
 
 **If team mode was used:**
-- Stage all new files (`.beads/`, `.coder/`, `.gitignore` changes)
+- Stage all new files (`.beads/`, `.coder/`, `.gitignore` changes, `AGENTS.md` if created)
 - Commit with message: "chore: initialize coder plugin"
 
 **If stealth mode was used:**
@@ -112,6 +103,7 @@ Files created:
     metadata.json
   .coder/
     coder.json
+  AGENTS.md (if not already present - contains beads quick reference)
 
 [Stealth mode: No commit - all files excluded from git]
 [Team mode: Committed as "chore: initialize coder plugin"]
@@ -136,6 +128,8 @@ After initialization, the project will have:
 
 .coder/
   coder.json        # Coder plugin configuration
+
+AGENTS.md           # Beads quick reference (if created by bd init)
 ```
 
 ## Idempotent Behavior
@@ -145,3 +139,10 @@ This command is safe to run multiple times:
 - No duplicate entries in `.gitignore`
 - No duplicate commits
 - Reports what was already present vs newly created
+
+## Note on AGENTS.md
+
+The `bd init` command may create or update `AGENTS.md` with a minimal beads quick reference (~12 lines). This is harmless:
+- Serves as human-readable documentation that the project uses beads
+- Plugin hooks automatically inject full beads context, so AGENTS.md is not read by AI
+- Can be safely committed or ignored based on project preference

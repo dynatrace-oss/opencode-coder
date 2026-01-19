@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, spyOn } from "bun:test";
 import { BeadsService } from "../../src/service/beads-service";
+import type { PlaygroundService } from "../../src/service/playground-service";
 import type { Config } from "@opencode-ai/sdk/v2";
 import type { PluginInput } from "@opencode-ai/plugin";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
@@ -21,6 +22,7 @@ describe("BeadsService", () => {
   let mockClient: OpencodeClient;
   let mockConfig: Config;
   let toastCalls: ToastCall[];
+  let mockPlaygroundService: PlaygroundService;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -38,6 +40,11 @@ describe("BeadsService", () => {
       },
     } as unknown as OpencodeClient;
     
+    // Create mock playground service
+    mockPlaygroundService = {
+      getOrCreatePlayground: async () => "/tmp/opencode/test-session",
+    } as unknown as PlaygroundService;
+    
     mockConfig = {} as Config;
   });
 
@@ -48,6 +55,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.processConfig(mockConfig);
@@ -61,6 +69,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: false,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.processConfig(mockConfig);
@@ -74,6 +83,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.processConfig(mockConfig);
@@ -87,14 +97,20 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.processConfig(mockConfig);
 
       // default_agent should still be set (independent of auto_approve_beads)
       expect(mockConfig.default_agent).toBe("beads-planner-agent");
-      // But permission should not be modified
-      expect(mockConfig.permission).toBeUndefined();
+      // Playground permissions should be added (independent of auto_approve_beads)
+      const tmpDir = process.env['TMPDIR'] || process.env['TEMP'] || '/tmp';
+      const playgroundGlob = `${tmpDir}/opencode/**/*`;
+      expect((mockConfig.permission as any)?.write?.[playgroundGlob]).toBe("allow");
+      expect((mockConfig.permission as any)?.read?.[playgroundGlob]).toBe("allow");
+      // But bd * permission should not be added
+      expect(mockConfig.permission?.bash).toBeUndefined();
     });
 
     it("should preserve existing bash permissions when adding bd *", async () => {
@@ -105,6 +121,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.processConfig(mockConfig);
@@ -123,6 +140,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.processConfig(mockConfig);
@@ -139,6 +157,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       expect(service.isBeadsEnabled()).toBe(true);
@@ -150,6 +169,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: false,
+        playgroundService: mockPlaygroundService,
       });
 
       expect(service.isBeadsEnabled()).toBe(false);
@@ -163,6 +183,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       const disabledService = new BeadsService({
@@ -170,6 +191,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: false,
+        playgroundService: mockPlaygroundService,
       });
 
       expect(enabledService.createDefinition().enabled()).toBe(true);
@@ -192,6 +214,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.checkBeadsAvailability();
@@ -222,6 +245,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.checkBeadsAvailability();
@@ -250,6 +274,7 @@ describe("BeadsService", () => {
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
+        playgroundService: mockPlaygroundService,
       });
 
       await service.checkBeadsAvailability();

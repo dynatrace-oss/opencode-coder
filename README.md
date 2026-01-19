@@ -8,6 +8,7 @@ OpenCode plugin for story-driven development with agents and commands.
 - **Custom Agents** - Four specialized agents for planning, review, task execution, and verification
 - **Knowledge Base Commands** - Rich command library for issue management (`bd/*`) and project setup (`coder/*`)
 - **Template Support** - Customizable workflows and issue templates
+- **Private Playground** - Session-specific temporary folders for experimentation and scratch work ([docs](./docs/playground.md))
 
 ## Prerequisites
 

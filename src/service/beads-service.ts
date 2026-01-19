@@ -147,26 +147,6 @@ export class BeadsService {
         edit: (config.agent["beads-planner-agent"].permission as any).edit,
       });
 
-      // Allow write access to playground folders
-      // Note: read/write permissions not in SDK types yet, but supported at runtime
-      if (!config.permission) {
-        config.permission = {};
-      }
-      const tmpDir = process.env['TMPDIR'] || process.env['TEMP'] || '/tmp';
-      const playgroundGlob = `${tmpDir}/opencode/**/*`;
-      
-      // Add write permission for playground
-      if (!(config.permission as any).write) {
-        (config.permission as any).write = {};
-      }
-      (config.permission as any).write[playgroundGlob] = "allow";
-      
-      // Also allow read access explicitly
-      if (!(config.permission as any).read) {
-        (config.permission as any).read = {};
-      }
-      (config.permission as any).read[playgroundGlob] = "allow";
-
       if (this.coderConfig.beads?.auto_approve_beads === false) return;
 
       if (!config.permission) {
@@ -274,25 +254,13 @@ export class BeadsService {
   }
 
   /**
-   * Process permission.ask hook - auto-approve bd CLI commands and playground operations
+   * Process permission.ask hook - auto-approve bd CLI commands
    */
   processPermissionAsk(input: PermissionAskInput, output: PermissionAskOutput): void {
     const start = Date.now();
     try {
       if (!this.beadsEnabled) return;
       if (this.coderConfig.beads?.auto_approve_beads === false) return;
-
-      // Auto-approve playground folder operations
-      const tmpDir = process.env['TMPDIR'] || process.env['TEMP'] || '/tmp';
-      const playgroundPrefix = `${tmpDir}/opencode/`;
-      
-      if (input.type === "write" || input.type === "read") {
-        const filePath = (input as any).path || input.title || "";
-        if (filePath.startsWith(playgroundPrefix)) {
-          output.status = "allow";
-          return;
-        }
-      }
 
       // Auto-approve bd commands (beads CLI)
       if (input.type === "bash" && input.title?.startsWith("bd ")) {

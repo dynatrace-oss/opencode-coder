@@ -137,24 +137,56 @@ export class BeadsContext {
   }
 
   /**
+   * Get playground context string with path and usage instructions
+   */
+  private getPlaygroundContext(playgroundPath: string): string {
+    return `## 🎮 Session Playground
+
+**IMPORTANT**: You have a dedicated temporary workspace for this session.
+
+**Path**: \`${playgroundPath}\`
+
+**Rules**:
+- You MUST use this folder for all temporary files, tests, and experiments
+- DO NOT use \`/tmp\` or other temp locations directly
+- You have full read/write permission - no prompts will be shown
+- The OS will clean up this folder automatically
+- Create any subdirectories you need within this space
+
+**Use cases**:
+- Testing code snippets
+- Creating temporary test files
+- Generating examples or prototypes
+- Any file operations that don't belong in the project`;
+  }
+
+  /**
    * Build the full context string for injection
    */
-  private buildContextString(primeOutput: string): string {
+  private buildContextString(primeOutput: string, playgroundPath?: string): string {
     if (!primeOutput) {
       return "";
     }
 
-    return `<beads-context>
+    let contextString = "";
+
+    if (playgroundPath) {
+      contextString += this.getPlaygroundContext(playgroundPath) + "\n\n";
+    }
+
+    contextString += `<beads-context>
 ${primeOutput}
 </beads-context>
 
 ${BEADS_GUIDANCE}`;
+
+    return contextString;
   }
 
   /**
    * Get beads context for session injection
    */
-  async getContext(): Promise<BeadsContextInfo> {
+  async getContext(playgroundPath?: string): Promise<BeadsContextInfo> {
     const primeOutput = await this.getPrimeOutput();
 
     if (!primeOutput) {
@@ -166,9 +198,11 @@ ${BEADS_GUIDANCE}`;
       };
     }
 
-    const contextString = this.buildContextString(primeOutput);
+    const contextString = this.buildContextString(primeOutput, playgroundPath);
 
-    this.logger.debug("Beads context loaded via bd prime");
+    this.logger.debug("Beads context loaded via bd prime", { 
+      hasPlayground: !!playgroundPath 
+    });
 
     return {
       available: true,

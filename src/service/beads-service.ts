@@ -3,6 +3,7 @@ import type { PluginInput } from "@opencode-ai/plugin";
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { BeadsDefinition } from "../template/types";
+import type { PlaygroundService } from "./playground-service";
 import { BeadsContext, BeadsDetector } from "../beads";
 import { execSync } from "child_process";
 
@@ -18,6 +19,8 @@ export interface BeadsServiceOptions {
   logger: Logger;
   /** OpenCode client for session operations */
   client: OpencodeClient;
+  /** PlaygroundService for session-specific temp folders */
+  playgroundService: PlaygroundService;
   /** Override BeadsContext (for testing) */
   beadsContext?: BeadsContext;
   /** Override beads enabled state (for testing) */
@@ -82,12 +85,14 @@ export class BeadsService {
   private readonly beadsEnabled: boolean;
   private readonly client: OpencodeClient;
   private readonly beadsContext: BeadsContext;
+  private readonly playgroundService: PlaygroundService;
   private readonly injectedSessions: Set<string> = new Set();
 
   constructor(options: BeadsServiceOptions) {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
     this.client = options.client;
+    this.playgroundService = options.playgroundService;
     this.beadsContext = options.beadsContext ?? new BeadsContext({ logger: options.logger });
 
     // Detect beads enabled state (can be overridden for testing)
@@ -174,6 +179,12 @@ export class BeadsService {
     try {
       if (!this.beadsEnabled) return;
 
+      // Create playground folder for this session
+      let playgroundPath = await this.playgroundService.getOrCreatePlayground(sessionID);
+      if (playgroundPath) {
+        this.logger.info("Playground ready", { sessionID, path: playgroundPath });
+      }
+
       // Skip if already injected this session
       if (this.injectedSessions.has(sessionID)) return;
 
@@ -213,7 +224,7 @@ export class BeadsService {
       }
       
       this.logger.info("Injecting beads context for new session", { sessionID });
-      await this.injectBeadsContext(sessionID, context);
+      await this.injectBeadsContext(sessionID, context, playgroundPath);
     } finally {
       this.logger.debug("processChatMessage completed", { durationMs: Date.now() - start, sessionID });
     }
@@ -230,8 +241,12 @@ export class BeadsService {
       if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
         const sessionID = event.properties["sessionID"];
         this.logger.info("Session compacted, re-injecting beads context", { sessionID });
+        
+        // Ensure playground exists after compaction
+        const playgroundPath = await this.playgroundService.getOrCreatePlayground(sessionID);
+        
         const context = await this.getSessionContext(sessionID);
-        await this.injectBeadsContext(sessionID, context);
+        await this.injectBeadsContext(sessionID, context, playgroundPath);
       }
     } finally {
       this.logger.debug("processEvent completed", { durationMs: Date.now() - start, eventType: event.type });
@@ -262,11 +277,12 @@ export class BeadsService {
    */
   private async injectBeadsContext(
     sessionID: string,
-    context?: { model?: { providerID: string; modelID: string }; agent?: string }
+    context?: { model?: { providerID: string; modelID: string }; agent?: string },
+    playgroundPath?: string
   ): Promise<void> {
     const start = Date.now();
     try {
-      const contextInfo = await this.beadsContext.getContext();
+      const contextInfo = await this.beadsContext.getContext(playgroundPath);
 
       if (!contextInfo.available || !contextInfo.contextString) {
         this.logger.info("Beads context not available, skipping injection", { sessionID });

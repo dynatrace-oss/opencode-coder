@@ -13,3 +13,6 @@ export type {
 
 export { GitHubService } from "./github-service";
 export type { GitHubServiceOptions } from "./github-service";
+
+export { PlaygroundService } from "./playground-service";
+export type { PlaygroundServiceOptions } from "./playground-service";

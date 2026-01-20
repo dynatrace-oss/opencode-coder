@@ -274,7 +274,7 @@ export class BeadsService {
   }
 
   /**
-   * Process permission.ask hook - auto-approve bd CLI commands and playground operations
+   * Process permission.ask hook - auto-approve bd CLI commands and temp directory operations
    */
   processPermissionAsk(input: PermissionAskInput, output: PermissionAskOutput): void {
     const start = Date.now();
@@ -282,13 +282,13 @@ export class BeadsService {
       if (!this.beadsEnabled) return;
       if (this.coderConfig.beads?.auto_approve_beads === false) return;
 
-      // Auto-approve playground folder operations
+      // Auto-approve all temp directory operations (cross-platform)
       const tmpDir = process.env['TMPDIR'] || process.env['TEMP'] || '/tmp';
-      const playgroundPrefix = `${tmpDir}/opencode/`;
       
       if (input.type === "write" || input.type === "read") {
         const filePath = (input as any).path || input.title || "";
-        if (filePath.startsWith(playgroundPrefix)) {
+        // Allow any operation within the temp directory
+        if (filePath.startsWith(tmpDir + '/') || filePath.startsWith(tmpDir + '\\')) {
           output.status = "allow";
           return;
         }

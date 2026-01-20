@@ -148,7 +148,7 @@ export class BeadsContext {
 
 **Rules**:
 - You MUST use this folder for all temporary files, tests, and experiments
-- DO NOT use \`/tmp\` or other temp locations directly
+- DO NOT use \`/tmp\` or other temp locations but use this \`${playgroundPath}\`
 - You have full read/write permission - no prompts will be shown
 - The OS will clean up this folder automatically
 - Create any subdirectories you need within this space

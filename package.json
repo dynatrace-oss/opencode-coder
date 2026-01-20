@@ -1,6 +1,6 @@
 {
   "name": "@hk9890/opencode-coder",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "OpenCode plugin for story-driven development with agents and commands",
   "author": "hk9890",
   "repository": {

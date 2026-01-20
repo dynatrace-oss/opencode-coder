@@ -139,16 +139,26 @@ These commands require beads to be initialized in your project.
 
 | Agent | Role |
 |-------|------|
-| `beads-planner-agent` | Planning, structure, orchestration - creates epics and tasks |
+| `beads-planner-agent` | Planning, structure, orchestration - creates epics and tasks, delegates implementation |
+| `beads-build-agent` | Hybrid agent - plans AND implements directly (alternative to planner + task agents) |
 | `beads-review-agent` | Reviews plans and structure (not code) |
 | `beads-task-agent` | Implements tasks and closes them when complete |
 | `beads-verify-agent` | Verifies outcomes and owns acceptance gates |
 
 ### Workflow
 
+**Two Workflows Available:**
+
+**Option A: Planner + Task Agents** (planning and implementation separated)
 1. **Planner** creates epic + tasks + acceptance gate
 2. **Reviewer** reviews plans and creates additional tasks/gates if needed
 3. **Task agent** implements tasks and closes when complete
+4. **Verifier** validates gates and closes them or creates bugs
+
+**Option B: Build Agent** (planning and implementation together)
+1. **Build agent** directly implements simple/medium work
+2. For complex work: **Build agent** creates epic + tasks, then implements them itself
+3. **Reviewer** reviews plans if needed (high-risk)
 4. **Verifier** validates gates and closes them or creates bugs
 
 ## License

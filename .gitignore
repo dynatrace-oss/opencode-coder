@@ -28,5 +28,8 @@ credentials.json
 # bv (beads viewer) local config and caches
 .bv/
 
+# perles (beads TUI) local config
+.perles/
+
 # Local mise config (machine-specific)
 mise.local.toml

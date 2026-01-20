@@ -177,7 +177,6 @@ Ready tasks remaining: 2
 - **Link discoveries**: Use `discovered-from` dependency type
 - **Don't reopen**: Create new issues instead
 - **Be decisive**: Close when implementation is done
-- **Sync changes**: Run `bd sync` at session end
 - **Parse JSON**: Summarize structured output, don't dump raw
 
 ## Core Philosophy

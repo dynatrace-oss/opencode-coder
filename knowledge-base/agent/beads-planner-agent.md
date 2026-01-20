@@ -673,5 +673,4 @@ Task(subagent_type: "beads-review-agent", prompt: "Review epic beads-xxx and its
 3. **Use labels for routing** - `need:review` triggers review agent
 4. **Atomic tasks** - each task completable in one focused session
 5. **Don't reopen closed work** - create new issues instead
-6. **Sync changes** - remind agents to run `bd sync`
-7. **Respect review agent output** - when review agent creates tasks/gates/bugs, do NOT close them with "will fix directly" or similar shortcuts. The review workflow exists for a reason - work through the created issues properly. If you disagree with review findings, add a comment explaining why, but don't dismiss the work.
+6. **Respect review agent output** - when review agent creates tasks/gates/bugs, do NOT close them with "will fix directly" or similar shortcuts. The review workflow exists for a reason - work through the created issues properly. If you disagree with review findings, add a comment explaining why, but don't dismiss the work.

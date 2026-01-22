@@ -61,7 +61,6 @@ export class PermissionService {
   private readonly rules: RegisteredRule[] = [];
 
   constructor(options: PermissionServiceOptions) {
-    this.coderConfig = options.coderConfig;
     this.logger = options.logger;
 
     // Register built-in rules

@@ -57,7 +57,6 @@ export interface PermissionServiceOptions {
  * - Services can register additional rules
  */
 export class PermissionService {
-  private readonly coderConfig: CoderConfig;
   private readonly logger: Logger;
   private readonly rules: RegisteredRule[] = [];
 

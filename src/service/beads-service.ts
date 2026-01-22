@@ -4,6 +4,7 @@ import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { BeadsDefinition } from "../template/types";
 import type { PlaygroundService } from "./playground-service";
+import type { PermissionService } from "./permission-service";
 import { BeadsContext, BeadsDetector } from "../beads";
 import { execSync } from "child_process";
 
@@ -21,6 +22,8 @@ export interface BeadsServiceOptions {
   client: OpencodeClient;
   /** PlaygroundService for session-specific temp folders */
   playgroundService: PlaygroundService;
+  /** PermissionService for registering permission rules */
+  permissionService: PermissionService;
   /** Override BeadsContext (for testing) */
   beadsContext?: BeadsContext;
   /** Override beads enabled state (for testing) */
@@ -56,28 +59,11 @@ export interface GenericEvent {
 }
 
 /**
- * Input type for permission.ask hook
- */
-export interface PermissionAskInput {
-  type: string;
-  title?: string;
-}
-
-/**
- * Output type for permission.ask hook
- */
-export interface PermissionAskOutput {
-  status?: "allow" | "deny" | "ask";
-}
-
-/**
  * Service that handles all beads-related functionality.
  *
  * Features:
  * - Injects beads context into sessions on first message
  * - Re-injects context after session compaction
- * - Auto-approves bd CLI commands
- * - Manages bash permission for bd commands
  */
 export class BeadsService {
   private readonly coderConfig: CoderConfig;
@@ -86,6 +72,8 @@ export class BeadsService {
   private readonly client: OpencodeClient;
   private readonly beadsContext: BeadsContext;
   private readonly playgroundService: PlaygroundService;
+  /** PermissionService for registering permission rules */
+  permissionService: PermissionService;
   private readonly injectedSessions: Set<string> = new Set();
 
   constructor(options: BeadsServiceOptions) {
@@ -93,6 +81,7 @@ export class BeadsService {
     this.logger = options.logger;
     this.client = options.client;
     this.playgroundService = options.playgroundService;
+    this.permissionService = options.permissionService;
     this.beadsContext = options.beadsContext ?? new BeadsContext({ logger: options.logger });
 
     // Detect beads enabled state (can be overridden for testing)
@@ -101,6 +90,20 @@ export class BeadsService {
     } else {
       const detector = new BeadsDetector({ logger: options.logger });
       this.beadsEnabled = detector.isBeadsEnabled(options.coderConfig);
+    }
+
+    // Register bd CLI permission rule
+    if (this.beadsEnabled && this.coderConfig.beads?.auto_approve_beads !== false) {
+      this.permissionService.registerRule(
+        "beads-cli-commands",
+        (input) => {
+          if (input.type === "bash" && input.title?.startsWith("bd ")) {
+            return "allow";
+          }
+          return undefined;
+        },
+        50 // Priority: lower than built-in temp directory rules
+      );
     }
   }
 
@@ -274,34 +277,6 @@ export class BeadsService {
   }
 
   /**
-   * Process permission.ask hook - auto-approve bd CLI commands and temp directory operations
-   */
-  processPermissionAsk(input: PermissionAskInput, output: PermissionAskOutput): void {
-    const start = Date.now();
-    try {
-      if (!this.beadsEnabled) return;
-      if (this.coderConfig.beads?.auto_approve_beads === false) return;
-
-      // Auto-approve all temp directory operations (cross-platform)
-      const tmpDir = process.env['TMPDIR'] || process.env['TEMP'] || '/tmp';
-      
-      if (input.type === "write" || input.type === "read") {
-        const filePath = (input as any).path || input.title || "";
-        // Allow any operation within the temp directory
-        if (filePath.startsWith(tmpDir + '/') || filePath.startsWith(tmpDir + '\\')) {
-          output.status = "allow";
-          return;
-        }
-      }
-
-      // Auto-approve bd commands (beads CLI)
-      if (input.type === "bash" && input.title?.startsWith("bd ")) {
-        output.status = "allow";
-      }
-    } finally {
-      this.logger.debug("processPermissionAsk completed", { durationMs: Date.now() - start });
-    }
-  }
 
   /**
    * Inject beads context into a session via synthetic message.

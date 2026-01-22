@@ -1,9 +1,11 @@
 import { describe, expect, it, beforeEach, spyOn } from "bun:test";
 import { BeadsService } from "../../src/service/beads-service";
 import type { PlaygroundService } from "../../src/service/playground-service";
+import type { PermissionService } from "../../src/service/permission-service";
 import type { Config } from "@opencode-ai/sdk/v2";
 import type { PluginInput } from "@opencode-ai/plugin";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
+import { createMockPermissionService } from "../helpers/mock-permission-service";
 import { createMockClient } from "../helpers/mock-client";
 import * as childProcess from "child_process";
 import * as fs from "fs";
@@ -23,6 +25,7 @@ describe("BeadsService", () => {
   let mockConfig: Config;
   let toastCalls: ToastCall[];
   let mockPlaygroundService: PlaygroundService;
+  let mockPermissionService: PermissionService;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -41,6 +44,8 @@ describe("BeadsService", () => {
     } as unknown as OpencodeClient;
     
     // Create mock playground service
+    mockPermissionService = createMockPermissionService();
+
     mockPlaygroundService = {
       getOrCreatePlayground: async () => "/tmp/opencode/test-session",
     } as unknown as PlaygroundService;
@@ -56,6 +61,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.processConfig(mockConfig);
@@ -70,6 +76,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: false,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.processConfig(mockConfig);
@@ -84,6 +91,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.processConfig(mockConfig);
@@ -98,6 +106,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.processConfig(mockConfig);
@@ -122,6 +131,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.processConfig(mockConfig);
@@ -141,6 +151,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.processConfig(mockConfig);
@@ -158,6 +169,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       expect(service.isBeadsEnabled()).toBe(true);
@@ -170,6 +182,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: false,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       expect(service.isBeadsEnabled()).toBe(false);
@@ -184,6 +197,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       const disabledService = new BeadsService({
@@ -192,6 +206,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: false,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       expect(enabledService.createDefinition().enabled()).toBe(true);
@@ -215,6 +230,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.checkBeadsAvailability();
@@ -246,6 +262,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.checkBeadsAvailability();
@@ -275,6 +292,7 @@ describe("BeadsService", () => {
         client: mockClient,
         beadsEnabled: true,
         playgroundService: mockPlaygroundService,
+        permissionService: mockPermissionService,
       });
 
       await service.checkBeadsAvailability();

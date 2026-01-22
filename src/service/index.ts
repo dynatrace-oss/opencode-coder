@@ -7,8 +7,6 @@ export type {
   ChatMessageInput,
   ChatMessageOutput,
   GenericEvent,
-  PermissionAskInput,
-  PermissionAskOutput,
 } from "./beads-service";
 
 export { GitHubService } from "./github-service";
@@ -16,3 +14,10 @@ export type { GitHubServiceOptions } from "./github-service";
 
 export { PlaygroundService } from "./playground-service";
 export type { PlaygroundServiceOptions } from "./playground-service";
+
+export { PermissionService } from "./permission-service";
+export type {
+  PermissionServiceOptions,
+  PermissionAskInput,
+  PermissionAskOutput,
+} from "./permission-service";

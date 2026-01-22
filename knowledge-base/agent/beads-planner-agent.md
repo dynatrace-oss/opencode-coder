@@ -9,14 +9,7 @@ permission:
     "*": deny
     "${TMPDIR}/opencode/**/*": allow
   bash:
-    "*": deny
-    "bd *": allow
-    "git log*": allow
-    "git show*": allow
-    "git diff*": allow
-    "git status": allow
-    "ls *": allow
-    "cat *": allow
+    "*": allow
   read: allow
   grep: allow
   glob: allow

@@ -1,11 +1,30 @@
----
-description: Manage issue templates for streamlined issue creation
-argument-hint: [list|show|create] [template-name]
----
+# bd template
 
 Manage issue templates for streamlined issue creation.
 
+## Synopsis
+
 Templates provide pre-filled structures for common issue types, making it faster to create well-formed issues with consistent formatting.
+
+```bash
+bd template list
+bd template show <template-name>
+bd template create <template-name>
+```
+
+## Description
+
+Templates can be:
+- **Built-in**: Provided by bd (epic, bug, feature)
+- **Custom**: Stored in `.beads/templates/` directory
+
+Each template defines default values for:
+- Description structure with placeholders
+- Issue type (bug, feature, task, epic, chore)
+- Priority (0-4)
+- Labels
+- Design notes structure
+- Acceptance criteria structure
 
 ## Commands
 
@@ -75,7 +94,7 @@ This creates a YAML file with default structure that you can edit to customize.
 
 ```bash
 $ bd template create performance
-Created template: .beads/templates/performance.yaml
+✓ Created template: .beads/templates/performance.yaml
 Edit the file to customize your template.
 
 $ cat .beads/templates/performance.yaml
@@ -121,14 +140,14 @@ bd create --from-template epic "Q4 Infrastructure" -l infrastructure,ops
 ```bash
 # Create epic from template
 $ bd create --from-template epic "Phase 3 Features"
-Created issue: bd-a3f8e9
+✓ Created issue: bd-a3f8e9
   Title: Phase 3 Features
   Priority: P1
   Status: open
 
 # Create bug report from template
 $ bd create --from-template bug "Auth token validation fails"
-Created issue: bd-42bc7a
+✓ Created issue: bd-42bc7a
   Title: Auth token validation fails
   Priority: P1
   Status: open
@@ -310,3 +329,9 @@ $ bd template show bug --json
 4. **Keep templates focused**: Create specific templates (e.g., `performance`, `security-audit`) rather than generic ones
 5. **Use placeholders**: Mark sections requiring input with `[brackets]` or `TODO`
 6. **Include checklists**: Use `- [ ]` for actionable items in description and acceptance criteria
+
+## See Also
+
+- [bd create](create.md) - Create issues
+- [bd list](list.md) - List issues
+- [README](../README.md) - Main documentation

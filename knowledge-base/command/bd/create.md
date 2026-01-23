@@ -14,6 +14,6 @@ If arguments are missing, ask the user for:
 3. Priority (default: 2)
 4. Description (optional)
 
-Run `bd create --title="<title>" --type=<type> --priority=<priority>` to create the issue. Show the created issue ID and details to the user.
+Use the bd CLI `bd create` command to create the issue. Show the created issue ID and details to the user.
 
 Optionally ask if this issue should be linked to another issue (discovered-from, blocks, parent-child, related).

@@ -51,8 +51,8 @@ Output can be embedded in markdown:
 ````markdown
 ```mermaid
 flowchart TD
-  bd-1["bd-1: Main task"]
-  bd-2["bd-2: Subtask"]
+  bd-1["◧ bd-1: Main task"]
+  bd-2["☑ bd-2: Subtask"]
 
   bd-1 --> bd-2
 ```
@@ -62,10 +62,10 @@ flowchart TD
 
 Each node includes a symbol indicator for quick visual status identification:
 
-- Open - Not started yet (empty checkbox)
-- In Progress - Currently being worked on (half-filled box)
-- Blocked - Waiting on something (warning sign)
-- Closed - Completed! (checked checkbox)
+- ☐ **Open** - Not started yet (empty checkbox)
+- ◧ **In Progress** - Currently being worked on (half-filled box)
+- ⚠ **Blocked** - Waiting on something (warning sign)
+- ☑ **Closed** - Completed! (checked checkbox)
 
 The diagram colors are determined by your Mermaid theme (default, dark, forest, neutral, or base). Mermaid diagrams render natively in GitHub, GitLab, VSCode markdown preview, and can be imported to Miro.
 

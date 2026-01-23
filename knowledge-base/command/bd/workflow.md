@@ -9,30 +9,30 @@ Display the beads workflow for AI agents and developers.
 Beads is an issue tracker designed for AI-supervised coding workflows. Here's how to use it effectively:
 
 ## 1. Find Ready Work
-Run `bd ready` or use `/bd-ready` to see tasks with no blockers.
+Use `/bd-ready` or the `ready` bd command to see tasks with no blockers.
 
 ## 2. Claim Your Task
 Update the issue status to `in_progress`:
 - Via command: `/bd-update <id> in_progress`
-- Via CLI: `bd update <id> --status in_progress`
+- Via bd command: `update` with `status: "in_progress"`
 
 ## 3. Work on It
 Implement, test, and document the feature or fix.
 
 ## 4. Discover New Work
 As you work, you'll often find bugs, TODOs, or related work:
-- Create issues: `/bd-create` or `bd create`
-- Link them: `bd dep add <new-id> <current-id> --type discovered-from`
+- Create issues: `/bd-create` or `create` bd command
+- Link them: Use `dep` bd command with `type: "discovered-from"`
 - This maintains context and work history
 
 ## 5. Complete the Task
 Close the issue when done:
 - Via command: `/bd-close <id> "Completed: <summary>"`
-- Via CLI: `bd close <id> --reason "Completed: <summary>"`
+- Via bd command: `close` with reason
 
 ## 6. Check What's Unblocked
 After closing, check if other work became ready:
-- Run `bd ready` to see newly unblocked tasks
+- Use `/bd-ready` to see newly unblocked tasks
 - Start the cycle again
 
 ## Tips
@@ -49,5 +49,11 @@ After closing, check if other work became ready:
 - `/bd-update` - Update issue
 - `/bd-close` - Close issue
 - `/bd-workflow` - Show this guide (you are here!)
+
+## MCP Tools Available
+Use these via the bd CLI:
+- `ready`, `list`, `show`, `create`, `update`, `close`
+- `dep` (manage dependencies), `blocked`, `stats`
+- `init` (initialize bd in a project)
 
 For more details, see the beads README at: https://github.com/steveyegge/beads

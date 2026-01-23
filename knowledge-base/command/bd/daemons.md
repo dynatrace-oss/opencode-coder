@@ -1,7 +1,4 @@
----
-description: Daemon Management
-argument-hint: [subcommand]
----
+# bd daemons - Daemon Management
 
 Manage bd daemon processes across all repositories and worktrees.
 
@@ -241,3 +238,5 @@ ls -la /path/to/workspace/.beads/bd.sock
 ## See Also
 
 - [bd daemon](daemon.md) - Start a daemon manually
+- [AGENTS.md](../AGENTS.md) - Agent workflow guide
+- [README.md](../README.md) - Main documentation

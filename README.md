@@ -9,7 +9,7 @@ OpenCode plugin for story-driven development with agents and commands.
 - **Knowledge Base Commands** - Rich command library for issue management (`bd/*`) and project setup (`coder/*`)
 - **Skills as Commands** - Skills from `.opencode/skills/` and other locations automatically available as `/skills/*` commands ([docs](./docs/skills.md))
 - **Template Support** - Customizable workflows and issue templates
-- **Private Playground** - Session-specific temporary folders for experimentation and scratch work ([docs](./docs/playground.md))
+
 
 ## Prerequisites
 

@@ -7,7 +7,6 @@ permission:
     "*": deny
   write:
     "*": deny
-    "${TMPDIR}/opencode/**/*": allow
   bash:
     "*": allow
   read: allow

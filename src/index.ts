@@ -1,7 +1,7 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { createLogger } from "./core";
 import { loadConfig } from "./config";
-import { KnowledgeBaseService, BeadsService, GitHubService, PlaygroundService, PermissionService, SkillService } from "./service";
+import { KnowledgeBaseService, BeadsService, GitHubService, PlaygroundService, SkillService } from "./service";
 import { TemplateService } from "./template";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
@@ -24,15 +24,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("TemplateService created", { durationMs: Date.now() - templateStart });
 
-  // 3. Create permission service (before other services that register rules)
-  const permissionStart = Date.now();
-  const permissionService = new PermissionService({
-    coderConfig,
-    logger: log,
-  });
-  log.debug("PermissionService created", { durationMs: Date.now() - permissionStart });
-
-  // 4. Create playground service
+  // 3. Create playground service
   const playgroundStart = Date.now();
   const playgroundService = new PlaygroundService({
     logger: log,
@@ -40,21 +32,20 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("PlaygroundService created", { durationMs: Date.now() - playgroundStart });
 
-  // 5. Create beads service (registers bd CLI permission rule)
+  // 4. Create beads service
   const beadsStart = Date.now();
   const beadsService = new BeadsService({
     coderConfig,
     logger: log,
     client,
     playgroundService,
-    permissionService,
   });
   log.debug("BeadsService created", { durationMs: Date.now() - beadsStart });
 
-  // 6. Register beads with template service
+  // 5. Register beads with template service
   templateService.registerBeads(beadsService.createDefinition());
 
-  // 7. Create GitHub service and register with template service
+  // 6. Create GitHub service and register with template service
   const githubStart = Date.now();
   const githubService = new GitHubService({
     coderConfig,
@@ -63,7 +54,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   log.debug("GitHubService created", { durationMs: Date.now() - githubStart });
   templateService.registerGitHub(githubService.createDefinition());
 
-  // 8. Create KB service with template service and feature flags
+  // 7. Create KB service with template service and feature flags
   const kbStart = Date.now();
   const kbService = new KnowledgeBaseService({
     coderConfig,
@@ -75,7 +66,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("KnowledgeBaseService created", { durationMs: Date.now() - kbStart });
 
-  // 9. Create Skill service
+  // 8. Create Skill service
   const skillStart = Date.now();
   const skillService = new SkillService({
     coderConfig,
@@ -83,7 +74,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("SkillService created", { durationMs: Date.now() - skillStart });
 
-  // 10. Check beads availability and show toast if needed
+  // 9. Check beads availability and show toast if needed
   // This runs in the background and doesn't block plugin loading
   const beadsCheckStart = Date.now();
   beadsService.checkBeadsAvailability()
@@ -115,7 +106,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
     },
 
     async "permission.ask"(input, output) {
-      permissionService.processPermissionAsk(input, output);
+      beadsService.processPermissionAsk(input, output);
     },
   };
 };

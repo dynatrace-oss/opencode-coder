@@ -4,7 +4,6 @@ import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { BeadsDefinition } from "../template/types";
 import type { PlaygroundService } from "./playground-service";
-import type { PermissionService } from "./permission-service";
 import { BeadsContext, BeadsDetector } from "../beads";
 import { execSync } from "child_process";
 
@@ -22,8 +21,6 @@ export interface BeadsServiceOptions {
   client: OpencodeClient;
   /** PlaygroundService for session-specific temp folders */
   playgroundService: PlaygroundService;
-  /** PermissionService for registering permission rules */
-  permissionService: PermissionService;
   /** Override BeadsContext (for testing) */
   beadsContext?: BeadsContext;
   /** Override beads enabled state (for testing) */
@@ -72,8 +69,6 @@ export class BeadsService {
   private readonly client: OpencodeClient;
   private readonly beadsContext: BeadsContext;
   private readonly playgroundService: PlaygroundService;
-  /** PermissionService for registering permission rules */
-  permissionService: PermissionService;
   private readonly injectedSessions: Set<string> = new Set();
 
   constructor(options: BeadsServiceOptions) {
@@ -81,7 +76,6 @@ export class BeadsService {
     this.logger = options.logger;
     this.client = options.client;
     this.playgroundService = options.playgroundService;
-    this.permissionService = options.permissionService;
     this.beadsContext = options.beadsContext ?? new BeadsContext({ logger: options.logger });
 
     // Detect beads enabled state (can be overridden for testing)
@@ -91,20 +85,6 @@ export class BeadsService {
       const detector = new BeadsDetector({ logger: options.logger });
       this.beadsEnabled = detector.isBeadsEnabled(options.coderConfig);
     }
-
-    // Register bd CLI permission rule
-    if (this.beadsEnabled && this.coderConfig.beads?.auto_approve_beads !== false) {
-      this.permissionService.registerRule(
-        "beads-cli-commands",
-        (input) => {
-          if (input.type === "bash" && input.title?.startsWith("bd ")) {
-            return "allow";
-          }
-          return undefined;
-        },
-        50 // Priority: lower than built-in temp directory rules
-      );
-    }
   }
 
   /**
@@ -112,6 +92,21 @@ export class BeadsService {
    */
   isBeadsEnabled(): boolean {
     return this.beadsEnabled;
+  }
+
+  /**
+   * Process permission.ask hook for beads CLI commands
+   */
+  processPermissionAsk(input: { type: string; title?: string; [key: string]: unknown }, output: { status?: "allow" | "deny" | "ask" }): void {
+    // Only handle beads CLI commands
+    if (!this.beadsEnabled || this.coderConfig.beads?.auto_approve_beads === false) {
+      return;
+    }
+    
+    if (input.type === "bash" && input.title?.startsWith("bd ")) {
+      output.status = "allow";
+      this.logger.debug("Auto-approved beads CLI command", { command: input.title });
+    }
   }
 
   /**
@@ -247,7 +242,7 @@ export class BeadsService {
       }
       
       this.logger.info("Injecting beads context for new session", { sessionID });
-      await this.injectBeadsContext(sessionID, context, playgroundPath);
+      await this.injectBeadsContext(sessionID, context);
     } finally {
       this.logger.debug("processChatMessage completed", { durationMs: Date.now() - start, sessionID });
     }
@@ -266,10 +261,10 @@ export class BeadsService {
         this.logger.info("Session compacted, re-injecting beads context", { sessionID });
         
         // Ensure playground exists after compaction
-        const playgroundPath = await this.playgroundService.getOrCreatePlayground(sessionID);
+        await this.playgroundService.getOrCreatePlayground(sessionID);
         
         const context = await this.getSessionContext(sessionID);
-        await this.injectBeadsContext(sessionID, context, playgroundPath);
+        await this.injectBeadsContext(sessionID, context);
       }
     } finally {
       this.logger.debug("processEvent completed", { durationMs: Date.now() - start, eventType: event.type });
@@ -284,12 +279,11 @@ export class BeadsService {
    */
   private async injectBeadsContext(
     sessionID: string,
-    context?: { model?: { providerID: string; modelID: string }; agent?: string },
-    playgroundPath?: string
+    context?: { model?: { providerID: string; modelID: string }; agent?: string }
   ): Promise<void> {
     const start = Date.now();
     try {
-      const contextInfo = await this.beadsContext.getContext(playgroundPath);
+      const contextInfo = await this.beadsContext.getContext();
 
       if (!contextInfo.available || !contextInfo.contextString) {
         this.logger.info("Beads context not available, skipping injection", { sessionID });

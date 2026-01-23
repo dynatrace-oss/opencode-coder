@@ -64,14 +64,18 @@ export async function loadCommands(log: Logger, options: LoadCommandsOptions = {
   const commands: CommandDef[] = [];
   const commandDir = join(basePath, "command");
 
+  log.debug("Loading commands", { basePath, commandDir });
+
   try {
     const categories = await fs.readdir(commandDir, { withFileTypes: true });
+    log.debug("Found categories", { count: categories.length, names: categories.map(c => c.name) });
 
     for (const category of categories) {
       if (!category.isDirectory()) continue;
 
       const categoryPath = join(commandDir, category.name);
       const files = await fs.readdir(categoryPath, { withFileTypes: true });
+      log.debug("Found files in category", { category: category.name, count: files.length, names: files.map(f => f.name) });
 
       for (const file of files) {
         if (!file.isFile() || !file.name.endsWith(".md")) continue;
@@ -97,8 +101,9 @@ export async function loadCommands(log: Logger, options: LoadCommandsOptions = {
       }
     }
   } catch (error) {
-    log.error("Failed to load commands", { error: String(error) });
+    log.error("Failed to load commands", { error: String(error), basePath, commandDir });
   }
 
+  log.debug("Loaded commands", { count: commands.length, names: commands.map(c => c.name) });
   return commands;
 }

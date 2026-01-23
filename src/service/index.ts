@@ -21,3 +21,6 @@ export type {
   PermissionAskInput,
   PermissionAskOutput,
 } from "./permission-service";
+
+export { SkillService } from "./skill-service";
+export type { SkillServiceOptions } from "./skill-service";

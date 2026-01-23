@@ -1,15 +1,16 @@
 import { describe, expect, it, beforeEach, mock } from "bun:test";
 
-// Mock the fs module before importing SkillService
+// Create mock fs functions
 const mockReaddir = mock(async (..._args: any[]) => []);
 const mockReadFile = mock(async (..._args: any[]) => "");
 const mockAccess = mock(async (..._args: any[]) => {});
 
-mock.module("fs/promises", () => ({
+// Mock fs object for DI
+const mockFs = {
   readdir: mockReaddir,
   readFile: mockReadFile,
   access: mockAccess,
-}));
+};
 
 // Mock os.homedir
 const mockHomedir = mock(() => "/home/testuser");
@@ -34,6 +35,7 @@ describe("SkillService", () => {
     service = new SkillService({
       coderConfig,
       logger: mockLogger,
+      fileSystem: mockFs,
     });
     config = {};
 
@@ -50,7 +52,7 @@ describe("SkillService", () => {
   describe("processConfig", () => {
     it("should skip if plugin not active", async () => {
       coderConfig.active = false;
-      service = new SkillService({ coderConfig, logger: mockLogger });
+      service = new SkillService({ coderConfig, logger: mockLogger, fileSystem: mockFs });
 
       await service.processConfig(config);
 

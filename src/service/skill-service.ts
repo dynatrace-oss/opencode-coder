@@ -8,6 +8,27 @@ import { join } from "path";
 import { homedir } from "os";
 
 /**
+ * File system interface for dependency injection
+ */
+export interface SkillFileSystem {
+  readdir(
+    path: string,
+    options: { withFileTypes: true }
+  ): Promise<{ name: string; isDirectory(): boolean; isFile(): boolean }[]>;
+  readFile(path: string, encoding: BufferEncoding): Promise<string>;
+  access(path: string): Promise<void>;
+}
+
+/**
+ * Default file system implementation
+ */
+export const defaultSkillFileSystem: SkillFileSystem = {
+  readdir: (path: string, options: { withFileTypes: true }) => readdir(path, options),
+  readFile: (path: string, encoding: BufferEncoding) => readFile(path, encoding),
+  access: (path: string) => access(path),
+};
+
+/**
  * Options for SkillService
  */
 export interface SkillServiceOptions {
@@ -15,6 +36,8 @@ export interface SkillServiceOptions {
   coderConfig: CoderConfig;
   /** Logger for reporting status and errors */
   logger: Logger;
+  /** Optional file system implementation for testing */
+  fileSystem?: SkillFileSystem;
 }
 
 /**
@@ -33,10 +56,12 @@ export interface SkillServiceOptions {
 export class SkillService {
   private coderConfig: CoderConfig;
   private logger: Logger;
+  private fs: SkillFileSystem;
 
   constructor(options: SkillServiceOptions) {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
+    this.fs = options.fileSystem ?? defaultSkillFileSystem;
   }
 
   /**
@@ -58,11 +83,11 @@ export class SkillService {
     for (const skillPath of skillPaths) {
       try {
         // Check if directory exists
-        await access(skillPath);
+        await this.fs.access(skillPath);
         this.logger.debug(`Scanning skills directory: ${skillPath}`);
 
         // Read subdirectories
-        const entries = await readdir(skillPath, { withFileTypes: true });
+        const entries = await this.fs.readdir(skillPath, { withFileTypes: true });
         const skillDirs = entries.filter((entry) => entry.isDirectory());
 
         for (const dir of skillDirs) {
@@ -72,14 +97,14 @@ export class SkillService {
 
             // Check if SKILL.md exists
             try {
-              await access(skillMdPath);
+              await this.fs.access(skillMdPath);
             } catch {
               this.logger.debug(`Skipping ${dir.name}: no SKILL.md found`);
               continue;
             }
 
             // Read and parse SKILL.md
-            const content = await readFile(skillMdPath, "utf-8");
+            const content = await this.fs.readFile(skillMdPath, "utf-8");
             const parsed = parseFrontmatter(content);
 
             // Validate required fields

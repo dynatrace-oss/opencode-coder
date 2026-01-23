@@ -196,60 +196,17 @@ describe("loadConfig", () => {
     it("should handle fixture files correctly", async () => {
       // Read the fixture directly and verify parsing
       const validActivePath = join(FIXTURES_DIR, "valid-active.json");
-      console.log("[DEBUG] valid-active.json path:", validActivePath);
-      console.log("[DEBUG] FIXTURES_DIR:", FIXTURES_DIR);
-      console.log("[DEBUG] import.meta.dir:", import.meta.dir);
-      
-      // Check if file exists using fs.access
-      try {
-        const { access } = await import("fs/promises");
-        await access(validActivePath);
-        console.log("[DEBUG] valid-active.json exists: true");
-      } catch (err) {
-        console.log("[DEBUG] valid-active.json exists: false", err);
-      }
-      
       const validActiveContent = await readFile(validActivePath, "utf-8");
-      console.log("[DEBUG] valid-active.json raw content:", JSON.stringify(validActiveContent));
-      console.log("[DEBUG] valid-active.json content length:", validActiveContent.length);
-      console.log("[DEBUG] valid-active.json content bytes:", Buffer.from(validActiveContent).toString("hex"));
-      
       const parsed = JSON.parse(validActiveContent);
       expect(parsed).toEqual({ active: true });
 
       const validInactivePath = join(FIXTURES_DIR, "valid-inactive.json");
-      console.log("[DEBUG] valid-inactive.json path:", validInactivePath);
-      
-      try {
-        const { access } = await import("fs/promises");
-        await access(validInactivePath);
-        console.log("[DEBUG] valid-inactive.json exists: true");
-      } catch (err) {
-        console.log("[DEBUG] valid-inactive.json exists: false", err);
-      }
-      
       const validInactiveContent = await readFile(validInactivePath, "utf-8");
-      console.log("[DEBUG] valid-inactive.json raw content:", JSON.stringify(validInactiveContent));
-      console.log("[DEBUG] valid-inactive.json content length:", validInactiveContent.length);
-      
       const parsedInactive = JSON.parse(validInactiveContent);
       expect(parsedInactive).toEqual({ active: false });
 
       const invalidPath = join(FIXTURES_DIR, "invalid.json");
-      console.log("[DEBUG] invalid.json path:", invalidPath);
-      
-      try {
-        const { access } = await import("fs/promises");
-        await access(invalidPath);
-        console.log("[DEBUG] invalid.json exists: true");
-      } catch (err) {
-        console.log("[DEBUG] invalid.json exists: false", err);
-      }
-      
       const invalidContent = await readFile(invalidPath, "utf-8");
-      console.log("[DEBUG] invalid.json raw content:", JSON.stringify(invalidContent));
-      console.log("[DEBUG] invalid.json content length:", invalidContent.length);
-      
       const parsedInvalid = JSON.parse(invalidContent);
       expect(parsedInvalid.active).toBe("not-a-boolean");
     });

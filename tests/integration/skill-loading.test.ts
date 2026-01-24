@@ -545,4 +545,65 @@ description: Invalid
       expect(warnLog).toBeDefined();
     });
   });
+
+  describe("duplicate skill handling", () => {
+    it("should deduplicate skills found in multiple locations (.opencode takes precedence)", async () => {
+      // Create same skill in TWO locations (.opencode and .claude)
+      const opencodeSkillDir = join(tempDir, ".opencode/skills/shared-skill");
+      await mkdir(opencodeSkillDir, { recursive: true });
+      await writeFile(
+        join(opencodeSkillDir, "SKILL.md"),
+        `---
+description: Skill from .opencode (should win)
+---
+
+This is from .opencode/skills`,
+        "utf-8"
+      );
+
+      const claudeSkillDir = join(tempDir, ".claude/skills/shared-skill");
+      await mkdir(claudeSkillDir, { recursive: true });
+      await writeFile(
+        join(claudeSkillDir, "SKILL.md"),
+        `---
+description: Skill from .claude (should be skipped)
+---
+
+This is from .claude/skills`,
+        "utf-8"
+      );
+
+      // Initialize plugin
+      const mockInput = createMockPluginInput();
+      const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
+
+      // Process config
+      const config: Config = {};
+      await hooks.config?.(config);
+
+      // Verify skill was registered ONCE
+      expect(config.command).toBeDefined();
+      expect(config.command!["skills/shared-skill"]).toBeDefined();
+
+      // Verify it used the .opencode version (first location wins)
+      const command = config.command!["skills/shared-skill"];
+      expect(command.template).toContain("This is from .opencode/skills");
+      expect(command.description).toBe("Skill from .opencode (should win)");
+
+      // Verify only 1 skill was registered (not 2)
+      const registeredLog = mockInput.client.app.logs.find(
+        (log) => log.message.includes("Registered 1 skills")
+      );
+      expect(registeredLog).toBeDefined();
+
+      // Verify debug log for skipped duplicate
+      const duplicateLog = mockInput.client.app.logs.find(
+        (log) =>
+          log.level === "debug" &&
+          log.message.includes("Skipping duplicate skill") &&
+          log.message.includes("shared-skill")
+      );
+      expect(duplicateLog).toBeDefined();
+    });
+  });
 });

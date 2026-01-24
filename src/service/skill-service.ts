@@ -79,6 +79,7 @@ export class SkillService {
     ];
 
     const commands: CommandDef[] = [];
+    const seenSkills = new Set<string>();
 
     for (const skillPath of skillPaths) {
       try {
@@ -109,6 +110,13 @@ export class SkillService {
 
             // Validate required fields
             const name = `skills/${dir.name}`;
+            
+            // Check for duplicates (first location wins)
+            if (seenSkills.has(dir.name)) {
+              this.logger.debug(`Skipping duplicate skill: ${dir.name}`);
+              continue;
+            }
+            seenSkills.add(dir.name);
             const template = parsed.body.trim();
 
             if (!template) {

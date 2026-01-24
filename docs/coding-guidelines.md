@@ -17,8 +17,9 @@ src/
 ├── config/            # Configuration loading and schema
 ├── kb/                # Knowledge base loading (commands, agents)
 ├── service/           # Main services (KnowledgeBaseService, BeadsService)
-├── template/          # Template rendering with Handlebars
-└── beads/             # Beads integration (detector, context)
+├── template/          # Template rendering with Mustache
+├── beads/             # Beads integration (detector, context)
+└── github/            # GitHub integration (detector, remote detection)
 ```
 
 ## 2. Package Index Pattern

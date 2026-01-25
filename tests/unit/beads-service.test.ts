@@ -176,28 +176,6 @@ describe("BeadsService", () => {
     });
   });
 
-  describe("createDefinition", () => {
-    it("should return definition with enabled function reflecting beads state", () => {
-      const enabledService = new BeadsService({
-        coderConfig: { active: true },
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-        playgroundService: mockPlaygroundService,
-      });
-
-      const disabledService = new BeadsService({
-        coderConfig: { active: true },
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: false,
-        playgroundService: mockPlaygroundService,
-      });
-
-      expect(enabledService.createDefinition().enabled()).toBe(true);
-      expect(disabledService.createDefinition().enabled()).toBe(false);
-    });
-  });
 
   describe("processPermissionAsk", () => {
     it("should auto-approve bd commands when beads is enabled", () => {

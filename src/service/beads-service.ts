@@ -2,7 +2,6 @@ import type { Config } from "@opencode-ai/sdk/v2";
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
-import type { BeadsDefinition } from "../template/types";
 import type { PlaygroundService } from "./playground-service";
 import { BeadsContext, BeadsDetector } from "../beads";
 import { execSync } from "child_process";
@@ -355,13 +354,6 @@ export class BeadsService {
   }
 
   /**
-   * Create a definition object for template service registration.
-   */
-  createDefinition(): BeadsDefinition {
-    return {
-      enabled: () => this.beadsEnabled,
-    };
-  }
 
   /**
    * Check beads availability and show toast notification if something is missing.

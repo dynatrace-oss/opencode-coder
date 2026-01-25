@@ -1,6 +1,5 @@
 import type { Logger } from "../core/logger";
 import type { KnowledgeBase, CommandDef, AgentDef } from "./types";
-import type { KnowledgeBaseDefinition } from "../template/types";
 import { loadAgents, type LoadAgentsOptions } from "./loaders/agents";
 import { loadCommands, type LoadCommandsOptions } from "./loaders/commands";
 
@@ -95,15 +94,5 @@ export class LoaderKnowledgeBase implements KnowledgeBase {
    */
   getBasePath(): string {
     return this.basePath;
-  }
-
-  /**
-   * Create a definition object for template service registration.
-   */
-  createDefinition(): KnowledgeBaseDefinition {
-    return {
-      commands: () => this.commands,
-      agents: () => this.agents,
-    };
   }
 }

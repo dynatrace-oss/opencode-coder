@@ -2,7 +2,6 @@ import type { Config } from "@opencode-ai/sdk";
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { KnowledgeBase, CommandDef, AgentDef, KbInfo, KbInfoType } from "../kb/types";
-import type { TemplateService } from "../template";
 import { LoaderKnowledgeBase } from "../kb/loader-kb";
 import { CompositeKnowledgeBase } from "../kb/composite-kb";
 import { dirname, join } from "path";
@@ -29,10 +28,10 @@ async function resolveBundledKnowledgeBaseDir(): Promise<string> {
 }
 
 /**
-+ * Feature flags that control which commands/agents are registered.
-+ * Commands in feature-specific folders (e.g., github/*) are only
-+ * registered when the corresponding feature is enabled.
-+ */
+ * Feature flags that control which commands/agents are registered.
+ * Commands in feature-specific folders (e.g., github/*) are only
+ * registered when the corresponding feature is enabled.
+ */
 export interface FeatureFlags {
   /** Whether GitHub integration is enabled */
   github?: boolean;
@@ -48,8 +47,6 @@ export interface KnowledgeBaseServiceOptions {
   logger: Logger;
   /** Override the knowledge base (for testing) */
   knowledgeBase?: KnowledgeBase;
-  /** Template service for rendering Mustache templates in commands/agents */
-  templateService?: TemplateService;
   /** Feature flags for filtering commands by feature availability */
   featureFlags?: FeatureFlags;
 }
@@ -67,7 +64,6 @@ export class KnowledgeBaseService {
   private coderConfig: CoderConfig;
   private logger: Logger;
   private knowledgeBase: KnowledgeBase | null;
-  private templateService: TemplateService | null;
   private featureFlags: FeatureFlags;
   private loadErrors: string[] = [];
 
@@ -75,7 +71,6 @@ export class KnowledgeBaseService {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
     this.knowledgeBase = options.knowledgeBase ?? null;
-    this.templateService = options.templateService ?? null;
     this.featureFlags = options.featureFlags ?? {};
   }
 
@@ -214,27 +209,14 @@ export class KnowledgeBaseService {
       // Filter commands based on feature availability
       const commands = allCommands.filter((cmd) => this.shouldRegisterCommand(cmd));
 
-      // Register filtered KB with template service so templates can access command/agent data
-      // This ensures /coder/status shows only the commands that are actually registered
-      if (this.templateService) {
-        this.templateService.registerKnowledgeBase({
-          commands: () => commands,
-          agents: () => agents,
-        });
-      }
-
       this.logger.info(`Loaded ${commands.length} commands and ${agents.length} agents`);
 
-      // Register commands (with template rendering)
+      // Register commands
       const cmdStart = Date.now();
       config.command = config.command ?? {};
       for (const cmd of commands) {
-        const renderedTemplate = this.templateService
-          ? await this.templateService.render(cmd.template)
-          : cmd.template;
-
         config.command[cmd.name] = {
-          template: renderedTemplate,
+          template: cmd.template,
           ...(cmd.description && { description: cmd.description }),
           ...(cmd.agent && { agent: cmd.agent }),
           ...(cmd.model && { model: cmd.model }),
@@ -244,21 +226,17 @@ export class KnowledgeBaseService {
         this.logger.info(`✓ Registered command: /${cmd.name}`, {
           description: cmd.description || "(no description)",
           agent: cmd.agent || "(default)",
-          templateLength: renderedTemplate.length,
+          templateLength: cmd.template.length,
         });
       }
       this.logger.info(`Total commands registered: ${commands.length}`, { durationMs: Date.now() - cmdStart });
 
-      // Register agents (with template rendering)
+      // Register agents
       const agentStart = Date.now();
       config.agent = config.agent ?? {};
       for (const agent of agents) {
-        const renderedPrompt = this.templateService
-          ? await this.templateService.render(agent.prompt)
-          : agent.prompt;
-
         config.agent[agent.name] = {
-          prompt: renderedPrompt,
+          prompt: agent.prompt,
           ...(agent.description && { description: agent.description }),
           ...(agent.mode && { mode: agent.mode }),
           ...(agent.model && { model: agent.model }),
@@ -269,7 +247,7 @@ export class KnowledgeBaseService {
           description: agent.description || "(no description)",
           mode: agent.mode || "(default)",
           hasPermission: !!agent.permission,
-          promptLength: renderedPrompt.length,
+          promptLength: agent.prompt.length,
         });
       }
       this.logger.info(`Total agents registered: ${agents.length}`, { durationMs: Date.now() - agentStart });

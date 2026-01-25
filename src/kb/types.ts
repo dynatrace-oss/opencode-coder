@@ -1,5 +1,3 @@
-import type { KnowledgeBaseDefinition } from "../template/types";
-
 /**
  * Command definition loaded from knowledge-base/command/
  */
@@ -47,12 +45,6 @@ export interface KnowledgeBase {
    * Returns empty array if load() hasn't been called or no agents exist.
    */
   getAgents(): AgentDef[];
-
-  /**
-   * Create a KnowledgeBaseDefinition for use with TemplateService.
-   * Must be called after load().
-   */
-  createDefinition(): KnowledgeBaseDefinition;
 }
 
 /**
@@ -61,7 +53,8 @@ export interface KnowledgeBase {
 export type KbInfoType = "command" | "agent";
 
 /**
- * Unified info about a knowledge base item (command or agent)
+ * Unified representation of a knowledge base item (command or agent).
+ * Used by doctor/status commands to report on loaded KBs.
  */
 export interface KbInfo {
   type: KbInfoType;

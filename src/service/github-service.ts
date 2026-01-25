@@ -1,6 +1,5 @@
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
-import type { GitHubDefinition } from "../template/types";
 import { GitHubDetector } from "../github/detector";
 
 /**
@@ -18,7 +17,6 @@ export interface GitHubServiceOptions {
  *
  * Features:
  * - Detects if GitHub integration is enabled (via config or auto-detection)
- * - Provides enabled state for template registration
  */
 export class GitHubService {
   private readonly githubEnabled: boolean;
@@ -33,14 +31,5 @@ export class GitHubService {
    */
   isGitHubEnabled(): boolean {
     return this.githubEnabled;
-  }
-
-  /**
-   * Create a definition object for template service registration.
-   */
-  createDefinition(): GitHubDefinition {
-    return {
-      enabled: () => this.githubEnabled,
-    };
   }
 }

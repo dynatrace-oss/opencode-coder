@@ -6,7 +6,7 @@ export type Logger = ReturnType<typeof createLogger>;
 
 export function createLogger(client: PluginInput["client"]) {
   // Check if debug logging is enabled via environment variable
-  const isDebugEnabled = !!process.env.OPENCODE_CODER_DEBUG;
+  const isDebugEnabled = !!process.env['OPENCODE_CODER_DEBUG'];
 
   const log = (level: "debug" | "info" | "warn" | "error", message: string, extra?: Record<string, unknown>) => {
     // For debug messages, only log if OPENCODE_CODER_DEBUG is truthy

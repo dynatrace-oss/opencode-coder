@@ -89,7 +89,7 @@ export class SkillService {
 
         // Read subdirectories (including symlinks to directories)
         const entries = await this.fs.readdir(skillPath, { withFileTypes: true });
-        const skillDirs = entries.filter((entry) => entry.isDirectory() || entry.isSymbolicLink());
+        const skillDirs = entries.filter((entry) => entry.isDirectory() || (typeof (entry as any).isSymbolicLink === 'function' && (entry as any).isSymbolicLink()));
 
         for (const dir of skillDirs) {
           try {

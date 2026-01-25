@@ -5,7 +5,29 @@ Complete guide to enabling debug logging and analyzing OpenCode logs for trouble
 ## Table of Contents
 
 1. [Debug Logging](#debug-logging)
+   - [Enabling Debug Logging](#enabling-debug-logging)
+   - [Plugin-Specific Debug Logging](#plugin-specific-debug-logging)
+   - [Setting Debug Logging Permanently](#setting-debug-logging-permanently)
+   - [Log File Locations](#log-file-locations)
+   - [Finding Log Files](#finding-log-files)
+   - [Analyzing Log Files](#analyzing-log-files)
+   - [Useful Log Analysis Commands](#useful-log-analysis-commands)
+   - [What to Look For](#what-to-look-for)
+   - [Disabling Debug Logging](#disabling-debug-logging)
 2. [Analyzing OpenCode Logs](#analyzing-opencode-logs)
+   - [Overview](#overview)
+   - [Running the Log Analyzer](#running-the-log-analyzer)
+   - [Interactive Mode](#interactive-mode)
+   - [CLI Mode](#cli-mode)
+   - [List Commands](#list-commands)
+   - [Filter Options](#filter-options)
+   - [Output Options](#output-options)
+   - [Common Use Cases](#common-use-cases)
+   - [Integration with Troubleshooting Workflows](#integration-with-troubleshooting-workflows)
+   - [Advanced Filtering Examples](#advanced-filtering-examples)
+   - [Performance Notes](#performance-notes)
+   - [Troubleshooting the Log Analyzer](#troubleshooting-the-log-analyzer)
+   - [Summary](#summary)
 
 ---
 

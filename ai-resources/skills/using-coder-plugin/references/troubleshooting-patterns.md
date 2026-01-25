@@ -2,6 +2,37 @@
 
 This reference contains detailed solutions for common issues when using the opencode-coder plugin. Issues are organized by category for quick reference.
 
+## Table of Contents
+
+1. [Quick Search Patterns](#quick-search-patterns)
+2. [Installation Issues](#installation-issues)
+   - [bd command not found after installation](#bd-command-not-found-after-installation)
+   - [npm permission errors during installation](#npm-permission-errors-during-installation)
+3. [Initialization Issues](#initialization-issues)
+   - [bd init fails with "not a git repository"](#bd-init-fails-with-not-a-git-repository)
+   - [Hooks not working after initialization](#hooks-not-working-after-initialization)
+   - [Already initialized but want to switch modes (stealth ↔ team)](#already-initialized-but-want-to-switch-modes-stealth--team)
+4. [Runtime Issues](#runtime-issues)
+   - [bd commands failing with database errors](#bd-commands-failing-with-database-errors)
+   - [Git hooks not triggering](#git-hooks-not-triggering)
+   - [Uncommitted beads changes piling up](#uncommitted-beads-changes-piling-up)
+5. [Configuration Issues](#configuration-issues)
+   - [Plugin not loading or not active](#plugin-not-loading-or-not-active)
+   - [Can't find log files](#cant-find-log-files)
+6. [Agent and Command Issues](#agent-and-command-issues)
+   - [Commands not being recognized](#commands-not-being-recognized)
+   - [Beads agents not following instructions](#beads-agents-not-following-instructions)
+7. [Sync and Git Issues](#sync-and-git-issues)
+   - [Beads files showing up in git status (stealth mode)](#beads-files-showing-up-in-git-status-stealth-mode)
+   - [Beads files not showing up in git status (team mode)](#beads-files-not-showing-up-in-git-status-team-mode)
+8. [Performance Issues](#performance-issues)
+   - [bd commands are slow](#bd-commands-are-slow)
+   - [Large log files filling disk](#large-log-files-filling-disk)
+9. [Getting Additional Help](#getting-additional-help)
+10. [Pattern Index](#pattern-index)
+
+---
+
 ## Quick Search Patterns
 
 Use these grep patterns to quickly find solutions:

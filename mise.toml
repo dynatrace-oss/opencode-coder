@@ -2,6 +2,5 @@
 # Replaces the old envctl env.rc file
 
 [env]
-OPENCODE_DEFAULT_OPTIONS = "--log-level DEBUG"
+OPENCODE_CODER_DEBUG=1
 OPENCODE_LOG_RETENTION = "100"
-DEBUG="opencode:coder"

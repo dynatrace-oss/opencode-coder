@@ -1071,7 +1071,7 @@ A structured template is available at [`assets/bug-report-template.md`](./assets
 Run the helper script to automatically collect system information:
 
 ```bash
-./scripts/collect-system-info.sh
+scripts/collect-system-info.sh
 ```
 
 This script collects:
@@ -1164,7 +1164,7 @@ For complex issues requiring logs, reproduction steps, or additional context:
 cp ai-resources/skills/using-coder-plugin/assets/bug-report-template.md /tmp/bug-report.md
 
 # Collect system info
-./scripts/collect-system-info.sh > /tmp/system-info.txt
+scripts/collect-system-info.sh > /tmp/system-info.txt
 
 # Edit the template, fill in all sections, paste system info
 # Then create the issue

@@ -185,10 +185,10 @@ describe("KnowledgeBaseService", () => {
 
       await service.processConfig(mockConfig);
 
-      expect(mockLogger.hasLogged("info", "2 commands and 1 agents")).toBe(true);
+      expect(mockLogger.hasLogged("info", "Loaded 2 commands and 1 agents")).toBe(true);
     });
 
-    it("should log each registered command and agent in debug", async () => {
+    it("should log each registered command and agent", async () => {
       const service = new KnowledgeBaseService({
         coderConfig: { active: true },
         logger: mockLogger,
@@ -200,8 +200,8 @@ describe("KnowledgeBaseService", () => {
 
       await service.processConfig(mockConfig);
 
-      expect(mockLogger.hasLogged("debug", "/story/next")).toBe(true);
-      expect(mockLogger.hasLogged("debug", "@reviewer")).toBe(true);
+      expect(mockLogger.hasLogged("info", "✓ Registered command: /story/next")).toBe(true);
+      expect(mockLogger.hasLogged("info", "✓ Registered agent: @reviewer")).toBe(true);
     });
   });
 
@@ -259,7 +259,7 @@ describe("KnowledgeBaseService", () => {
       await service.processConfig(mockConfig);
 
       // Should report all 4 commands (no filtering)
-      expect(mockLogger.hasLogged("info", "4 commands and 0 agents")).toBe(true);
+      expect(mockLogger.hasLogged("info", "Loaded 4 commands and 0 agents")).toBe(true);
     });
   });
 
@@ -482,8 +482,7 @@ describe("KnowledgeBaseService", () => {
 
       await service.processConfig(mockConfig);
 
-      expect(mockLogger.hasLogged("debug", "Skipping command /github/sync-issues")).toBe(true);
-      expect(mockLogger.hasLogged("debug", "GitHub not available")).toBe(true);
+      expect(mockLogger.hasLogged("debug", "Skipping command /github/sync-issues (GitHub not available)")).toBe(true);
     });
 
     it("should report correct count after filtering", async () => {
@@ -504,7 +503,7 @@ describe("KnowledgeBaseService", () => {
       await service.processConfig(mockConfig);
 
       // Should report 2 commands (coder/status and bd/init), not 4
-      expect(mockLogger.hasLogged("info", "2 commands and 0 agents")).toBe(true);
+      expect(mockLogger.hasLogged("info", "Loaded 2 commands and 0 agents")).toBe(true);
     });
   });
 });

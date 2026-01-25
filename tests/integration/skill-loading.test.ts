@@ -10,6 +10,9 @@ describe("Skill Loading Integration", () => {
   let originalCwd: string;
 
   beforeEach(async () => {
+    // Enable debug logging for tests
+    process.env['OPENCODE_CODER_DEBUG'] = '1';
+    
     // Save original working directory
     originalCwd = process.cwd();
 
@@ -22,6 +25,9 @@ describe("Skill Loading Integration", () => {
   });
 
   afterEach(async () => {
+    // Clean up environment variable
+    delete process.env['OPENCODE_CODER_DEBUG'];
+    
     // Restore original working directory
     process.chdir(originalCwd);
 
@@ -174,7 +180,7 @@ Skill three template`,
 
       // Verify log message
       const registeredLog = mockInput.client.app.logs.find(
-        (log) => log.message.includes("Registered 3 skills")
+        (log) => log.message.includes("Total skills registered: 3")
       );
       expect(registeredLog).toBeDefined();
     });
@@ -236,7 +242,7 @@ description: Invalid skill
 
       // Verify only 1 skill was registered (not 2)
       const registeredLog = mockInput.client.app.logs.find(
-        (log) => log.message.includes("Registered 1 skills")
+        (log) => log.message.includes("Total skills registered: 1")
       );
       expect(registeredLog).toBeDefined();
     });
@@ -270,14 +276,14 @@ description: Invalid skill
       // Verify skill without SKILL.md was skipped
       expect(config.command!["skills/no-skill-md"]).toBeUndefined();
 
-      // Verify debug log about missing SKILL.md
-      const debugLog = mockInput.client.app.logs.find(
+      // Verify warn log about missing SKILL.md
+      const warnLog = mockInput.client.app.logs.find(
         (log) =>
-          log.level === "debug" &&
+          log.level === "warn" &&
           log.message.includes("Skipping no-skill-md") &&
           log.message.includes("no SKILL.md found")
       );
-      expect(debugLog).toBeDefined();
+      expect(warnLog).toBeDefined();
     });
   });
 
@@ -306,11 +312,11 @@ description: Invalid skill
       // Verify it's NOT registered without the prefix
       expect(config.command!["my-custom-skill"]).toBeUndefined();
 
-      // Verify the debug log shows correct name
-      const debugLog = mockInput.client.app.logs.find(
+      // Verify the info log shows correct name
+      const infoLog = mockInput.client.app.logs.find(
         (log) => log.message.includes("Discovered skill: skills/my-custom-skill")
       );
-      expect(debugLog).toBeDefined();
+      expect(infoLog).toBeDefined();
     });
 
     it("should preserve directory name in command name", async () => {
@@ -454,7 +460,7 @@ description: Invalid skill
 
       // Verify only 1 skill was registered
       const registeredLog = mockInput.client.app.logs.find(
-        (log) => log.message.includes("Registered 1 skills")
+        (log) => log.message.includes("Total skills registered: 1")
       );
       expect(registeredLog).toBeDefined();
     });
@@ -534,7 +540,7 @@ description: Invalid
 
       // Verify correct count registered (3 valid)
       const registeredLog = mockInput.client.app.logs.find(
-        (log) => log.message.includes("Registered 3 skills")
+        (log) => log.message.includes("Total skills registered: 3")
       );
       expect(registeredLog).toBeDefined();
 
@@ -592,14 +598,14 @@ This is from .claude/skills`,
 
       // Verify only 1 skill was registered (not 2)
       const registeredLog = mockInput.client.app.logs.find(
-        (log) => log.message.includes("Registered 1 skills")
+        (log) => log.message.includes("Total skills registered: 1")
       );
       expect(registeredLog).toBeDefined();
 
-      // Verify debug log for skipped duplicate
+      // Verify warn log for skipped duplicate
       const duplicateLog = mockInput.client.app.logs.find(
         (log) =>
-          log.level === "debug" &&
+          log.level === "warn" &&
           log.message.includes("Skipping duplicate skill") &&
           log.message.includes("shared-skill")
       );

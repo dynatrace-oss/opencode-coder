@@ -89,7 +89,7 @@ This is a skill template.`);
       expect(config.command).toBeDefined();
       expect(config.command!["skills/my-skill"]).toBeDefined();
       expect(config.command!["skills/my-skill"].template).toContain("This is a skill template");
-      expect(mockLogger.hasLogged("info", "Registered 1 skills as commands")).toBe(true);
+      expect(mockLogger.hasLogged("info", "Total skills registered: 1")).toBe(true);
     });
 
     it("should parse frontmatter and set command properties", async () => {
@@ -157,7 +157,7 @@ Template body here.`);
       expect(config.command!["skills/skill-2"]).toBeDefined();
       expect(config.command!["skills/skill-3"]).toBeDefined();
       expect(config.command!["skills/skill-4"]).toBeDefined();
-      expect(mockLogger.hasLogged("info", "Registered 4 skills as commands")).toBe(true);
+      expect(mockLogger.hasLogged("info", "Total skills registered: 4")).toBe(true);
     });
 
     it("should skip directories without SKILL.md", async () => {
@@ -192,7 +192,7 @@ Template body here.`);
       expect(config.command!["skills/valid-skill"]).toBeDefined();
       expect(config.command!["skills/no-skill-md"]).toBeUndefined();
       expect(readFileCallCount).toBe(1); // Only read valid-skill
-      expect(mockLogger.hasLogged("debug", "Skipping no-skill-md: no SKILL.md found")).toBe(true);
+      expect(mockLogger.hasLogged("warn", "Skipping no-skill-md: no SKILL.md found")).toBe(true);
     });
 
     it("should skip skills with empty template body", async () => {
@@ -407,12 +407,12 @@ Template`);
 
       await service.processConfig(config);
 
-      expect(mockLogger.hasLogged("debug", "Discovered skill: skills/test-skill")).toBe(true);
-      const debugCall = mockLogger.calls.find((call) =>
+      expect(mockLogger.hasLogged("info", "Discovered skill: skills/test-skill")).toBe(true);
+      const infoCall = mockLogger.calls.find((call) =>
         call.message.includes("Discovered skill: skills/test-skill")
       );
-      expect(debugCall?.extra?.hasDescription).toBe(true);
-      expect(debugCall?.extra?.hasAgent).toBe(true);
+      expect(infoCall?.extra?.hasDescription).toBe(true);
+      expect(infoCall?.extra?.hasAgent).toBe(true);
     });
 
     it("should handle multiple skills with same name from different locations", async () => {
@@ -438,7 +438,7 @@ Template`);
       // Both skills should be registered
       expect(config.command!["skills/skill-1"]).toBeDefined();
       expect(config.command!["skills/skill-2"]).toBeDefined();
-      expect(mockLogger.hasLogged("info", "Registered 2 skills as commands")).toBe(true);
+      expect(mockLogger.hasLogged("info", "Total skills registered: 2")).toBe(true);
     });
 
     it("should only set subtask when explicitly boolean", async () => {

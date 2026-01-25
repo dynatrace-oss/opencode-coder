@@ -240,9 +240,14 @@ export class KnowledgeBaseService {
           ...(cmd.model && { model: cmd.model }),
           ...(cmd.subtask && { subtask: cmd.subtask }),
         };
-        this.logger.debug(`Registered command: /${cmd.name}`);
+        
+        this.logger.info(`✓ Registered command: /${cmd.name}`, {
+          description: cmd.description || "(no description)",
+          agent: cmd.agent || "(default)",
+          templateLength: renderedTemplate.length,
+        });
       }
-      this.logger.debug("Commands registered", { durationMs: Date.now() - cmdStart, count: commands.length });
+      this.logger.info(`Total commands registered: ${commands.length}`, { durationMs: Date.now() - cmdStart });
 
       // Register agents (with template rendering)
       const agentStart = Date.now();
@@ -259,12 +264,15 @@ export class KnowledgeBaseService {
           ...(agent.model && { model: agent.model }),
           ...(agent.permission && { permission: agent.permission }),
         };
-        this.logger.debug(`Registered agent: @${agent.name}`, {
+        
+        this.logger.info(`✓ Registered agent: @${agent.name}`, {
+          description: agent.description || "(no description)",
+          mode: agent.mode || "(default)",
           hasPermission: !!agent.permission,
-          permission: agent.permission,
+          promptLength: renderedPrompt.length,
         });
       }
-      this.logger.debug("Agents registered", { durationMs: Date.now() - agentStart, count: agents.length });
+      this.logger.info(`Total agents registered: ${agents.length}`, { durationMs: Date.now() - agentStart });
     } finally {
       this.logger.debug("processConfig completed", { durationMs: Date.now() - start });
     }

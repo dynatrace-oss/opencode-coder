@@ -85,11 +85,11 @@ export class SkillService {
       try {
         // Check if directory exists
         await this.fs.access(skillPath);
-        this.logger.debug(`Scanning skills directory: ${skillPath}`);
+        this.logger.info(`Scanning skills directory: ${skillPath}`);
 
-        // Read subdirectories
+        // Read subdirectories (including symlinks to directories)
         const entries = await this.fs.readdir(skillPath, { withFileTypes: true });
-        const skillDirs = entries.filter((entry) => entry.isDirectory());
+        const skillDirs = entries.filter((entry) => entry.isDirectory() || entry.isSymbolicLink());
 
         for (const dir of skillDirs) {
           try {
@@ -100,7 +100,7 @@ export class SkillService {
             try {
               await this.fs.access(skillMdPath);
             } catch {
-              this.logger.debug(`Skipping ${dir.name}: no SKILL.md found`);
+              this.logger.warn(`Skipping ${dir.name}: no SKILL.md found`);
               continue;
             }
 
@@ -113,7 +113,7 @@ export class SkillService {
             
             // Check for duplicates (first location wins)
             if (seenSkills.has(dir.name)) {
-              this.logger.debug(`Skipping duplicate skill: ${dir.name}`);
+              this.logger.warn(`Skipping duplicate skill: ${dir.name}`);
               continue;
             }
             seenSkills.add(dir.name);
@@ -151,7 +151,7 @@ export class SkillService {
             }
 
             commands.push(command);
-            this.logger.debug(`Discovered skill: ${name}`, {
+            this.logger.info(`Discovered skill: ${name}`, {
               hasDescription: !!command.description,
               hasAgent: !!command.agent,
             });
@@ -192,16 +192,24 @@ export class SkillService {
       // Register skills as commands
       config.command = config.command ?? {};
       for (const skill of skills) {
-        config.command[skill.name] = {
+        const commandConfig = {
           template: skill.template,
           ...(skill.description && { description: skill.description }),
           ...(skill.agent && { agent: skill.agent }),
           ...(skill.model && { model: skill.model }),
           ...(skill.subtask !== undefined && { subtask: skill.subtask }),
         };
+        config.command[skill.name] = commandConfig;
+        
+        // Log each command registration with details
+        this.logger.info(`✓ Registered skill command: ${skill.name}`, {
+          description: skill.description || "(no description)",
+          agent: skill.agent || "(default)",
+          templateLength: skill.template.length,
+        });
       }
 
-      this.logger.info(`Registered ${skills.length} skills as commands`);
+      this.logger.info(`Total skills registered: ${skills.length}`);
     } finally {
       this.logger.debug("SkillService.processConfig completed", {
         durationMs: Date.now() - start,

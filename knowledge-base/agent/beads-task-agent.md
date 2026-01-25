@@ -69,7 +69,7 @@ You are called as a subagent with dual purposes:
 - Always update issue status (`in_progress` when starting, close when done)
 - Link discovered work with `discovered-from` dependencies
 - Don't close issues unless work is actually complete
-- If blocked, use `bd update` to set status to `blocked` and explain why
+- If blocked, run bd update to set status to `blocked` and explain why
 - Communicate clearly about progress and blockers
 - Parse JSON output and summarize it - don't dump raw JSON
 

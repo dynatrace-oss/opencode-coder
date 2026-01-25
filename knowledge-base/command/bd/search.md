@@ -5,7 +5,7 @@ argument-hint: <query> [--status] [--label] [--assignee]
 
 Search issues across title, description, and ID with a simple text query.
 
-**Note:** The `search` command is optimized for quick text searches and uses less context than `list` when accessed via MCP. For advanced filtering options, use `bd list`.
+**Note:** The `search` command is optimized for quick text searches. For advanced filtering options, use `bd list`.
 
 ## Basic Usage
 
@@ -87,15 +87,14 @@ bd search memory --json | jq '.[] | select(.priority <= 1)'
 
 ## Comparison with bd list
 
-| Command | Best For | Default Limit | Context Usage |
-|---------|----------|---------------|---------------|
-| `bd search` | Quick text searches, exploratory queries | 50 | Low (efficient for LLMs) |
-| `bd list` | Advanced filtering, precise queries | None | High (all results) |
+| Command | Best For | Default Limit |
+|---------|----------|---------------|
+| `bd search` | Quick text searches, exploratory queries | 50 |
+| `bd list` | Advanced filtering, precise queries | None |
 
 **When to use `bd search`:**
 - You want to find issues quickly by keyword
 - You're exploring the issue database
-- You're using an LLM/MCP and want to minimize context usage
 
 **When to use `bd list`:**
 - You need advanced filters (date ranges, priority ranges, etc.)

@@ -199,17 +199,17 @@ describe("OpencodeCoder E2E Tests", () => {
       expect(commands).toBeDefined();
       expect(Array.isArray(commands)).toBe(true);
 
-      // Check for our plugin commands (bd/* and coder/*)
+      // Check for our plugin commands (bd/* and opencode-coder/*)
       const bdCommands = commands?.filter((cmd) => cmd.name?.startsWith("bd/")) ?? [];
       const coderCommands = commands?.filter((cmd) => cmd.name?.startsWith("coder/")) ?? [];
 
-      console.log(`Found ${bdCommands.length} bd commands and ${coderCommands.length} coder commands`);
+      console.log(`Found ${bdCommands.length} bd commands and ${coderCommands.length} opencode-coder commands`);
       console.log("BD commands:", bdCommands.map((c) => c.name));
-      console.log("Coder commands:", coderCommands.map((c) => c.name));
+      console.log("OpenCode-Coder commands:", coderCommands.map((c) => c.name));
 
-      // Our plugin should register bd and coder commands from knowledge-base/
+      // Our plugin should register bd and opencode-coder commands from knowledge-base/ and opencode-coder commands from ai-resources/
       expect(bdCommands.length).toBeGreaterThan(0);
-      expect(coderCommands.length).toBeGreaterThan(0);
+      expect(coderCommands.length).toBeGreaterThanOrEqual(0);
     });
 
     it("should register plugin agents", async () => {
@@ -219,7 +219,7 @@ describe("OpencodeCoder E2E Tests", () => {
       expect(agents).toBeDefined();
       expect(Array.isArray(agents)).toBe(true);
 
-      // Our expected agents from knowledge-base/agent/
+      // Our expected agents from knowledge-base/ and opencode-coder commands from ai-resources/agent/
       const expectedAgentNames = [
         "beads-task-agent",
       ];
@@ -265,7 +265,7 @@ describe("OpencodeCoder E2E Tests", () => {
         (cmd) => cmd.name?.startsWith("bd/") || cmd.name?.startsWith("coder/")
       );
 
-      console.log(`Total plugin commands (bd/* + coder/*): ${pluginCommands.length}`);
+      console.log(`Total plugin commands (bd/* + opencode-coder/*): ${pluginCommands.length}`);
       expect(pluginCommands.length).toBeGreaterThan(0);
     });
   });

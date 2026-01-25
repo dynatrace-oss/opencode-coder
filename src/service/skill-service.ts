@@ -4,8 +4,28 @@ import type { Logger } from "../core/logger";
 import type { CommandDef } from "../kb/types";
 import { parseFrontmatter } from "../core/parser";
 import { readdir, readFile, access } from "fs/promises";
-import { join } from "path";
+import { join, dirname } from "path";
 import { homedir } from "os";
+import { fileURLToPath } from "url";
+
+// Get the directory where this module is located
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Resolve the bundled knowledge-base directory.
+ * Handles both source (src/service/) and dist (dist/) layouts.
+ */
+async function resolveBundledKnowledgeBaseDir(): Promise<string> {
+  // Try dist layout first (../knowledge-base from dist/)
+  const distPath = join(__dirname, "..", "knowledge-base");
+  try {
+    await access(distPath);
+    return distPath;
+  } catch {
+    // Fall back to source layout (../../knowledge-base from src/service/)
+    return join(__dirname, "..", "..", "knowledge-base");
+  }
+}
 
 /**
  * File system interface for dependency injection
@@ -44,7 +64,8 @@ export interface SkillServiceOptions {
  * Service that discovers SKILL.md files and registers them as /skills/* commands.
  *
  * Features:
- * - Discovers skills from 4 locations:
+ * - Discovers skills from 5 locations (first match wins):
+ *   - knowledge-base/skills (plugin-bundled, lowest priority)
  *   - .opencode/skills (project-specific)
  *   - .claude/skills (project-specific, legacy)
  *   - ~/.config/opencode/skills (user global)
@@ -68,10 +89,22 @@ export class SkillService {
    * Discover skills from all configured locations.
    * Each skill is a directory containing a SKILL.md file.
    *
+   * Search priority (first location wins for duplicate skill names):
+   * 1. knowledge-base/skills/ - Plugin-bundled (lowest priority, can be overridden)
+   * 2. .opencode/skills/ - Project-specific (overrides plugin)
+   * 3. .claude/skills/ - Legacy project
+   * 4. ~/.config/opencode/skills/ - User global (highest priority)
+   * 5. ~/.claude/skills/ - Legacy user global
+   *
    * @returns Array of CommandDef objects (one per skill)
    */
   private async discoverSkills(): Promise<CommandDef[]> {
+    // Resolve bundled skills directory
+    const bundledKbDir = await resolveBundledKnowledgeBaseDir();
+    const bundledSkillsPath = join(bundledKbDir, "skills");
+
     const skillPaths = [
+      bundledSkillsPath, // Plugin-bundled skills (lowest priority)
       join(process.cwd(), ".opencode/skills"),
       join(process.cwd(), ".claude/skills"),
       join(homedir(), ".config/opencode/skills"),
@@ -87,9 +120,9 @@ export class SkillService {
         await this.fs.access(skillPath);
         this.logger.info(`Scanning skills directory: ${skillPath}`);
 
-        // Read subdirectories (including symlinks to directories)
+        // Read subdirectories (symlinks to directories are followed automatically)
         const entries = await this.fs.readdir(skillPath, { withFileTypes: true });
-        const skillDirs = entries.filter((entry) => entry.isDirectory() || entry.isSymbolicLink());
+        const skillDirs = entries.filter((entry) => entry.isDirectory());
 
         for (const dir of skillDirs) {
           try {

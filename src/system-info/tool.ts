@@ -1,6 +1,6 @@
 import { tool } from '@opencode-ai/plugin';
 import type { SystemInfo } from './types';
-import { collectPluginInfo, collectBeadsInfo } from './collectors';
+import { collectPluginInfo, collectBeadsInfo, collectSessionInfo } from './collectors';
 
 export const systemInfoTool = tool({
   description: 'Get runtime information about opencode-coder plugin and integrations',
@@ -9,14 +9,17 @@ export const systemInfoTool = tool({
     // No args for minimal version
   },
   
-  async execute(_args, _context) {
+  async execute(_args, context) {
     // Top-level error handling ensures tool never fails completely
     try {
       const info: SystemInfo = {
-        metadata: {
-          version: '1.0.0',
-          generatedAt: new Date().toISOString()
-        },
+        session: await collectSessionInfo(context).catch(() => ({
+          id: 'unknown',
+          pid: process.pid,
+          workingDirectory: process.cwd(),
+          command: process.argv.join(' '),
+          terminal: null
+        })),
         
         // Each collector has internal error handling (returns safe defaults)
         // AND we add .catch() as defense-in-depth

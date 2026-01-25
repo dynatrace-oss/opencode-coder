@@ -2,14 +2,17 @@
  * Complete system info output structure
  */
 export interface SystemInfo {
-  metadata: SystemMetadata;
+  session: SessionInfo;
   plugin: PluginInfo;
   integrations: IntegrationInfo;
 }
 
-export interface SystemMetadata {
-  version: string;           // Schema version (1.0.0)
-  generatedAt: string;       // ISO timestamp
+export interface SessionInfo {
+  id: string;              // From context.sessionID
+  pid: number;             // From process.pid
+  workingDirectory: string; // From process.cwd()
+  command: string;         // From process.argv.join(' ')
+  terminal: string | null; // From process.env.TERM or tty detection
 }
 
 export interface PluginInfo {

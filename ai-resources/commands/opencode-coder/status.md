@@ -4,30 +4,40 @@ description: Show opencode-coder plugin status and information
 
 # Plugin Status
 
-**{{coder.version.name}}** v{{coder.version.version}}
+Load the opencode-coder skill to display comprehensive plugin status and information.
 
-{{coder.version.description}}
+## Task
 
-## Configuration
+Use the skill tool to load status checking guidance:
 
-- **Status**: {{#coder.config.active}}active{{/coder.config.active}}{{^coder.config.active}}inactive{{/coder.config.active}}
-- **Working Directory**: `{{coder.cwd}}`
-- **Beads Integration**: {{#beads.enabled}}enabled{{/beads.enabled}}{{^beads.enabled}}disabled{{/beads.enabled}}
-- **GitHub Integration**: {{#github.enabled}}enabled{{/github.enabled}}{{^github.enabled}}disabled{{/github.enabled}}
+```
+skill({ name: "opencode-coder" })
+```
 
-## Knowledge Base
+Then follow the **Status & Health Checks** section to collect and display:
 
-- **Commands**: {{knowledgeBase.commandCount}}
-- **Agents**: {{knowledgeBase.agentCount}}
+### 1. Plugin Information
+- Plugin name and version (from package.json or system_info)
+- Description and purpose
 
-### Commands
+### 2. Configuration Status
+- Coder config: active/inactive (check `.coder/coder.json`)
+- Working directory
+- Beads integration: enabled/disabled (check `.beads/` exists)
+- GitHub integration: enabled/disabled (check `gh` available)
 
-{{#knowledgeBase.commands}}
-- `/{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}
-{{/knowledgeBase.commands}}
+### 3. Knowledge Base
+- Count commands in `ai-resources/commands/` (if accessible)
+- Count agents in `ai-resources/agents/` (if accessible)
+- List available commands with descriptions
+- List available agents with descriptions and modes
 
-### Agents
+### 4. Health Summary
+- Run quick health checks
+- Report component statuses (OK/MISSING/WARN)
 
-{{#knowledgeBase.agents}}
-- `@{{name}}`: {{#description}}{{description}}{{/description}}{{^description}}(no description){{/description}}{{#mode}} (mode: {{mode}}){{/mode}}
-{{/knowledgeBase.agents}}
+The skill provides comprehensive status checking procedures and formatting guidance.
+
+## Note on Templates
+
+This command previously used template syntax ({{variable}}), which is no longer supported. Instead, gather information programmatically using bash commands, file reads, and the system_info tool.

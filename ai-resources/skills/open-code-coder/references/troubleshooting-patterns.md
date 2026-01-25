@@ -242,7 +242,7 @@ git push origin main
 
 ### Plugin not loading or not active
 
-**Symptoms**: Plugin commands/agents not available; plugin appears inactive in Claude.
+**Symptoms**: Plugin commands/agents not available; plugin appears inactive in OpenCode.
 
 **Solution**:
 

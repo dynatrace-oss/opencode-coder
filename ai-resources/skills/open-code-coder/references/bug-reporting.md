@@ -200,7 +200,7 @@ Two identical commits are created for each task closure:
 
 ## Steps to Reproduce
 1. Create a task: `bd create --title="Test feature" --type=task`
-2. Invoke task agent via Claude Code
+2. Invoke task agent via OpenCode
 3. Agent implements the task and closes it
 4. Check git log: `git log --oneline -10`
 5. Observe duplicate commits

@@ -5,10 +5,20 @@ export const SERVICE_NAME = "opencode-coder";
 export type Logger = ReturnType<typeof createLogger>;
 
 export function createLogger(client: PluginInput["client"]) {
+  // Check if debug logging is enabled via environment variable
+  const isDebugEnabled = !!process.env.OPENCODE_CODER_DEBUG;
+
   const log = (level: "debug" | "info" | "warn" | "error", message: string, extra?: Record<string, unknown>) => {
-    const body: { service: string; level: "debug" | "info" | "warn" | "error"; message: string; extra?: { [key: string]: unknown } } = {
+    // For debug messages, only log if OPENCODE_CODER_DEBUG is truthy
+    if (level === "debug" && !isDebugEnabled) {
+      return;
+    }
+
+    // Always use "info" level for OpenCode logging
+    // (even for our internal debug messages when they are enabled)
+    const body: { service: string; level: "info" | "warn" | "error"; message: string; extra?: { [key: string]: unknown } } = {
       service: SERVICE_NAME,
-      level,
+      level: level === "debug" ? "info" : level,
       message,
     };
     if (extra) {

@@ -3,6 +3,7 @@ import { createLogger } from "./core";
 import { loadConfig } from "./config";
 import { KnowledgeBaseService, BeadsService, GitHubService, PlaygroundService, SkillService } from "./service";
 import { TemplateService } from "./template";
+import { systemInfoTool } from "./system-info";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
   const log = createLogger(client);
@@ -107,6 +108,10 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
 
     async "permission.ask"(input, output) {
       beadsService.processPermissionAsk(input, output);
+    },
+
+    tool: {
+      system_info: systemInfoTool
     },
   };
 };

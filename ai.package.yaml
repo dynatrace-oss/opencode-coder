@@ -1,2 +1,4 @@
 resources:
     - skill/skill-creator
+    - skill/ai-resource-manager
+    - skill/self-reflection

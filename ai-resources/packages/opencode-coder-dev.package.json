@@ -1,0 +1,8 @@
+{
+  "name": "opencode-coder-dev",
+  "description": "Agent resources for opencode coder plugin development ",
+  "resources": [
+    "command/opencode-coder-dev/analyze-logs",
+    "command/opencode-coder-dev/coder-sync"
+  ]
+}

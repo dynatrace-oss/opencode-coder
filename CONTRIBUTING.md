@@ -35,7 +35,7 @@ src/
 ├── config/            # Configuration loading and schema
 ├── kb/                # Knowledge base loading (commands, agents)
 ├── service/           # Main services (KnowledgeBaseService, BeadsService)
-├── template/          # Template rendering with Mustache
+├── system-info/       # System information collection tool
 ├── beads/             # Beads integration (detector, context)
 └── github/            # GitHub integration (detector, remote detection)
 ```
@@ -88,9 +88,9 @@ For detailed architecture patterns and conventions, see [`docs/coding-guidelines
 
 | Level | Location | Description | Command |
 |-------|----------|-------------|---------|
-| Unit | `tests/unit/` | Fast, isolated tests with mocks | `bun test tests/unit` |
-| Integration | `tests/integration/` | Tests with real dependencies | `bun test tests/integration` |
-| E2E | `tests/e2e/` | Full plugin tests with opencode | `bun test tests/e2e` |
+| Unit | `tests/unit/` | Fast, isolated tests with mocks | `bun run test:unit` |
+| Integration | `tests/integration/` | Tests with real dependencies | `bun run test:integration` |
+| E2E | `tests/e2e/` | Full plugin tests with opencode | `bun run test:e2e` |
 
 ### Test Structure
 
@@ -111,9 +111,9 @@ tests/
 
 ```bash
 bun test                    # All tests
-bun test tests/unit         # Unit tests only
-bun test tests/integration  # Integration tests
-bun test tests/e2e          # E2E tests (requires build + opencode CLI)
+bun test tests/unit         # Unit tests only (or: bun run test:unit)
+bun test tests/integration  # Integration tests (or: bun run test:integration)
+bun test tests/e2e          # E2E tests (or: bun run test:e2e)
 ```
 
 ## Scripts Reference

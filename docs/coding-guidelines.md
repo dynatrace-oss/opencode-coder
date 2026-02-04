@@ -17,7 +17,7 @@ src/
 ├── config/            # Configuration loading and schema
 ├── kb/                # Knowledge base loading (commands, agents)
 ├── service/           # Main services (KnowledgeBaseService, BeadsService)
-├── template/          # Template rendering with Mustache
+├── system-info/       # System information collection tool
 ├── beads/             # Beads integration (detector, context)
 └── github/            # GitHub integration (detector, remote detection)
 ```
@@ -95,7 +95,7 @@ tests/
 
 ```bash
 bun test                    # All tests
-bun test tests/unit         # Unit tests only
-bun test tests/integration  # Integration tests
-bun test tests/e2e          # E2E tests (requires build + opencode)
+bun run test:unit           # Unit tests only
+bun run test:integration    # Integration tests
+bun run test:e2e            # E2E tests (requires build + opencode)
 ```

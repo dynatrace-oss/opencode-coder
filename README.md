@@ -6,7 +6,7 @@ OpenCode plugin for story-driven development with agents and commands.
 
 - **Beads Integration (Optional)** - Local-first issue tracking with stealth mode (local-only) or team mode (git-synced)
 - **Custom Agents** - Four specialized agents for planning, review, task execution, and verification
-- **Knowledge Base Commands** - Rich command library for issue management (`bd/*`) and project setup (`coder/*`)
+- **Knowledge Base Commands** - Rich command library for issue management (`bd/*`)
 - **Skills as Commands** - Skills from `.opencode/skills/` and other locations automatically available as `/skills/*` commands ([docs](./docs/skills.md))
 - **Template Support** - Customizable workflows and issue templates
 
@@ -35,61 +35,33 @@ Since this package is published to GitHub Packages, you may need to configure np
 @hk9890:registry=https://npm.pkg.github.com
 ```
 
-### 2. Verify installation
+### 2. Initialize your project (optional)
 
-Run the install command to verify dependencies:
-
-```
-/coder/install
-```
-
-### 3. Initialize your project
-
-In your project directory:
-
-```
-/coder/init
-```
-
-This sets up:
-- `.coder/` - Plugin configuration
-- `.beads/` - Local issue tracking (if beads mode selected)
-- Git hooks for beads sync (team mode only)
+If you want to use beads for issue tracking, you can initialize it in your project directory using the beads CLI (`bd init`). This is optional - the plugin works without beads too.
 
 ## Using with Beads
 
-Beads integration is optional. When you run `/coder/init`, you'll be prompted to choose a beads mode.
+Beads integration is optional. You can use the plugin without beads at all. If you want to use beads, initialize it with `bd init` in your project directory.
 
 ### Stealth Mode (Recommended default)
 
 - Beads files stay local to your machine (gitignored)
 - Won't affect git history or other team members
 - Perfect for: personal use, OSS contributions, teams not using beads yet
-- `/coder/init` prompts and defaults to this mode
+- Use `bd init --stealth` to enable this mode
 
 ### Team Mode
 
 - Beads files are committed and synced via git
 - Enables multi-device sync and team collaboration
 - Perfect for: teams adopting beads together
-
-### No Beads
-
-You can use the plugin without beads at all. The `coder/*` commands work independently.
+- Use `bd init` (default) to enable this mode
 
 ## Quick Start
 
-### Basic Plugin Usage
-
-```
-/coder/install    # Verify dependencies
-/coder/init       # Initialize your project
-/coder/status     # Check plugin status
-```
-
 ### With Beads
 
-Once beads is initialized, you can track issues:
+Initialize beads in your project, then track issues:
 
 ```bash
 # Create your first issue
@@ -106,16 +78,6 @@ bd close <id>
 ```
 
 ## Available Commands
-
-### coder/* - Project Management
-
-| Command | Description |
-|---------|-------------|
-| `/coder/install` | Install global dependencies |
-| `/coder/init` | Initialize project for coder plugin |
-| `/coder/doctor` | Check project health |
-| `/coder/status` | Show plugin status |
-| `/coder/feedback` | Submit feedback |
 
 ### bd/* - Beads Issue Management (requires beads)
 

@@ -33,3 +33,4 @@ credentials.json
 
 # Local mise config (machine-specific)
 mise.local.toml
+.beads/.jsonl.lock

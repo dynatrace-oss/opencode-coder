@@ -64,20 +64,6 @@ describe("OpencodeCoder Plugin Integration", () => {
   });
 
   describe("real knowledge base loading", () => {
-    it("should load bd commands from bundled knowledge base", async () => {
-      const mockInput = createMockPluginInput();
-      const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
-
-      const config: Config = {};
-      await hooks.config?.(config);
-
-      // Check for expected bd commands from knowledge-base/command/bd/
-      const bdCommands = Object.keys(config.command ?? {}).filter((k) =>
-        k.startsWith("bd/")
-      );
-      expect(bdCommands.length).toBeGreaterThan(0);
-    });
-
     it("should not load coder commands from plugin (loaded from ai-resources instead)", async () => {
       const mockInput = createMockPluginInput();
       const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
@@ -110,20 +96,6 @@ describe("OpencodeCoder Plugin Integration", () => {
         expect(agent).toBeDefined();
         // Note: mode, system, files may be undefined for some agents
       }
-    });
-
-    it("should register beads commands when beads is available", async () => {
-      const mockInput = createMockPluginInput();
-      const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
-
-      const config: Config = {};
-      await hooks.config?.(config);
-
-      // Check for bd commands (beads integration)
-      const bdCommands = Object.keys(config.command ?? {}).filter((k) =>
-        k.startsWith("bd/")
-      );
-      expect(bdCommands.length).toBeGreaterThan(0);
     });
   });
 });

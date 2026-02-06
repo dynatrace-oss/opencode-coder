@@ -50,12 +50,6 @@ describe("OpencodeCoder Plugin Integration", () => {
       expect(typeof hooks.config).toBe("function");
     });
 
-    it("should provide chat.message hook", async () => {
-      const mockInput = createMockPluginInput();
-      const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
-      expect(typeof hooks["chat.message"]).toBe("function");
-    });
-
     it("should provide event hook", async () => {
       const mockInput = createMockPluginInput();
       const hooks = await OpencodeCoder(asMockPluginInput(mockInput));

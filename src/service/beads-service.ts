@@ -27,24 +27,6 @@ export interface BeadsServiceOptions {
 }
 
 /**
- * Input type for chat.message hook
- */
-export interface ChatMessageInput {
-  // Input fields if needed
-}
-
-/**
- * Output type for chat.message hook
- */
-export interface ChatMessageOutput {
-  message: {
-    sessionID: string;
-    model?: { providerID: string; modelID: string };
-    agent?: string;
-  };
-}
-
-/**
  * Generic event type - processEvent handles filtering for relevant events
  */
 export interface GenericEvent {
@@ -58,8 +40,8 @@ export interface GenericEvent {
  * Service that handles all beads-related functionality.
  *
  * Features:
- * - Injects beads context into sessions on first message
- * - Re-injects context after session compaction
+ * - Injects beads context on session creation (session.created event)
+ * - Re-injects context after session compaction (session.compacted event)
  */
 export class BeadsService {
   private readonly coderConfig: CoderConfig;
@@ -68,7 +50,6 @@ export class BeadsService {
   private readonly client: OpencodeClient;
   private readonly beadsContext: BeadsContext;
   private readonly playgroundService: PlaygroundService;
-  private readonly injectedSessions: Set<string> = new Set();
 
   constructor(options: BeadsServiceOptions) {
     this.coderConfig = options.coderConfig;
@@ -187,75 +168,36 @@ export class BeadsService {
     }
   }
 
-  /**
-   * Process chat.message hook - inject beads context on first message in a session
-   */
-  async processChatMessage(_input: ChatMessageInput, output: ChatMessageOutput): Promise<void> {
-    const start = Date.now();
-    const sessionID = output.message.sessionID;
-    try {
-      if (!this.beadsEnabled) return;
 
-      // Create playground folder for this session
-      let playgroundPath = await this.playgroundService.getOrCreatePlayground(sessionID);
-      if (playgroundPath) {
-        this.logger.info("Playground ready", { sessionID, path: playgroundPath });
-      }
-
-      // Skip if already injected this session
-      if (this.injectedSessions.has(sessionID)) return;
-
-      // Check if beads-context was already injected (handles plugin reload)
-      try {
-        const existing = await this.client.session.messages({
-          path: { id: sessionID },
-        });
-
-        if (existing.data) {
-          const hasBeadsContext = existing.data.some((msg) => {
-            const parts = (msg as any).parts || (msg.info as any).parts;
-            if (!parts) return false;
-            return parts.some(
-              (part: any) => part.type === "text" && part.text?.includes("<beads-context>")
-            );
-          });
-
-          if (hasBeadsContext) {
-            this.injectedSessions.add(sessionID);
-            return;
-          }
-        }
-      } catch {
-        // On error, proceed with injection
-      }
-
-      this.injectedSessions.add(sessionID);
-
-      // Inject with current model/agent to prevent mode switching
-      const context: { model?: { providerID: string; modelID: string }; agent?: string } = {};
-      if (output.message.model) {
-        context.model = output.message.model;
-      }
-      if (output.message.agent) {
-        context.agent = output.message.agent;
-      }
-      
-      this.logger.info("Injecting beads context for new session", { sessionID });
-      await this.injectBeadsContext(sessionID, context);
-    } finally {
-      this.logger.debug("processChatMessage completed", { durationMs: Date.now() - start, sessionID });
-    }
-  }
 
   /**
-   * Process event hook - re-inject beads context after session compaction
+   * Process event hook - inject beads context on session creation and after compaction
    */
   async processEvent(event: GenericEvent): Promise<void> {
     const start = Date.now();
     try {
       if (!this.beadsEnabled) return;
 
-      if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
+      if (event.type === "session.created") {
+        // Extract session info from event.properties.info
+        const sessionInfo = event.properties["info"] as any;
+        if (!sessionInfo?.id) {
+          this.logger.warn("session.created event missing session ID", { event });
+          return;
+        }
+        
+        const sessionID = sessionInfo.id;
+        this.logger.info("Session created, injecting beads context", { sessionID });
+        
+        // Create playground folder for this session
+        const playgroundPath = await this.playgroundService.getOrCreatePlayground(sessionID);
+        if (playgroundPath) {
+          this.logger.info("Playground ready", { sessionID, path: playgroundPath });
+        }
+        
+        // Inject beads context (no model/agent context needed on initial injection)
+        await this.injectBeadsContext(sessionID);
+      } else if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
         const sessionID = event.properties["sessionID"];
         this.logger.info("Session compacted, re-injecting beads context", { sessionID });
         

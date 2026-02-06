@@ -83,10 +83,6 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
       log.debug("Final config after processing", { config: JSON.stringify(config, null, 2) });
     },
 
-    async "chat.message"(input, output) {
-      await beadsService.processChatMessage(input, output);
-    },
-
     async event({ event }) {
       await beadsService.processEvent(event);
     },

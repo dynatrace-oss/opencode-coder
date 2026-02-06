@@ -1,7 +1,7 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { createLogger } from "./core";
 import { loadConfig } from "./config";
-import { KnowledgeBaseService, BeadsService, GitHubService, PlaygroundService, SkillService } from "./service";
+import { KnowledgeBaseService, BeadsService, GitHubService, SkillService } from "./service";
 import { systemInfoTool } from "./system-info";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
@@ -15,25 +15,16 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   const coderConfig = await loadConfig(log);
   log.debug("Config loaded", { durationMs: Date.now() - configStart });
 
-  // 2. Create playground service
-  const playgroundStart = Date.now();
-  const playgroundService = new PlaygroundService({
-    logger: log,
-    client,
-  });
-  log.debug("PlaygroundService created", { durationMs: Date.now() - playgroundStart });
-
-  // 3. Create beads service
+  // 2. Create beads service
   const beadsStart = Date.now();
   const beadsService = new BeadsService({
     coderConfig,
     logger: log,
     client,
-    playgroundService,
   });
   log.debug("BeadsService created", { durationMs: Date.now() - beadsStart });
 
-  // 4. Create GitHub service
+  // 3. Create GitHub service
   const githubStart = Date.now();
   const githubService = new GitHubService({
     coderConfig,
@@ -41,7 +32,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("GitHubService created", { durationMs: Date.now() - githubStart });
 
-  // 5. Create KB service with feature flags
+  // 4. Create KB service with feature flags
   const kbStart = Date.now();
   const kbService = new KnowledgeBaseService({
     coderConfig,
@@ -52,7 +43,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("KnowledgeBaseService created", { durationMs: Date.now() - kbStart });
 
-  // 6. Create Skill service
+  // 5. Create Skill service
   const skillStart = Date.now();
   const skillService = new SkillService({
     coderConfig,
@@ -60,7 +51,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("SkillService created", { durationMs: Date.now() - skillStart });
 
-  // 7. Check beads availability and show toast if needed
+  // 6. Check beads availability and show toast if needed
   // This runs in the background and doesn't block plugin loading
   const beadsCheckStart = Date.now();
   beadsService.checkBeadsAvailability()

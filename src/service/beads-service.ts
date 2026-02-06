@@ -2,7 +2,6 @@ import type { Config } from "@opencode-ai/sdk/v2";
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
-import type { PlaygroundService } from "./playground-service";
 import { BeadsContext, BeadsDetector } from "../beads";
 import { execSync } from "child_process";
 
@@ -18,8 +17,6 @@ export interface BeadsServiceOptions {
   logger: Logger;
   /** OpenCode client for session operations */
   client: OpencodeClient;
-  /** PlaygroundService for session-specific temp folders */
-  playgroundService: PlaygroundService;
   /** Override BeadsContext (for testing) */
   beadsContext?: BeadsContext;
   /** Override beads enabled state (for testing) */
@@ -49,13 +46,11 @@ export class BeadsService {
   private readonly beadsEnabled: boolean;
   private readonly client: OpencodeClient;
   private readonly beadsContext: BeadsContext;
-  private readonly playgroundService: PlaygroundService;
 
   constructor(options: BeadsServiceOptions) {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
     this.client = options.client;
-    this.playgroundService = options.playgroundService;
     this.beadsContext = options.beadsContext ?? new BeadsContext({ logger: options.logger });
 
     // Detect beads enabled state (can be overridden for testing)
@@ -125,26 +120,6 @@ export class BeadsService {
         edit: (config.agent["beads-planner-agent"].permission as any).edit,
       });
 
-      // Allow write access to playground folders
-      // Note: read/write permissions not in SDK types yet, but supported at runtime
-      if (!config.permission) {
-        config.permission = {};
-      }
-      const tmpDir = process.env['TMPDIR'] || process.env['TEMP'] || '/tmp';
-      const playgroundGlob = `${tmpDir}/opencode/**/*`;
-      
-      // Add write permission for playground
-      if (!(config.permission as any).write) {
-        (config.permission as any).write = {};
-      }
-      (config.permission as any).write[playgroundGlob] = "allow";
-      
-      // Also allow read access explicitly
-      if (!(config.permission as any).read) {
-        (config.permission as any).read = {};
-      }
-      (config.permission as any).read[playgroundGlob] = "allow";
-
       if (this.coderConfig.beads?.auto_approve_beads === false) return;
 
       if (!config.permission) {
@@ -189,20 +164,11 @@ export class BeadsService {
         const sessionID = sessionInfo.id;
         this.logger.info("Session created, injecting beads context", { sessionID });
         
-        // Create playground folder for this session
-        const playgroundPath = await this.playgroundService.getOrCreatePlayground(sessionID);
-        if (playgroundPath) {
-          this.logger.info("Playground ready", { sessionID, path: playgroundPath });
-        }
-        
         // Inject beads context (no model/agent context needed on initial injection)
         await this.injectBeadsContext(sessionID);
       } else if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
         const sessionID = event.properties["sessionID"];
         this.logger.info("Session compacted, re-injecting beads context", { sessionID });
-        
-        // Ensure playground exists after compaction
-        await this.playgroundService.getOrCreatePlayground(sessionID);
         
         const context = await this.getSessionContext(sessionID);
         await this.injectBeadsContext(sessionID, context);

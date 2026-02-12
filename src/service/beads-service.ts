@@ -92,6 +92,9 @@ export class BeadsService {
     try {
       if (!this.beadsEnabled) return;
 
+      // Set default agent to beads-planner-agent when beads is active
+      config.default_agent = "beads-planner-agent";
+
       // Configure beads-planner-agent permissions
       if (!config.agent) {
         config.agent = {};

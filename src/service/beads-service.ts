@@ -169,9 +169,9 @@ export class BeadsService {
           this.logger.info("Playground ready", { sessionID, path: playgroundPath });
         }
         
-        // Get session context and inject to preserve model/agent (prevents mode switching)
-        const context = await this.getSessionContext(sessionID);
-        await this.injectBeadsContext(sessionID, context);
+        // On initial injection, don't pass context - let default_agent config take effect
+        // This respects user's agent choice while falling back to beads-planner-agent
+        await this.injectBeadsContext(sessionID);
       } else if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
         const sessionID = event.properties["sessionID"];
         this.logger.info("Session compacted, re-injecting beads context", { sessionID });

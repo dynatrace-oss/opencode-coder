@@ -92,9 +92,6 @@ export class BeadsService {
     try {
       if (!this.beadsEnabled) return;
 
-      // Set default agent to beads-planner-agent when beads is active
-      config.default_agent = "beads-planner-agent";
-
       // Configure beads-planner-agent permissions
       if (!config.agent) {
         config.agent = {};
@@ -163,9 +160,15 @@ export class BeadsService {
         
         const sessionID = sessionInfo.id;
         this.logger.info("Session created, injecting beads context", { sessionID });
+        // Create playground folder for this session
+        const playgroundPath = await this.playgroundService.getOrCreatePlayground(sessionID);
+        if (playgroundPath) {
+          this.logger.info("Playground ready", { sessionID, path: playgroundPath });
+        }
         
-        // Inject beads context (no model/agent context needed on initial injection)
-        await this.injectBeadsContext(sessionID);
+        // Get session context and inject to preserve model/agent (prevents mode switching)
+        const context = await this.getSessionContext(sessionID);
+        await this.injectBeadsContext(sessionID, context);
       } else if (event.type === "session.compacted" && typeof event.properties["sessionID"] === "string") {
         const sessionID = event.properties["sessionID"];
         this.logger.info("Session compacted, re-injecting beads context", { sessionID });

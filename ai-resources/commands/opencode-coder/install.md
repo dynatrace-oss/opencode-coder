@@ -19,9 +19,6 @@ Then follow the **Installation & Setup** section to:
 - Install beads via npm if missing (`npm install -g beads`)
 - Verify installation and report status
 
-**Optional but recommended**: Install aimgr for discovering AI resources in your project:
-```
-npm install -g @euricom/aimgr
-```
+**Optional but recommended**: Install aimgr for discovering AI resources in your project. See: https://github.com/hk9890/ai-config-manager
 
 The skill provides detailed installation procedures, troubleshooting, and next steps.

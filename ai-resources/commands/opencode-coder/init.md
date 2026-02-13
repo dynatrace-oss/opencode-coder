@@ -38,7 +38,7 @@ aimgr --version
 ```
 
 If not installed, inform the user:
-> aimgr is not installed. You can install it with: `npm install -g @euricom/aimgr`
+> aimgr is not installed. See: https://github.com/hk9890/ai-config-manager for installation.
 > 
 > aimgr helps discover and install AI resources (commands, skills, agents) relevant to your project type.
 

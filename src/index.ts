@@ -1,6 +1,6 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { createLogger } from "./core";
-import { KnowledgeBaseService, BeadsService, GitHubService } from "./service";
+import { KnowledgeBaseService, BeadsService, GitHubService, AimgrService } from "./service";
 import { systemInfoTool } from "./system-info";
 import { isPluginDisabled } from "./config/env";
 
@@ -31,7 +31,15 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("GitHubService created", { durationMs: Date.now() - githubStart });
 
-  // 4. Create KB service with feature flags
+  // 4. Create aimgr service
+  const aimgrStart = Date.now();
+  const aimgrService = new AimgrService({
+    logger: log,
+    client,
+  });
+  log.debug("AimgrService created", { durationMs: Date.now() - aimgrStart });
+
+  // 5. Create KB service with feature flags
   const kbStart = Date.now();
   const kbService = new KnowledgeBaseService({
     logger: log,
@@ -41,7 +49,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("KnowledgeBaseService created", { durationMs: Date.now() - kbStart });
 
-  // 5. Check beads availability and show toast if needed
+  // 6. Check beads availability and show toast if needed
   // This runs in the background and doesn't block plugin loading
   const beadsCheckStart = Date.now();
   beadsService.checkBeadsAvailability()
@@ -50,6 +58,17 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
     })
     .catch((err) => {
       log.error("Failed to check beads availability", { error: String(err) });
+    });
+
+  // 7. Auto-initialize aimgr if available
+  // This runs in the background and doesn't block plugin loading
+  const aimgrInitStart = Date.now();
+  aimgrService.autoInitialize()
+    .then(() => {
+      log.debug("aimgr autoInitialize completed", { durationMs: Date.now() - aimgrInitStart });
+    })
+    .catch((err) => {
+      log.error("Failed to auto-initialize aimgr", { error: String(err) });
     });
 
   // Log plugin load completion with timing

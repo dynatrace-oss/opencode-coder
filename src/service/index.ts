@@ -9,3 +9,6 @@ export type {
 
 export { GitHubService } from "./github-service";
 export type { GitHubServiceOptions } from "./github-service";
+
+export { AimgrService } from "./aimgr-service";
+export type { AimgrServiceOptions } from "./aimgr-service";

@@ -1,0 +1,197 @@
+import type { PluginInput } from "@opencode-ai/plugin";
+import type { Logger } from "../core/logger";
+import { execSync } from "child_process";
+import * as fs from "fs";
+import * as path from "path";
+
+type OpencodeClient = PluginInput["client"];
+
+/**
+ * Options for AimgrService
+ */
+export interface AimgrServiceOptions {
+  /** Logger for reporting status and errors */
+  logger: Logger;
+  /** OpenCode client for showing toasts */
+  client: OpencodeClient;
+  /** Working directory (defaults to process.cwd()) */
+  workdir?: string;
+}
+
+/**
+ * Service that handles aimgr integration for auto-discovering and installing AI resources.
+ *
+ * Features:
+ * - Detects if aimgr CLI is installed
+ * - Checks for ai.package.yaml existence
+ * - Runs aimgr init and install opencode-coder package automatically
+ * - Shows user notifications for auto-initialization
+ */
+export class AimgrService {
+  private readonly logger: Logger;
+  private readonly client: OpencodeClient;
+  private readonly workdir: string;
+
+  constructor(options: AimgrServiceOptions) {
+    this.logger = options.logger;
+    this.client = options.client;
+    this.workdir = options.workdir ?? process.cwd();
+  }
+
+  /**
+   * Check if aimgr command is available on PATH
+   */
+  isAimgrAvailable(): boolean {
+    try {
+      execSync("command -v aimgr", { stdio: "ignore" });
+      this.logger.debug("aimgr CLI is available");
+      return true;
+    } catch {
+      this.logger.debug("aimgr CLI not found on PATH");
+      return false;
+    }
+  }
+
+  /**
+   * Check if ai.package.yaml exists in the working directory
+   */
+  hasPackageYaml(): boolean {
+    const packagePath = path.join(this.workdir, "ai.package.yaml");
+    const exists = fs.existsSync(packagePath);
+    this.logger.debug("Checking for ai.package.yaml", { path: packagePath, exists });
+    return exists;
+  }
+
+  /**
+   * Run aimgr init in the working directory
+   */
+  initializeAimgr(): void {
+    try {
+      this.logger.debug("Running aimgr init", { workdir: this.workdir });
+      execSync("aimgr init", { cwd: this.workdir, stdio: "pipe" });
+      this.logger.info("aimgr init completed successfully");
+    } catch (error) {
+      this.logger.error("Failed to run aimgr init", { error: String(error) });
+      throw error;
+    }
+  }
+
+  /**
+   * Check if a package is available in the aimgr repository
+   */
+  isPackageAvailable(packageName: string): boolean {
+    try {
+      this.logger.debug("Checking if package is available", { packageName });
+      const stdout = execSync("aimgr repo list --format=json", { encoding: "utf-8" });
+      const data = JSON.parse(stdout);
+      
+      // Check if package exists in any of the resource lists
+      const packages = data.packages || [];
+      const found = packages.some((pkg: any) => pkg.name === packageName);
+      
+      this.logger.debug("Package availability check", { packageName, found });
+      return found;
+    } catch (error) {
+      this.logger.error("Failed to check package availability", { packageName, error: String(error) });
+      return false;
+    }
+  }
+
+  /**
+   * Install a package using aimgr
+   */
+  installPackage(packageName: string): void {
+    try {
+      this.logger.debug("Installing package", { packageName, workdir: this.workdir });
+      execSync(`aimgr install package/${packageName}`, { cwd: this.workdir, stdio: "pipe" });
+      this.logger.info("Package installed successfully", { packageName });
+    } catch (error) {
+      this.logger.error("Failed to install package", { packageName, error: String(error) });
+      throw error;
+    }
+  }
+
+  /**
+   * Show a toast notification via the OpenCode TUI
+   */
+  private async showToast(options: {
+    title: string;
+    message: string;
+    variant: "info" | "success" | "warning" | "error";
+    duration?: number;
+  }): Promise<void> {
+    try {
+      await (this.client as any).tui.showToast({
+        title: options.title,
+        message: options.message,
+        variant: options.variant,
+        duration: options.duration,
+      });
+    } catch (error) {
+      this.logger.error("Failed to show toast", { error: String(error) });
+    }
+  }
+
+  /**
+   * Main orchestration method for auto-initialization
+   * 
+   * This method:
+   * 1. Checks if ai.package.yaml exists
+   * 2. If not, checks if aimgr is available
+   * 3. If available, runs aimgr init
+   * 4. Checks if opencode-coder package is available
+   * 5. If yes, installs it
+   * 6. Shows user notification
+   * 
+   * All errors are caught and logged but do not throw.
+   */
+  async autoInitialize(): Promise<void> {
+    const start = Date.now();
+    
+    try {
+      // Step 1: Check if ai.package.yaml already exists
+      if (this.hasPackageYaml()) {
+        this.logger.debug("ai.package.yaml already exists, skipping auto-initialization");
+        return;
+      }
+
+      // Step 2: Check if aimgr is available
+      if (!this.isAimgrAvailable()) {
+        this.logger.debug("aimgr not available, skipping auto-initialization");
+        return;
+      }
+
+      // Step 3: Run aimgr init
+      this.initializeAimgr();
+
+      // Step 4: Check if opencode-coder package is available
+      const packageAvailable = this.isPackageAvailable("opencode-coder");
+      if (!packageAvailable) {
+        this.logger.debug("opencode-coder package not available in repo");
+        await this.showToast({
+          title: "aimgr Initialized",
+          message: "Created ai.package.yaml. Run 'aimgr repo search opencode' to discover resources.",
+          variant: "info",
+          duration: 6000,
+        });
+        return;
+      }
+
+      // Step 5: Install opencode-coder package
+      this.installPackage("opencode-coder");
+
+      // Step 6: Show success notification
+      await this.showToast({
+        title: "aimgr Initialized",
+        message: "Detected aimgr and installed opencode-coder package",
+        variant: "success",
+        duration: 6000,
+      });
+
+      this.logger.info("aimgr auto-initialization completed", { durationMs: Date.now() - start });
+    } catch (error) {
+      this.logger.error("aimgr auto-initialization failed", { error: String(error), durationMs: Date.now() - start });
+      // Don't throw - we want the plugin to load even if aimgr fails
+    }
+  }
+}

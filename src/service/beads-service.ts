@@ -1,8 +1,8 @@
 import type { Config } from "@opencode-ai/sdk/v2";
 import type { PluginInput } from "@opencode-ai/plugin";
-import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import { BeadsContext, BeadsDetector } from "../beads";
+import { shouldAutoApproveBeads } from "../config/env";
 import { execSync } from "child_process";
 
 type OpencodeClient = PluginInput["client"];
@@ -11,8 +11,6 @@ type OpencodeClient = PluginInput["client"];
  * Options for BeadsService
  */
 export interface BeadsServiceOptions {
-  /** The coder configuration */
-  coderConfig: CoderConfig;
   /** Logger for reporting status and errors */
   logger: Logger;
   /** OpenCode client for session operations */
@@ -60,7 +58,6 @@ export interface GenericEvent {
  * - Re-injects context after session compaction
  */
 export class BeadsService {
-  private readonly coderConfig: CoderConfig;
   private readonly logger: Logger;
   private readonly beadsEnabled: boolean;
   private readonly client: OpencodeClient;
@@ -68,7 +65,6 @@ export class BeadsService {
   private readonly injectedSessions: Set<string> = new Set();
 
   constructor(options: BeadsServiceOptions) {
-    this.coderConfig = options.coderConfig;
     this.logger = options.logger;
     this.client = options.client;
     this.beadsContext = options.beadsContext ?? new BeadsContext({ logger: options.logger });
@@ -78,7 +74,7 @@ export class BeadsService {
       this.beadsEnabled = options.beadsEnabled;
     } else {
       const detector = new BeadsDetector({ logger: options.logger });
-      this.beadsEnabled = detector.isBeadsEnabled(options.coderConfig);
+      this.beadsEnabled = detector.isBeadsEnabled();
     }
   }
 
@@ -94,7 +90,7 @@ export class BeadsService {
    */
   processPermissionAsk(input: { type: string; title?: string; [key: string]: unknown }, output: { status?: "allow" | "deny" | "ask" }): void {
     // Only handle beads CLI commands
-    if (!this.beadsEnabled || this.coderConfig.beads?.auto_approve_beads === false) {
+    if (!this.beadsEnabled || !shouldAutoApproveBeads()) {
       return;
     }
     
@@ -160,7 +156,7 @@ export class BeadsService {
       }
       (config.permission as any).read[playgroundGlob] = "allow";
 
-      if (this.coderConfig.beads?.auto_approve_beads === false) return;
+      if (!shouldAutoApproveBeads()) return;
 
       if (!config.permission) {
         config.permission = {};

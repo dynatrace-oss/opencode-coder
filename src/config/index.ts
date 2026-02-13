@@ -1,20 +1,13 @@
-// Schema and types
-export {
-  CoderConfigSchema,
-  BeadsConfigSchema,
-  KnowledgeBaseLocationSchema,
-  DEFAULT_CONFIG,
-  type CoderConfig,
-  type BeadsConfig,
-  type KnowledgeBaseLocation,
-} from "./schema";
+/**
+ * Configuration module - Environment variable helpers
+ *
+ * This module provides environment variable based configuration for the plugin.
+ * The plugin works with zero configuration by default, using sensible defaults.
+ *
+ * Available environment variables:
+ * - OPENCODE_CODER_DISABLED: Disable the plugin entirely (default: false)
+ * - BEADS_AUTO_APPROVE: Auto-approve beads commands (default: true)
+ */
 
-// Loader
-export { loadConfig } from "./loader";
-export type { LoadConfigOptions } from "./loader";
-
-// Re-export FileSystem from core for backwards compatibility
-export type { FileSystem } from "../core";
-
-// Resolver utilities
-export { resolveEnvVariables, expandHome, resolvePath, resolveEnvInObject } from "./resolver";
+// Environment variable helpers
+export { isPluginDisabled, shouldAutoApproveBeads } from "./env";

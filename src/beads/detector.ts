@@ -1,7 +1,6 @@
 import { accessSync, constants } from "fs";
 import { join } from "path";
 import type { Logger } from "../core/logger";
-import type { CoderConfig } from "../config/schema";
 
 /**
  * Options for BeadsDetector
@@ -49,23 +48,13 @@ export class BeadsDetector {
   /**
    * Determine if beads integration should be enabled (sync)
    * 
-   * Logic:
-   * - If config.beads.enabled is explicitly set (true/false), use that value
-   * - Otherwise, auto-detect by checking if .beads directory exists
+   * Uses auto-detection by checking if .beads directory exists.
    * 
-   * @param config - The loaded coder configuration
    * @returns true if beads should be enabled, false otherwise
    */
-  isBeadsEnabled(config: CoderConfig): boolean {
+  isBeadsEnabled(): boolean {
     const start = Date.now();
     try {
-      // Check explicit config override first
-      if (config.beads?.enabled !== undefined) {
-        this.logger.debug("Beads enabled from config", { enabled: config.beads.enabled });
-        return config.beads.enabled;
-      }
-
-      // Fall back to auto-detection
       const detected = this.detectBeadsDirectory();
       this.logger.debug("Beads enabled from auto-detection", { enabled: detected });
       return detected;

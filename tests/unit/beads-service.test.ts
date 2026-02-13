@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, spyOn } from "bun:test";
+import { describe, expect, it, beforeEach, afterEach, spyOn } from "bun:test";
 import { BeadsService } from "../../src/service/beads-service";
 import type { Config } from "@opencode-ai/sdk/v2";
 import type { PluginInput } from "@opencode-ai/plugin";
@@ -21,10 +21,15 @@ describe("BeadsService", () => {
   let mockClient: OpencodeClient;
   let mockConfig: Config;
   let toastCalls: ToastCall[];
+  let originalAutoApprove: string | undefined;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
     toastCalls = [];
+    
+    // Save and clear environment variable
+    originalAutoApprove = process.env["BEADS_AUTO_APPROVE"];
+    delete process.env["BEADS_AUTO_APPROVE"];
     
     // Create mock client with tui.showToast
     const baseMockClient = createMockClient();
@@ -41,10 +46,19 @@ describe("BeadsService", () => {
     mockConfig = {} as Config;
   });
 
+  afterEach(() => {
+    // Restore environment variable
+    if (originalAutoApprove === undefined) {
+      delete process.env["BEADS_AUTO_APPROVE"];
+    } else {
+      process.env["BEADS_AUTO_APPROVE"] = originalAutoApprove;
+    }
+  });
+
   describe("processConfig", () => {
     it("should set default_agent to beads-planner-agent when beads is enabled", async () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -58,7 +72,7 @@ describe("BeadsService", () => {
 
     it("should not modify default_agent when beads is disabled", async () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: false,
@@ -72,7 +86,7 @@ describe("BeadsService", () => {
 
     it("should inject bd * permission when beads is enabled", async () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -85,8 +99,9 @@ describe("BeadsService", () => {
     });
 
     it("should not inject bd * permission when auto_approve_beads is false", async () => {
+      process.env["BEADS_AUTO_APPROVE"] = "false";
+      
       const service = new BeadsService({
-        coderConfig: { active: true, beads: { auto_approve_beads: false } },
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -105,7 +120,7 @@ describe("BeadsService", () => {
       mockConfig.permission = { bash: { "git *": "allow" } };
 
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -124,7 +139,7 @@ describe("BeadsService", () => {
       mockConfig.permission = { bash: "allow" };
 
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -141,7 +156,7 @@ describe("BeadsService", () => {
   describe("isBeadsEnabled", () => {
     it("should return true when beads is enabled", () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -153,7 +168,7 @@ describe("BeadsService", () => {
 
     it("should return false when beads is disabled", () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: false,
@@ -168,7 +183,7 @@ describe("BeadsService", () => {
   describe("processPermissionAsk", () => {
     it("should auto-approve bd commands when beads is enabled", () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -186,7 +201,7 @@ describe("BeadsService", () => {
 
     it("should not auto-approve bd commands when beads is disabled", () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: false,
@@ -202,8 +217,9 @@ describe("BeadsService", () => {
     });
 
     it("should not auto-approve bd commands when auto_approve_beads is false", () => {
+      process.env["BEADS_AUTO_APPROVE"] = "false";
+      
       const service = new BeadsService({
-        coderConfig: { active: true, beads: { auto_approve_beads: false } },
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -220,7 +236,7 @@ describe("BeadsService", () => {
 
     it("should not auto-approve non-bd bash commands", () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -237,7 +253,7 @@ describe("BeadsService", () => {
 
     it("should not auto-approve non-bash commands", () => {
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -264,7 +280,7 @@ describe("BeadsService", () => {
       const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
 
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -295,7 +311,7 @@ describe("BeadsService", () => {
       });
 
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
@@ -324,7 +340,7 @@ describe("BeadsService", () => {
       const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
 
       const service = new BeadsService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,

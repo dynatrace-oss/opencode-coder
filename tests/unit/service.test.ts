@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "bun:test";
+import { describe, expect, it, beforeEach, afterEach } from "bun:test";
 import { KnowledgeBaseService } from "../../src/service";
 import type { Config } from "@opencode-ai/sdk";
 import type { CommandDef, AgentDef, KnowledgeBase } from "../../src/kb/types";
@@ -18,16 +18,31 @@ function createMockKnowledgeBase(commands: CommandDef[], agents: AgentDef[]): Kn
 describe("KnowledgeBaseService", () => {
   let mockLogger: MockLogger;
   let mockConfig: Config;
+  let originalDisabled: string | undefined;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
     mockConfig = {} as Config;
+    
+    // Save and clear environment variable
+    originalDisabled = process.env["OPENCODE_CODER_DISABLED"];
+    delete process.env["OPENCODE_CODER_DISABLED"];
+  });
+
+  afterEach(() => {
+    // Restore environment variable
+    if (originalDisabled === undefined) {
+      delete process.env["OPENCODE_CODER_DISABLED"];
+    } else {
+      process.env["OPENCODE_CODER_DISABLED"] = originalDisabled;
+    }
   });
 
   describe("processConfig", () => {
-    it("should not modify config when active is false", async () => {
+    it("should not modify config when plugin is disabled", async () => {
+      process.env["OPENCODE_CODER_DISABLED"] = "true";
+      
       const service = new KnowledgeBaseService({
-        coderConfig: { active: false },
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase([], []),
       });
@@ -36,7 +51,7 @@ describe("KnowledgeBaseService", () => {
 
       expect(mockConfig.command).toBeUndefined();
       expect(mockConfig.agent).toBeUndefined();
-      expect(mockLogger.hasLogged("info", "disabled via config")).toBe(true);
+      expect(mockLogger.hasLogged("info", "disabled")).toBe(true);
     });
 
     it("should load and register commands when active is true", async () => {
@@ -46,7 +61,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
       });
@@ -71,7 +86,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase([], mockAgents),
       });
@@ -102,7 +117,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
       });
@@ -130,7 +145,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase([], mockAgents),
       });
@@ -150,7 +165,7 @@ describe("KnowledgeBaseService", () => {
       mockConfig.agent = { "existing-agent": { prompt: "Existing" } };
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(
           [{ name: "new/cmd", template: "New" }],
@@ -168,7 +183,7 @@ describe("KnowledgeBaseService", () => {
 
     it("should log loaded counts", async () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(
           [
@@ -186,7 +201,7 @@ describe("KnowledgeBaseService", () => {
 
     it("should log each registered command and agent", async () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(
           [{ name: "story/next", template: "T" }],
@@ -204,8 +219,9 @@ describe("KnowledgeBaseService", () => {
   describe("constructor", () => {
     it("should use default loaders when no knowledgeBase provided", async () => {
       // This tests that the service works with real loaders (integration-like)
+      process.env["OPENCODE_CODER_DISABLED"] = "true";
+      
       const service = new KnowledgeBaseService({
-        coderConfig: { active: false },
         logger: mockLogger,
       });
 
@@ -225,7 +241,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
       });
@@ -247,7 +263,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
       });
@@ -262,7 +278,7 @@ describe("KnowledgeBaseService", () => {
   describe("createKbInfo", () => {
     it("should create KbInfo from a command with description", () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
       });
 
@@ -282,7 +298,7 @@ describe("KnowledgeBaseService", () => {
 
     it("should create KbInfo from a command without description", () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
       });
 
@@ -301,7 +317,7 @@ describe("KnowledgeBaseService", () => {
 
     it("should create KbInfo from an agent with description", () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
       });
 
@@ -321,7 +337,7 @@ describe("KnowledgeBaseService", () => {
 
     it("should create KbInfo from an agent without description", () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
       });
 
@@ -340,7 +356,7 @@ describe("KnowledgeBaseService", () => {
 
     it("should preserve all source fields in the returned KbInfo", () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
       });
 
@@ -365,7 +381,7 @@ describe("KnowledgeBaseService", () => {
   describe("getLoadErrors", () => {
     it("should return empty array when no errors", () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase([], []),
       });
@@ -377,28 +393,20 @@ describe("KnowledgeBaseService", () => {
   describe("getKnowledgeBaseCount", () => {
     it("should return 1 for bundled KB only", () => {
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
       });
 
       expect(service.getKnowledgeBaseCount()).toBe(1);
     });
 
-    it("should count enabled user KBs", () => {
+    it("should count only bundled KB", () => {
       const service = new KnowledgeBaseService({
-        coderConfig: {
-          active: true,
-          knowledgeBases: [
-            { path: "/kb1", enabled: true },
-            { path: "/kb2", enabled: false },
-            { path: "/kb3", enabled: true },
-          ],
-        },
         logger: mockLogger,
       });
 
-      // 1 bundled + 2 enabled user KBs
-      expect(service.getKnowledgeBaseCount()).toBe(3);
+      // Only bundled KB (user KBs no longer supported)
+      expect(service.getKnowledgeBaseCount()).toBe(1);
     });
   });
 
@@ -411,7 +419,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
         featureFlags: { github: false },
@@ -432,7 +440,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
         featureFlags: { github: true },
@@ -452,7 +460,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
         // No featureFlags provided - defaults to {}
@@ -470,7 +478,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
         featureFlags: { github: false },
@@ -490,7 +498,7 @@ describe("KnowledgeBaseService", () => {
       ];
 
       const service = new KnowledgeBaseService({
-        coderConfig: { active: true },
+
         logger: mockLogger,
         knowledgeBase: createMockKnowledgeBase(mockCommands, []),
         featureFlags: { github: false },

@@ -98,14 +98,6 @@ async function setupTestProject(): Promise<void> {
     // Ignore if doesn't exist
   }
   await symlink(PLUGIN_PATH, pluginSymlink);
-
-  // Create .coder/coder.json for the plugin config
-  const coderDir = join(TEST_PROJECT_DIR, ".coder");
-  await mkdir(coderDir, { recursive: true });
-  await writeFile(
-    join(coderDir, "coder.json"),
-    JSON.stringify({ active: true })
-  );
 }
 
 /**

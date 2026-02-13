@@ -2,7 +2,6 @@ import { accessSync, constants } from "fs";
 import { join } from "path";
 import { execSync } from "child_process";
 import type { Logger } from "../core/logger";
-import type { CoderConfig } from "../config/schema";
 
 /**
  * Options for GitHubDetector
@@ -98,28 +97,17 @@ export class GitHubDetector {
   /**
    * Determine if GitHub integration should be enabled (sync)
    *
-   * Logic:
-   * - If config.github.enabled is explicitly set (true/false), use that value
-   * - Otherwise, auto-detect by checking:
+   * Uses auto-detection by checking:
    *   1. .git directory exists
    *   2. A GitHub remote is configured
    *   3. gh CLI is installed
    *
-   * @param config - The loaded coder configuration
    * @returns true if GitHub integration should be enabled, false otherwise
    */
-  isGitHubEnabled(config: CoderConfig): boolean {
+  isGitHubEnabled(): boolean {
     const start = Date.now();
     try {
-      // Check explicit config override first
-      if (config.github?.enabled !== undefined) {
-        this.logger.debug("GitHub enabled from config", {
-          enabled: config.github.enabled,
-        });
-        return config.github.enabled;
-      }
-
-      // Fall back to auto-detection: all three conditions must be true
+      // Auto-detection: all three conditions must be true
       const hasGitDir = this.detectGitDirectory();
       if (!hasGitDir) {
         this.logger.debug("GitHub disabled: no git directory");

@@ -1,10 +1,10 @@
 import type { Config } from "@opencode-ai/sdk";
-import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { KnowledgeBase, CommandDef, AgentDef, KbInfo, KbInfoType } from "../kb/types";
 import { LoaderKnowledgeBase } from "../kb/loader-kb";
 import { CompositeKnowledgeBase } from "../kb/composite-kb";
 import { resolveKnowledgeBaseDir } from "../core";
+import { isPluginDisabled } from "../config/env";
 
 /**
  * Feature flags that control which commands/agents are registered.
@@ -20,8 +20,6 @@ export interface FeatureFlags {
  * Options for KnowledgeBaseService
  */
 export interface KnowledgeBaseServiceOptions {
-  /** The coder configuration */
-  coderConfig: CoderConfig;
   /** Logger for reporting status and errors */
   logger: Logger;
   /** Override the knowledge base (for testing) */
@@ -40,14 +38,12 @@ export interface KnowledgeBaseServiceOptions {
  * - Supports dependency injection for testing
  */
 export class KnowledgeBaseService {
-  private coderConfig: CoderConfig;
   private logger: Logger;
   private knowledgeBase: KnowledgeBase | null;
   private featureFlags: FeatureFlags;
   private loadErrors: string[] = [];
 
   constructor(options: KnowledgeBaseServiceOptions) {
-    this.coderConfig = options.coderConfig;
     this.logger = options.logger;
     this.knowledgeBase = options.knowledgeBase ?? null;
     this.featureFlags = options.featureFlags ?? {};
@@ -70,20 +66,6 @@ export class KnowledgeBaseService {
           logger: this.logger,
         })
       );
-
-      // Add user-configured knowledge bases (enabled ones only)
-      if (this.coderConfig.knowledgeBases) {
-        for (const kbConfig of this.coderConfig.knowledgeBases) {
-          if (kbConfig.enabled) {
-            knowledgeBases.push(
-              new LoaderKnowledgeBase({
-                basePath: kbConfig.path,
-                logger: this.logger,
-              })
-            );
-          }
-        }
-      }
 
       return new CompositeKnowledgeBase({
         knowledgeBases,
@@ -112,7 +94,7 @@ export class KnowledgeBaseService {
    * Check if the plugin is active
    */
   isActive(): boolean {
-    return this.coderConfig.active;
+    return !isPluginDisabled();
   }
 
   /**
@@ -130,9 +112,8 @@ export class KnowledgeBaseService {
    * Get the number of configured knowledge bases.
    */
   getKnowledgeBaseCount(): number {
-    // Bundled KB + user-configured enabled KBs
-    const userKbCount = this.coderConfig.knowledgeBases?.filter((kb) => kb.enabled).length ?? 0;
-    return 1 + userKbCount; // 1 for bundled
+    // Only bundled KB
+    return 1;
   }
 
   /**
@@ -161,14 +142,14 @@ export class KnowledgeBaseService {
 
   /**
    * Process and apply the knowledge base to an OpenCode config.
-   * If coderConfig.active is false, logs and returns without modification.
-   * If active is true, loads commands/agents and mutates the config.
+   * If plugin is disabled via env var, logs and returns without modification.
+   * Otherwise, loads commands/agents and mutates the config.
    */
   async processConfig(config: Config): Promise<void> {
     const start = Date.now();
     try {
-      if (!this.coderConfig.active) {
-        this.logger.info("OpencodeCoder plugin disabled via config (active: false)");
+      if (isPluginDisabled()) {
+        this.logger.info("OpencodeCoder plugin disabled via OPENCODE_CODER_DISABLED env var");
         return;
       }
 

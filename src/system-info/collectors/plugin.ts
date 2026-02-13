@@ -2,6 +2,7 @@ import type { PluginInfo } from '../types';
 import { readFile, access } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { isPluginDisabled } from '../../config/env';
 
 // Get the directory where this plugin is located
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -22,17 +23,8 @@ export async function collectPluginInfo(): Promise<PluginInfo> {
     await readFile(packageJsonPath, 'utf-8')
   );
   
-  // Check .coder/coder.json for active status
-  const coderConfigPath = join(process.cwd(), '.coder/coder.json');
-  let active = false;
-  
-  try {
-    await access(coderConfigPath);
-    const coderConfig = JSON.parse(await readFile(coderConfigPath, 'utf-8'));
-    active = coderConfig.active === true;
-  } catch {
-    active = false;
-  }
+  // Check if plugin is disabled via environment variable
+  const active = !isPluginDisabled();
   
   return {
     name: packageJson.name,

@@ -1,8 +1,8 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { createLogger } from "./core";
-import { loadConfig } from "./config";
 import { KnowledgeBaseService, BeadsService, GitHubService } from "./service";
 import { systemInfoTool } from "./system-info";
+import { isPluginDisabled } from "./config/env";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
   const log = createLogger(client);
@@ -10,15 +10,15 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
 
   log.info("OpencodeCoder plugin loading...");
 
-  // 1. Load config
-  const configStart = Date.now();
-  const coderConfig = await loadConfig(log);
-  log.debug("Config loaded", { durationMs: Date.now() - configStart });
+  // 1. Check if plugin is disabled
+  if (isPluginDisabled()) {
+    log.info("OpencodeCoder plugin disabled via OPENCODE_CODER_DISABLED env var");
+    return {};
+  }
 
   // 2. Create beads service
   const beadsStart = Date.now();
   const beadsService = new BeadsService({
-    coderConfig,
     logger: log,
     client,
   });
@@ -27,7 +27,6 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   // 3. Create GitHub service
   const githubStart = Date.now();
   const githubService = new GitHubService({
-    coderConfig,
     logger: log,
   });
   log.debug("GitHubService created", { durationMs: Date.now() - githubStart });
@@ -35,7 +34,6 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   // 4. Create KB service with feature flags
   const kbStart = Date.now();
   const kbService = new KnowledgeBaseService({
-    coderConfig,
     logger: log,
     featureFlags: {
       github: githubService.isGitHubEnabled(),

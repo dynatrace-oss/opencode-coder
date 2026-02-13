@@ -32,12 +32,38 @@ bd --version
 
 You should see output showing the beads version number.
 
+### Installing aimgr (Optional)
+
+The coder plugin can optionally use `aimgr` to discover AI resources (commands, skills) relevant to your project type:
+
+```bash
+npm install -g @euricom/aimgr
+```
+
+**What aimgr does:**
+- Discovers AI resources based on project type (React, Python, TypeScript, etc.)
+- Suggests relevant packages from the aimgr repository
+- Installs commands and skills tailored to your workflow
+
+**Basic usage:**
+```bash
+# Discover resources for your project
+aimgr repo search react
+
+# Install a specific package
+aimgr install @scope/package-name
+```
+
+aimgr integrates with the `bd init` workflow to automatically suggest relevant resources during project initialization. See [Initialization](#initialization) for details.
+
+
 ### Upgrading Dependencies
 
 To upgrade beads to the latest version:
 
 ```bash
 npm update -g beads
+npm update -g @euricom/aimgr  # Optional
 ```
 
 **Important**: Always use npm for installation and upgrades. Do NOT use curl/bash install scripts that might be suggested by `bd doctor`.

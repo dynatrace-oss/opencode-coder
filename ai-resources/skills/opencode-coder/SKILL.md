@@ -5,7 +5,7 @@ description: "Complete guide to installing, configuring, and troubleshooting the
 
 # Using the Coder Plugin
 
-This skill provides comprehensive guidance for installing, configuring, and troubleshooting the opencode-coder plugin. Use this when users need help with plugin setup, debugging issues, or understanding how the plugin works.
+Guide for installing, configuring, and troubleshooting the opencode-coder plugin.
 
 ## Table of Contents
 
@@ -20,278 +20,124 @@ This skill provides comprehensive guidance for installing, configuring, and trou
 
 ## Installation & Setup
 
-Get started with the opencode-coder plugin by installing dependencies and initializing your project.
-
-### Overview
-
-The coder plugin requires:
-- **bd CLI**: Issue tracking and workflow management
-- **Beads initialization**: Project-level setup (stealth or team mode)
-- **Coder configuration**: Plugin activation and settings
-
 ### Quick Start
 
 ```bash
-# 1. Install bd CLI globally
+# Install bd CLI globally
 npm install -g beads
 
-# 2. Initialize project (stealth mode - recommended)
+# Initialize project (stealth mode - recommended)
 bd init --stealth && bd hooks install
 
-# 3. Verify
+# Verify
 bd ready
 ```
 
-### Key Topics
+### Key Components
 
-- **Installation**: Installing bd CLI, verifying installation, upgrading dependencies
-- **Initialization**: Stealth vs team mode, git hooks setup, file structure
-- **Configuration**: Environment variables (`OPENCODE_CODER_DISABLED`, `BEADS_AUTO_APPROVE`)
+- **bd CLI**: Issue tracking and workflow management
+- **Beads initialization**: Stealth vs team mode, git hooks
+- **Configuration**: `OPENCODE_CODER_DISABLED`, `BEADS_AUTO_APPROVE` environment variables
 
-**See [references/installation-setup.md](references/installation-setup.md) for detailed installation and initialization guide.**
+**See [references/installation-setup.md](references/installation-setup.md) for detailed guide.**
 
 ---
 
 ## Troubleshooting & Diagnostics
 
-Diagnose and resolve issues with the coder plugin.
-
-### Running Health Checks
-
-The plugin includes comprehensive health checks to verify:
-
-1. **Plugin Status**: `OPENCODE_CODER_DISABLED` is not set to "true"
-2. **Beads**: `.beads/` directory and `bd doctor` status
-3. **Git Hooks**: Hooks are installed and executable
-4. **Git Sync**: No uncommitted beads changes
-
 ### Quick Diagnostics
 
 ```bash
-# Check bd CLI
-bd --version
-
-# Check beads health
-bd doctor
-
-# Check sync status
-bd sync --status
-
-# Verify git hooks
-ls -la .git/hooks/
-
-# Check plugin status
-echo $OPENCODE_CODER_DISABLED
+bd --version                    # Check bd CLI
+bd doctor                       # Check beads health
+bd sync --status                # Check sync status
+ls -la .git/hooks/              # Verify git hooks
+echo $OPENCODE_CODER_DISABLED   # Check plugin status
 ```
 
-### Understanding bd doctor Output
+**Understanding bd doctor**: Run `bd hooks install` if it suggests installing hooks. Ignore curl/bash upgrade suggestions - use `npm install -g beads` instead. Setting upstream is optional.
 
-Filter `bd doctor` suggestions:
-
-| bd doctor suggestion | Action |
-|---------------------|--------|
-| Install git hooks | Run `bd hooks install` |
-| Set upstream | Optional - not critical for local use |
-| Upgrade CLI (curl script) | **Ignore** - Use `npm install -g beads` instead |
-
-**Important**: Never use curl/bash upgrade method. Always use npm for beads updates.
-
-### Advanced Diagnostics
-
-For deep log analysis, the plugin includes a powerful log analyzer tool with:
-- Interactive session/process browsing with fzf
-- Filtering by session, process, service, and log level
-- JSON export for programmatic analysis
-
-**See [references/debugging-logs.md](references/debugging-logs.md) for log analysis guide.**
+**Advanced Analysis**: See [references/debugging-logs.md](references/debugging-logs.md) for log analyzer tool.
 
 ---
 
 ## Debug Logging & Log Analysis
 
-Enable debug logging and analyze OpenCode logs for troubleshooting.
-
-### Enabling Debug Logging
+### Enable Debug Logging
 
 ```bash
-# General OpenCode debug logging
+# All OpenCode internals - General troubleshooting
 export OPENCODE_DEFAULT_OPTIONS="--log-level DEBUG"
 
-# Plugin-specific debug logging
+# Plugin messages only - Plugin-specific debugging
 export OPENCODE_CODER_DEBUG=1
 ```
 
-**When to use each:**
-
-| Variable | What it shows | When to use |
-|----------|---------------|-------------|
-| `OPENCODE_DEFAULT_OPTIONS="--log-level DEBUG"` | All OpenCode internals, all plugins | General troubleshooting |
-| `OPENCODE_CODER_DEBUG=1` | Only opencode-coder plugin messages | Plugin-specific debugging |
-| Both together | Full context with plugin details | Complex issues |
-
-### Log File Locations
+### Log Locations
 
 - **Linux**: `~/.config/opencode/logs/`
 - **macOS**: `~/Library/Logs/opencode/`
 - **Windows**: `%APPDATA%\opencode\logs\`
 
-### Quick Log Analysis
+### Quick Analysis
 
 ```bash
-# Find recent log files
-ls -lt ~/.config/opencode/logs/ | head -5
-
-# Search for errors
-grep -i "error" ~/.config/opencode/logs/*.log
-
-# Search for plugin messages (when OPENCODE_CODER_DEBUG=1)
-grep "opencode-coder" ~/.config/opencode/logs/*.log
+ls -lt ~/.config/opencode/logs/ | head -5                 # Recent logs
+grep -i "error" ~/.config/opencode/logs/*.log             # Find errors
+grep "opencode-coder" ~/.config/opencode/logs/*.log       # Plugin messages
 ```
 
-### Advanced Log Analyzer
-
-The plugin includes a CLI tool for powerful log analysis:
+### Log Analyzer Tool
 
 ```bash
-# Interactive mode (requires fzf)
-bun run scripts/log-analyzer
-
-# List sessions
-bun run scripts/log-analyzer list sessions
-
-# Analyze specific session
-bun run scripts/log-analyzer --session=ses_xxx --level=ERROR,WARN
-
-# Filter by service
-bun run scripts/log-analyzer --session=ses_xxx --service=opencode-coder
+bun run scripts/log-analyzer                                    # Interactive mode
+bun run scripts/log-analyzer list sessions                      # List sessions
+bun run scripts/log-analyzer --session=ses_xxx --level=ERROR   # Filter by level
 ```
 
-**See [references/debugging-logs.md](references/debugging-logs.md) for complete logging and analysis guide.**
+**See [references/debugging-logs.md](references/debugging-logs.md) for complete guide.**
 
 ---
 
 ## Status & Health Checks
 
-Monitor the health and status of your coder plugin installation.
-
-### Quick Health Check
+### Quick Check
 
 ```bash
-# Verify bd CLI is available
-bd --version
-
-# Verify project is initialized
-ls .beads
-
-# Verify git hooks are installed
-ls .git/hooks/post-commit
+bd --version                     # CLI available
+ls .beads                        # Project initialized
+ls .git/hooks/post-commit        # Hooks installed
+bd sync --status                 # Sync status
 ```
 
-### Complete Health Check
-
-Run a comprehensive check of all components:
+### Complete Check
 
 ```bash
-# Check plugin status
-if [ "$OPENCODE_CODER_DISABLED" = "true" ]; then
-  echo "Plugin: DISABLED"
-else
-  echo "Plugin: ACTIVE"
-fi
-
-# Check beads
-test -d .beads && bd doctor || echo "Beads: NOT INITIALIZED"
-
-# Check git hooks
-test -f .git/hooks/post-commit && echo "Git hooks: OK" || echo "Git hooks: MISSING"
-
-# Check sync status
+[ "$OPENCODE_CODER_DISABLED" = "true" ] && echo "DISABLED" || echo "ACTIVE"
+test -d .beads && bd doctor || echo "NOT INITIALIZED"
+test -f .git/hooks/post-commit && echo "OK" || echo "MISSING"
 bd sync --status
 ```
 
-### Component Status Meanings
+### Maintenance
 
-| Status | Meaning | Action |
-|--------|---------|--------|
-| OK | Component working correctly | None |
-| MISSING | Component not installed | Run initialization |
-| INVALID | Component exists but has errors | Fix configuration |
-| WARN | Component has warnings | Review and fix if needed |
+- **Daily**: `bd sync --status`
+- **Weekly**: Verify hooks, check updates (`npm outdated -g beads`)
+- **After updates**: Run health check
 
-### Version Checking
-
-```bash
-# Check versions
-bd --version
-node --version
-npm list -g opencode-coder
-
-# Check for updates
-npm outdated -g beads opencode-coder
-```
-
-### Regular Maintenance
-
-**Daily (when active):**
-- Check for uncommitted changes: `bd sync --status`
-
-**Weekly:**
-- Verify hooks: `ls .git/hooks/`
-- Check for updates: `npm outdated -g beads`
-
-**After Updates:**
-- Run full health check
-- Test basic commands
-
-**See [references/status-health.md](references/status-health.md) for comprehensive health check guide.**
+**See [references/status-health.md](references/status-health.md) for comprehensive guide.**
 
 ---
 
 ## Reporting Issues
 
-Report bugs and issues with the opencode-coder plugin (not your project code).
+**Report plugin issues only** (bd CLI, knowledge-base, agents, docs). Don't report your project code bugs.
 
-### What to Report
+### Process
 
-**Report issues with:**
-- bd CLI commands and behavior
-- Knowledge-base loading and commands
-- Beads agents (planner, task, review, verify)
-- Plugin documentation gaps
-- Plugin features not working as expected
-
-**Do NOT report:**
-- Your own code bugs
-- Build/test failures in your project
-- Configuration issues with your project
-
-### Before Reporting
-
-1. Enable debug logging (see [Debug Logging](#debug-logging--log-analysis))
-2. Run health checks (see [Status & Health Checks](#status--health-checks))
-3. Collect information:
-   - What command or feature you were using
-   - Expected vs actual behavior
-   - Error messages or outputs
-   - Steps to reproduce
-
-### Information to Include
-
-A good bug report includes:
-
-1. **Component**: What part of the plugin (bd CLI, agent, command)
-2. **Expected behavior**: What should have happened
-3. **Actual behavior**: What actually happened
-4. **Steps to reproduce**: How to trigger the issue
-5. **Environment**: OS, Node.js version, bd version, plugin version
-6. **Logs**: Relevant log excerpts with debug logging enabled
-7. **Context**: What you were trying to accomplish
-
-### Creating a GitHub Issue
-
-Issues should be reported to: https://github.com/hk9890/opencode-coder
-
-**Quick report pattern:**
+1. Enable debug logging
+2. Run health checks
+3. Report to: https://github.com/hk9890/opencode-coder
 
 ```bash
 gh issue create --repo hk9890/opencode-coder \
@@ -299,106 +145,51 @@ gh issue create --repo hk9890/opencode-coder \
   --body "Problem: ...\nSteps: ...\nEnvironment: ..."
 ```
 
-**Use descriptive titles with component in brackets:**
-- `[bd ready] Returns empty when issues exist`
-- `[plugin] Knowledge-base fails to load custom commands`
-- `[agent] Task agent doesn't follow closing rules`
+**Include**: Component, expected vs actual behavior, reproduction steps, environment (OS, Node.js, bd version), log excerpts, context.
 
-### Issue Classification
-
-**Plugin Issues** (create GitHub issue):
-- bd CLI errors
-- Plugin loading failures
-- Agent behavior issues
-- Documentation gaps
-
-**Project Issues** (do NOT create GitHub issue):
-- Your own code bugs
-- Build/test failures in your project
-- Configuration issues with your project
-
-**See [references/bug-reporting.md](references/bug-reporting.md) for detailed bug reporting guide.**
+**See [references/bug-reporting.md](references/bug-reporting.md) for detailed guide.**
 
 ---
 
 ## Common Problems & Solutions
 
-Quick solutions to the most frequently encountered issues.
+### Quick Fixes
 
-### Most Common Issues
-
-**Problem: bd command not found after installation**
-
+**bd command not found**
 ```bash
-# Quick fix: Add npm global bin to PATH
-export PATH="$(npm bin -g):$PATH"
-
-# Permanent fix: Add to ~/.bashrc or ~/.zshrc
-echo 'export PATH="$(npm bin -g):$PATH"' >> ~/.bashrc
+export PATH="$(npm bin -g):$PATH"                           # Quick
+echo 'export PATH="$(npm bin -g):$PATH"' >> ~/.bashrc      # Permanent
 ```
 
-**Problem: Git hooks not triggering**
-
+**Git hooks not triggering**
 ```bash
-# Reinstall hooks
-bd hooks install
-
-# Verify they're executable
-chmod +x .git/hooks/post-commit
+bd hooks install && chmod +x .git/hooks/post-commit
 ```
 
-**Problem: bd commands failing with database errors**
-
+**Database errors**
 ```bash
-# Rebuild the local cache
-rm .beads/beads.db
-bd ready  # Will rebuild cache
+rm .beads/beads.db && bd ready
 ```
 
-### Issue Categories
+### More Solutions
 
-For detailed solutions, see **[references/troubleshooting-patterns.md](references/troubleshooting-patterns.md)**:
+**See [references/troubleshooting-patterns.md](references/troubleshooting-patterns.md)** for installation, initialization, runtime, configuration, agent, sync, and performance issues.
 
-- **Installation Issues**: PATH problems, npm permissions
-- **Initialization Issues**: Git requirements, hook installation, mode switching
-- **Runtime Issues**: Database errors, hook failures, sync problems
-- **Configuration Issues**: Plugin activation, log file locations
-- **Agent and Command Issues**: Command recognition, agent behavior
-- **Sync and Git Issues**: File visibility in stealth vs team mode
-- **Performance Issues**: Slow commands, large log files
+### Help
 
-### Getting Additional Help
-
-If your issue isn't covered:
-
-1. **Check detailed patterns**: [references/troubleshooting-patterns.md](references/troubleshooting-patterns.md)
-2. **Enable debug logging**: `export OPENCODE_DEFAULT_OPTIONS="--log-level DEBUG"`
-3. **Run health checks**: `bd doctor` and `bd sync --status`
-4. **Search issues**: https://github.com/hk9890/opencode-coder/issues
-5. **Create discussion**: https://github.com/hk9890/opencode-coder/discussions
-6. **Report bug**: See [Reporting Issues](#reporting-issues)
+1. Check [troubleshooting-patterns.md](references/troubleshooting-patterns.md)
+2. Enable debug: `export OPENCODE_DEFAULT_OPTIONS="--log-level DEBUG"`
+3. Run `bd doctor` and `bd sync --status`
+4. Search or report: https://github.com/hk9890/opencode-coder
 
 ---
 
-## Summary
+## Reference Documentation
 
-This skill covers the complete lifecycle of using the opencode-coder plugin:
+- [Installation & Setup Guide](references/installation-setup.md)
+- [Debug Logging & Log Analysis](references/debugging-logs.md)
+- [Status & Health Checks](references/status-health.md)
+- [Bug Reporting Guide](references/bug-reporting.md)
+- [Troubleshooting Patterns](references/troubleshooting-patterns.md)
 
-1. **Install** the bd CLI via npm
-2. **Initialize** your project (stealth or team mode)
-3. **Configure** the plugin via environment variables if needed
-4. **Troubleshoot** issues using health checks and diagnostics
-5. **Debug** with proper logging and log analysis
-6. **Report** plugin issues to GitHub
-7. **Monitor** status and health regularly
-8. **Resolve** common problems quickly
-
-### Reference Documentation
-
-- [Installation & Setup Guide](references/installation-setup.md) - Complete installation and initialization
-- [Debug Logging & Log Analysis](references/debugging-logs.md) - Enable logging and analyze logs
-- [Status & Health Checks](references/status-health.md) - Monitor plugin health
-- [Bug Reporting Guide](references/bug-reporting.md) - Report issues effectively
-- [Troubleshooting Patterns](references/troubleshooting-patterns.md) - Detailed problem solutions
-
-For the latest documentation and updates, visit: https://github.com/hk9890/opencode-coder
+https://github.com/hk9890/opencode-coder

@@ -1,15 +1,9 @@
-import { readFile } from "fs/promises";
 import { join } from "path";
 import type { Logger } from "../core/logger";
+import { defaultFileSystem } from "../core";
+import type { FileSystem } from "../core";
 import { CoderConfigSchema, DEFAULT_CONFIG, type CoderConfig } from "./schema";
 import { resolvePath, resolveEnvInObject } from "./resolver";
-
-/**
- * File system interface for dependency injection
- */
-export interface FileSystem {
-  readFile(path: string, encoding: BufferEncoding): Promise<string>;
-}
 
 /**
  * Options for loadConfig function
@@ -20,13 +14,6 @@ export interface LoadConfigOptions {
   /** Current working directory (defaults to process.cwd()) */
   cwd?: string;
 }
-
-/**
- * Default file system implementation using Node's fs/promises
- */
-export const defaultFileSystem: FileSystem = {
-  readFile: (path: string, encoding: BufferEncoding) => readFile(path, encoding),
-};
 
 /**
  * Resolve all knowledge base paths in the config to absolute paths.

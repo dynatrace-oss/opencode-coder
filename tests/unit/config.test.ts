@@ -17,7 +17,9 @@ describe("loadConfig", () => {
   describe("with mock file system", () => {
     it("should load valid active config", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ active: true }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -28,7 +30,9 @@ describe("loadConfig", () => {
 
     it("should load valid inactive config", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ active: false }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -38,11 +42,13 @@ describe("loadConfig", () => {
 
     it("should return defaults when config file is missing", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => {
           const error = new Error("ENOENT") as NodeJS.ErrnoException;
           error.code = "ENOENT";
           throw error;
         },
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -53,7 +59,9 @@ describe("loadConfig", () => {
 
     it("should return defaults when config file is invalid JSON", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => "not valid json{",
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -64,7 +72,9 @@ describe("loadConfig", () => {
 
     it("should return defaults when config fails schema validation", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ active: "not-a-boolean" }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -75,9 +85,11 @@ describe("loadConfig", () => {
 
     it("should handle read errors gracefully", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => {
           throw new Error("Permission denied");
         },
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -89,10 +101,12 @@ describe("loadConfig", () => {
     it("should use provided cwd path", async () => {
       let capturedPath = "";
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async (path: string) => {
           capturedPath = path;
           return JSON.stringify({ active: true });
         },
+        access: async () => {},
       };
 
       await loadConfig(mockLogger, { fs: mockFs, cwd: "/custom/project" });
@@ -102,7 +116,9 @@ describe("loadConfig", () => {
 
     it("should apply default value for missing active field", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({}),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -113,11 +129,13 @@ describe("loadConfig", () => {
 
     it("should ignore unknown fields in config", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ 
           active: false,
           unknownField: "ignored",
           anotherField: 123,
         }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -128,10 +146,12 @@ describe("loadConfig", () => {
 
     it("should load config with beads.enabled set to true", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ 
           active: true,
           beads: { enabled: true },
         }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -141,10 +161,12 @@ describe("loadConfig", () => {
 
     it("should load config with beads.enabled set to false", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ 
           active: true,
           beads: { enabled: false },
         }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -154,10 +176,12 @@ describe("loadConfig", () => {
 
     it("should load config with empty beads object", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ 
           active: true,
           beads: {},
         }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -167,10 +191,12 @@ describe("loadConfig", () => {
 
     it("should load config with auto_approve_beads set to false", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ 
           active: true,
           beads: { auto_approve_beads: false },
         }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });
@@ -180,9 +206,11 @@ describe("loadConfig", () => {
 
     it("should load config without beads section", async () => {
       const mockFs: FileSystem = {
+        readdir: async () => [],
         readFile: async () => JSON.stringify({ 
           active: true,
         }),
+        access: async () => {},
       };
 
       const config = await loadConfig(mockLogger, { fs: mockFs, cwd: "/test" });

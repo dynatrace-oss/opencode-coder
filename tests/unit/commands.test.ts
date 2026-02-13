@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach } from "bun:test";
-import { loadCommands, type CommandsFileSystem } from "../../src/kb/loaders/commands";
+import { loadCommands } from "../../src/kb/loaders/commands";
+import type { FileSystem } from "../../src/core";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
 import { join } from "path";
 
@@ -15,7 +16,7 @@ describe("loadCommands", () => {
 
   describe("with mock file system", () => {
     it("should load commands from categories", async () => {
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async (path: string) => {
           if (path.endsWith("/command")) {
             return [
@@ -34,6 +35,7 @@ description: Shows next steps
 agent: story-reviewer
 ---
 Review the story and suggest next steps.`,
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -64,7 +66,7 @@ model: gpt-4
 Fix bug template`,
       };
 
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async (path: string) => {
           if (path.endsWith("/command")) {
             return [
@@ -86,6 +88,7 @@ Fix bug template`,
           return [];
         },
         readFile: async (path: string) => files[path] ?? "",
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -99,7 +102,7 @@ Fix bug template`,
     });
 
     it("should handle subtask flag", async () => {
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async (path: string) => {
           if (path.endsWith("/command")) {
             return [{ name: "cat", isDirectory: () => true, isFile: () => false }];
@@ -110,6 +113,7 @@ Fix bug template`,
 subtask: true
 ---
 Template`,
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -118,7 +122,7 @@ Template`,
     });
 
     it("should not set subtask when value is not 'true'", async () => {
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async (path: string) => {
           if (path.endsWith("/command")) {
             return [{ name: "cat", isDirectory: () => true, isFile: () => false }];
@@ -129,6 +133,7 @@ Template`,
 subtask: false
 ---
 Template`,
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -137,7 +142,7 @@ Template`,
     });
 
     it("should skip non-markdown files", async () => {
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async (path: string) => {
           if (path.endsWith("/command")) {
             return [{ name: "cat", isDirectory: () => true, isFile: () => false }];
@@ -149,6 +154,7 @@ Template`,
           ];
         },
         readFile: async () => "Template",
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -158,7 +164,7 @@ Template`,
     });
 
     it("should skip non-directory entries in command folder", async () => {
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async (path: string) => {
           if (path.endsWith("/command")) {
             return [
@@ -169,6 +175,7 @@ Template`,
           return [{ name: "cmd.md", isDirectory: () => false, isFile: () => true }];
         },
         readFile: async () => "Template",
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -178,11 +185,12 @@ Template`,
     });
 
     it("should return empty array on read error", async () => {
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => {
           throw new Error("Permission denied");
         },
         readFile: async () => "",
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -192,9 +200,10 @@ Template`,
     });
 
     it("should handle empty command directory", async () => {
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => [],
         readFile: async () => "",
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -203,7 +212,7 @@ Template`,
     });
 
     it("should trim template body", async () => {
-      const mockFs: CommandsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async (path: string) => {
           if (path.endsWith("/command")) {
             return [{ name: "cat", isDirectory: () => true, isFile: () => false }];
@@ -217,6 +226,7 @@ description: Test
   Template with whitespace  
 
 `,
+        access: async () => {},
       };
 
       const commands = await loadCommands(mockLogger, { fs: mockFs, basePath: "/kb" });

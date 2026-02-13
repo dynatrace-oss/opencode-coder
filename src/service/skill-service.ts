@@ -3,30 +3,10 @@ import type { CoderConfig } from "../config/schema";
 import type { Logger } from "../core/logger";
 import type { CommandDef } from "../kb/types";
 import { parseFrontmatter } from "../core/parser";
-import { readdir, readFile, access } from "fs/promises";
+import { defaultFileSystem } from "../core";
+import type { FileSystem } from "../core";
 import { join } from "path";
 import { homedir } from "os";
-
-/**
- * File system interface for dependency injection
- */
-export interface SkillFileSystem {
-  readdir(
-    path: string,
-    options: { withFileTypes: true }
-  ): Promise<{ name: string; isDirectory(): boolean; isFile(): boolean }[]>;
-  readFile(path: string, encoding: BufferEncoding): Promise<string>;
-  access(path: string): Promise<void>;
-}
-
-/**
- * Default file system implementation
- */
-export const defaultSkillFileSystem: SkillFileSystem = {
-  readdir: (path: string, options: { withFileTypes: true }) => readdir(path, options),
-  readFile: (path: string, encoding: BufferEncoding) => readFile(path, encoding),
-  access: (path: string) => access(path),
-};
 
 /**
  * Options for SkillService
@@ -37,7 +17,7 @@ export interface SkillServiceOptions {
   /** Logger for reporting status and errors */
   logger: Logger;
   /** Optional file system implementation for testing */
-  fileSystem?: SkillFileSystem;
+  fileSystem?: FileSystem;
 }
 
 /**
@@ -56,12 +36,12 @@ export interface SkillServiceOptions {
 export class SkillService {
   private coderConfig: CoderConfig;
   private logger: Logger;
-  private fs: SkillFileSystem;
+  private fs: FileSystem;
 
   constructor(options: SkillServiceOptions) {
     this.coderConfig = options.coderConfig;
     this.logger = options.logger;
-    this.fs = options.fileSystem ?? defaultSkillFileSystem;
+    this.fs = options.fileSystem ?? defaultFileSystem;
   }
 
   /**

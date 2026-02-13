@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach } from "bun:test";
-import { loadAgents, type AgentsFileSystem } from "../../src/kb/loaders/agents";
+import { loadAgents } from "../../src/kb/loaders/agents";
+import type { FileSystem } from "../../src/core";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
 import { join } from "path";
 
@@ -15,9 +16,9 @@ describe("loadAgents", () => {
 
   describe("with mock file system", () => {
     it("should load agents from agent directory", async () => {
-      const mockFs: AgentsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => [
-          { name: "code-reviewer.md", isFile: () => true },
+          { name: "code-reviewer.md", isFile: () => true, isDirectory: () => false },
         ],
         readFile: async () => `---
 name: code-reviewer
@@ -26,6 +27,7 @@ model: claude-3-opus
 mode: subagent
 ---
 You are a code reviewer. Analyze code and provide feedback.`,
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -41,14 +43,15 @@ You are a code reviewer. Analyze code and provide feedback.`,
     });
 
     it("should use filename as name when frontmatter name is missing", async () => {
-      const mockFs: AgentsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => [
-          { name: "my-agent.md", isFile: () => true },
+          { name: "my-agent.md", isFile: () => true, isDirectory: () => false },
         ],
         readFile: async () => `---
 description: An agent without name
 ---
 Agent prompt`,
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -69,12 +72,13 @@ description: Second agent
 Prompt two`,
       };
 
-      const mockFs: AgentsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => [
-          { name: "agent1.md", isFile: () => true },
-          { name: "agent2.md", isFile: () => true },
+          { name: "agent1.md", isFile: () => true, isDirectory: () => false },
+          { name: "agent2.md", isFile: () => true, isDirectory: () => false },
         ],
         readFile: async (path: string) => files[path] ?? "",
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -87,12 +91,13 @@ Prompt two`,
       const modes = ["subagent", "primary", "all"] as const;
       
       for (const mode of modes) {
-        const mockFs: AgentsFileSystem = {
-          readdir: async () => [{ name: "agent.md", isFile: () => true }],
+        const mockFs: FileSystem = {
+          readdir: async () => [{ name: "agent.md", isFile: () => true, isDirectory: () => false }],
           readFile: async () => `---
 mode: ${mode}
 ---
 Prompt`,
+          access: async () => {},
         };
 
         const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -101,12 +106,13 @@ Prompt`,
     });
 
     it("should ignore invalid mode values", async () => {
-      const mockFs: AgentsFileSystem = {
-        readdir: async () => [{ name: "agent.md", isFile: () => true }],
+      const mockFs: FileSystem = {
+        readdir: async () => [{ name: "agent.md", isFile: () => true, isDirectory: () => false }],
         readFile: async () => `---
 mode: invalid-mode
 ---
 Prompt`,
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -114,14 +120,15 @@ Prompt`,
     });
 
     it("should skip non-markdown files", async () => {
-      const mockFs: AgentsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => [
-          { name: "valid-agent.md", isFile: () => true },
-          { name: "readme.txt", isFile: () => true },
-          { name: ".hidden", isFile: () => true },
-          { name: "config.json", isFile: () => true },
+          { name: "valid-agent.md", isFile: () => true, isDirectory: () => false },
+          { name: "readme.txt", isFile: () => true, isDirectory: () => false },
+          { name: ".hidden", isFile: () => true, isDirectory: () => false },
+          { name: "config.json", isFile: () => true, isDirectory: () => false },
         ],
         readFile: async () => "---\nname: valid\n---\nPrompt",
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -131,12 +138,13 @@ Prompt`,
     });
 
     it("should skip non-file entries", async () => {
-      const mockFs: AgentsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => [
-          { name: "valid-agent.md", isFile: () => true },
-          { name: "subdirectory", isFile: () => false },
+          { name: "valid-agent.md", isFile: () => true, isDirectory: () => false },
+          { name: "subdirectory", isFile: () => false, isDirectory: () => true },
         ],
         readFile: async () => "---\nname: valid\n---\nPrompt",
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -145,11 +153,12 @@ Prompt`,
     });
 
     it("should return empty array on read error", async () => {
-      const mockFs: AgentsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => {
           throw new Error("Permission denied");
         },
         readFile: async () => "",
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -159,9 +168,10 @@ Prompt`,
     });
 
     it("should handle empty agent directory", async () => {
-      const mockFs: AgentsFileSystem = {
+      const mockFs: FileSystem = {
         readdir: async () => [],
         readFile: async () => "",
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -170,8 +180,8 @@ Prompt`,
     });
 
     it("should trim prompt body", async () => {
-      const mockFs: AgentsFileSystem = {
-        readdir: async () => [{ name: "agent.md", isFile: () => true }],
+      const mockFs: FileSystem = {
+        readdir: async () => [{ name: "agent.md", isFile: () => true, isDirectory: () => false }],
         readFile: async () => `---
 name: test
 ---
@@ -179,6 +189,7 @@ name: test
   Prompt with whitespace  
 
 `,
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });
@@ -187,9 +198,10 @@ name: test
     });
 
     it("should handle agent without frontmatter", async () => {
-      const mockFs: AgentsFileSystem = {
-        readdir: async () => [{ name: "simple-agent.md", isFile: () => true }],
+      const mockFs: FileSystem = {
+        readdir: async () => [{ name: "simple-agent.md", isFile: () => true, isDirectory: () => false }],
         readFile: async () => "Just a prompt without frontmatter",
+        access: async () => {},
       };
 
       const agents = await loadAgents(mockLogger, { fs: mockFs, basePath: "/kb" });

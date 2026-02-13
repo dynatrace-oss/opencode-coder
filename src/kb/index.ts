@@ -2,10 +2,10 @@
 export type { CommandDef, AgentDef, KnowledgeBase, KbInfo, KbInfoType } from "./types";
 
 // Loaders
-export { loadCommands, defaultCommandsFileSystem } from "./loaders/commands";
-export type { CommandsFileSystem, LoadCommandsOptions } from "./loaders/commands";
-export { loadAgents, defaultAgentsFileSystem } from "./loaders/agents";
-export type { AgentsFileSystem, LoadAgentsOptions } from "./loaders/agents";
+export { loadCommands } from "./loaders/commands";
+export type { LoadCommandsOptions } from "./loaders/commands";
+export { loadAgents } from "./loaders/agents";
+export type { LoadAgentsOptions } from "./loaders/agents";
 
 // KnowledgeBase implementations
 export { LoaderKnowledgeBase } from "./loader-kb";

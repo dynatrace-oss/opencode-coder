@@ -4,28 +4,7 @@ import type { Logger } from "../core/logger";
 import type { KnowledgeBase, CommandDef, AgentDef, KbInfo, KbInfoType } from "../kb/types";
 import { LoaderKnowledgeBase } from "../kb/loader-kb";
 import { CompositeKnowledgeBase } from "../kb/composite-kb";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import { access } from "fs/promises";
-
-// Get the directory where this module is located
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * Resolve the bundled knowledge-base directory.
- * Handles both source (src/service/) and dist (dist/) layouts.
- */
-async function resolveBundledKnowledgeBaseDir(): Promise<string> {
-  // Try dist layout first (../knowledge-base from dist/)
-  const distPath = join(__dirname, "..", "knowledge-base");
-  try {
-    await access(distPath);
-    return distPath;
-  } catch {
-    // Fall back to source layout (../../knowledge-base from src/service/)
-    return join(__dirname, "..", "..", "knowledge-base");
-  }
-}
+import { resolveKnowledgeBaseDir } from "../core";
 
 /**
  * Feature flags that control which commands/agents are registered.
@@ -84,7 +63,7 @@ export class KnowledgeBaseService {
       const knowledgeBases: KnowledgeBase[] = [];
 
       // Always include bundled KB first (Option A: bundled first, user overrides)
-      const bundledPath = await resolveBundledKnowledgeBaseDir();
+      const bundledPath = await resolveKnowledgeBaseDir();
       knowledgeBases.push(
         new LoaderKnowledgeBase({
           basePath: bundledPath,

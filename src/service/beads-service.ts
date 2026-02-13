@@ -192,11 +192,6 @@ export class BeadsService {
     try {
       if (!this.beadsEnabled) return;
 
-      // Create playground folder for this session
-      if (playgroundPath) {
-        this.logger.info("Playground ready", { sessionID, path: playgroundPath });
-      }
-
       // Skip if already injected this session
       if (this.injectedSessions.has(sessionID)) return;
 

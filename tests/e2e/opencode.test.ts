@@ -199,17 +199,22 @@ describe("OpencodeCoder E2E Tests", () => {
       expect(commands).toBeDefined();
       expect(Array.isArray(commands)).toBe(true);
 
-      // Check for our plugin commands (bd/* and opencode-coder/*)
-      const bdCommands = commands?.filter((cmd) => cmd.name?.startsWith("bd/")) ?? [];
-      const coderCommands = commands?.filter((cmd) => cmd.name?.startsWith("coder/")) ?? [];
+      // Check for our plugin commands from knowledge-base/command/
+      // Commands are named after their category directory (e.g., fix/*, github/*, skills/*)
+      const pluginCategories = ["fix", "github", "skills"];
+      const pluginCommands = commands?.filter((cmd) =>
+        pluginCategories.some(cat => cmd.name?.startsWith(`${cat}/`))
+      ) ?? [];
 
-      console.log(`Found ${bdCommands.length} bd commands and ${coderCommands.length} opencode-coder commands`);
-      console.log("BD commands:", bdCommands.map((c) => c.name));
-      console.log("OpenCode-Coder commands:", coderCommands.map((c) => c.name));
+      console.log(`Found ${pluginCommands.length} plugin commands`);
+      console.log("Plugin commands:", pluginCommands.map((c) => c.name));
 
-      // Our plugin should register bd and opencode-coder commands from knowledge-base/ and opencode-coder commands from ai-resources/
-      expect(bdCommands.length).toBeGreaterThan(0);
-      expect(coderCommands.length).toBeGreaterThanOrEqual(0);
+      // Our plugin should register commands from knowledge-base/command/
+      expect(pluginCommands.length).toBeGreaterThan(0);
+
+      // Verify specific expected commands exist
+      const fixCommands = pluginCommands.filter((c) => c.name?.startsWith("fix/"));
+      expect(fixCommands.length).toBeGreaterThan(0);
     });
 
     it("should register plugin agents", async () => {
@@ -219,7 +224,7 @@ describe("OpencodeCoder E2E Tests", () => {
       expect(agents).toBeDefined();
       expect(Array.isArray(agents)).toBe(true);
 
-      // Our expected agents from knowledge-base/ and opencode-coder commands from ai-resources/agent/
+      // Our expected agents from knowledge-base/agent/
       const expectedAgentNames = [
         "beads-task-agent",
       ];
@@ -239,18 +244,18 @@ describe("OpencodeCoder E2E Tests", () => {
       const response = await client!.command.list();
       const commands = response.data ?? [];
 
-      // Get our bd/next command
-      const bdNextCmd = commands.find((cmd) => cmd.name === "bd/next");
-      if (bdNextCmd) {
-        expect(bdNextCmd.template).toBeDefined();
-        expect(bdNextCmd.template?.length).toBeGreaterThan(0);
-        console.log("bd/next command found with template length:", bdNextCmd.template?.length);
+      // Get a known command from our plugin
+      const fixCmd = commands.find((cmd) => cmd.name?.startsWith("fix/"));
+      if (fixCmd) {
+        expect(fixCmd.template).toBeDefined();
+        expect(fixCmd.template?.length).toBeGreaterThan(0);
+        console.log(`${fixCmd.name} command found with template length:`, fixCmd.template?.length);
       } else {
-        // If bd/next isn't found, check if any bd commands exist
-        const anyBdCmd = commands.find((cmd) => cmd.name?.startsWith("bd/"));
-        if (anyBdCmd) {
-          console.log("Found bd command:", anyBdCmd.name);
-          expect(anyBdCmd.template).toBeDefined();
+        // If no fix commands, check for any plugin commands
+        const anyCmd = commands.find((cmd) => cmd.name?.startsWith("github/") || cmd.name?.startsWith("skills/"));
+        if (anyCmd) {
+          console.log("Found plugin command:", anyCmd.name);
+          expect(anyCmd.template).toBeDefined();
         }
       }
     });
@@ -261,11 +266,14 @@ describe("OpencodeCoder E2E Tests", () => {
       // With active:true (default), commands should be registered
       const response = await client!.command.list();
       const commands = response.data ?? [];
-      const pluginCommands = commands.filter(
-        (cmd) => cmd.name?.startsWith("bd/") || cmd.name?.startsWith("coder/")
+
+      // Check for plugin commands from knowledge-base/command/
+      const pluginCategories = ["fix", "github", "skills"];
+      const pluginCommands = commands.filter((cmd) =>
+        pluginCategories.some(cat => cmd.name?.startsWith(`${cat}/`))
       );
 
-      console.log(`Total plugin commands (bd/* + opencode-coder/*): ${pluginCommands.length}`);
+      console.log(`Total plugin commands: ${pluginCommands.length}`);
       expect(pluginCommands.length).toBeGreaterThan(0);
     });
   });

@@ -1,51 +1,18 @@
-import { readdir, readFile, access } from "fs/promises";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { join } from "path";
 import type { Logger } from "../../core/logger";
-import { parseFrontmatter } from "../../core/parser";
+import { parseFrontmatter, resolveKnowledgeBaseDir, defaultFileSystem } from "../../core";
+import type { FileSystem } from "../../core";
 import type { AgentDef } from "../types";
-
-// Get the directory where this plugin is located
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// Resolve knowledge-base directory - handles both source (src/kb/loaders/) and dist (dist/) layouts
-async function resolveKnowledgeBaseDir(): Promise<string> {
-  // Try dist layout first (../knowledge-base from dist/)
-  const distPath = join(__dirname, "..", "knowledge-base");
-  try {
-    await access(distPath);
-    return distPath;
-  } catch {
-    // Fall back to source layout (../../../knowledge-base from src/kb/loaders/)
-    return join(__dirname, "..", "..", "..", "knowledge-base");
-  }
-}
-
-/**
- * File system interface for dependency injection
- */
-export interface AgentsFileSystem {
-  readdir(path: string, options: { withFileTypes: true }): Promise<{ name: string; isFile(): boolean }[]>;
-  readFile(path: string, encoding: BufferEncoding): Promise<string>;
-}
 
 /**
  * Options for loadAgents function
  */
 export interface LoadAgentsOptions {
   /** File system implementation (defaults to fs/promises) */
-  fs?: AgentsFileSystem;
+  fs?: FileSystem;
   /** Base path for knowledge base directory (defaults to plugin's knowledge-base/) */
   basePath?: string;
 }
-
-/**
- * Default file system implementation using Node's fs/promises
- */
-export const defaultAgentsFileSystem: AgentsFileSystem = {
-  readdir: (path: string, options: { withFileTypes: true }) => readdir(path, options),
-  readFile: (path: string, encoding: BufferEncoding) => readFile(path, encoding),
-};
 
 /**
  * Load all agent files from knowledge-base/agent/
@@ -56,7 +23,7 @@ export const defaultAgentsFileSystem: AgentsFileSystem = {
  * @returns Array of agent definitions
  */
 export async function loadAgents(log: Logger, options: LoadAgentsOptions = {}): Promise<AgentDef[]> {
-  const fs = options.fs ?? defaultAgentsFileSystem;
+  const fs = options.fs ?? defaultFileSystem;
   const basePath = options.basePath ?? (await resolveKnowledgeBaseDir());
   const agents: AgentDef[] = [];
   const agentDir = join(basePath, "agent");

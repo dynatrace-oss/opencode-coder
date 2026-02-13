@@ -1,7 +1,7 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { createLogger } from "./core";
 import { loadConfig } from "./config";
-import { KnowledgeBaseService, BeadsService, GitHubService, SkillService } from "./service";
+import { KnowledgeBaseService, BeadsService, GitHubService } from "./service";
 import { systemInfoTool } from "./system-info";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
@@ -43,15 +43,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("KnowledgeBaseService created", { durationMs: Date.now() - kbStart });
 
-  // 5. Create Skill service
-  const skillStart = Date.now();
-  const skillService = new SkillService({
-    coderConfig,
-    logger: log,
-  });
-  log.debug("SkillService created", { durationMs: Date.now() - skillStart });
-
-  // 6. Check beads availability and show toast if needed
+  // 5. Check beads availability and show toast if needed
   // This runs in the background and doesn't block plugin loading
   const beadsCheckStart = Date.now();
   beadsService.checkBeadsAvailability()
@@ -70,7 +62,6 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
     async config(config) {
       await beadsService.processConfig(config);
       await kbService.processConfig(config);
-      await skillService.processConfig(config);
       log.debug("Final config after processing", { config: JSON.stringify(config, null, 2) });
     },
 

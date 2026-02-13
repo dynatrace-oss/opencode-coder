@@ -9,6 +9,3 @@ export type {
 
 export { GitHubService } from "./github-service";
 export type { GitHubServiceOptions } from "./github-service";
-
-export { SkillService } from "./skill-service";
-export type { SkillServiceOptions } from "./skill-service";

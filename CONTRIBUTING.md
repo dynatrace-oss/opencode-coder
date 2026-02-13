@@ -144,7 +144,13 @@ bun test tests/e2e          # E2E tests (or: bun run test:e2e)
 
 ### Adding Commands
 
-Commands go in `knowledge-base/command/` as Markdown files with YAML frontmatter:
+Commands can be added in two locations depending on their purpose:
+
+**Generic commands** (for all users) go in `knowledge-base/agent/` as Markdown files with YAML frontmatter.
+
+**Project-specific commands** (for developing this plugin) go in `.opencode/commands/` or `ai-resources/commands/`.
+
+Example command structure:
 
 ```markdown
 ---

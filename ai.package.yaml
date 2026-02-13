@@ -3,3 +3,4 @@ resources:
     - skill/ai-resource-manager
     - skill/self-reflection
     - package/opencode-coder
+    - skill/fix-documentation

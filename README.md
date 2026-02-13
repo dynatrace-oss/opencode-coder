@@ -98,6 +98,41 @@ These commands require beads to be initialized in your project.
 | `/bd/epic` | Create an epic with tasks |
 | `/bd/template` | Manage issue templates |
 
+## Available Skills
+
+Skills extend the agent's capabilities with specialized workflows and domain expertise.
+
+### Task Synchronization Skills
+
+Bidirectional sync between beads and external task systems (GitHub, Jira, etc.).
+
+| Skill | Description |
+|-------|-------------|
+| `task-sync` | System-agnostic orchestrator for task synchronization. Provides workflow guidance and delegates to backend-specific skills. |
+| `github-task-sync` | GitHub backend for task sync. Syncs beads with GitHub issues using gh CLI. Supports import, export, and bidirectional workflows. |
+
+**Usage Examples:**
+
+```
+Sync with GitHub
+Import GitHub issues to beads
+Export beads to GitHub  
+Sync tasks bidirectionally
+```
+
+**Features:**
+- **Import**: Fetch GitHub issues into beads with automatic priority mapping
+- **Export**: Create GitHub issues from beads (NEW capability)
+- **Bidirectional**: Full two-way sync with conflict detection and resolution
+- **Smart Deduplication**: Never import the same issue twice
+- **Label Tracking**: `source:external` and `github:<number>` labels for sync direction
+
+**Prerequisites:**
+- GitHub CLI (`gh`) authenticated: `gh auth login`
+- Beads initialized: `bd init`
+
+For detailed workflow documentation, see the skills at `ai-resources/skills/task-sync/` and `ai-resources/skills/github-task-sync/`.
+
 ## Available Agents
 
 | Agent | Role |

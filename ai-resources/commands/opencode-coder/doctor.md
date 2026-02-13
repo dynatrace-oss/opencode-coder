@@ -15,7 +15,7 @@ skill({ name: "opencode-coder" })
 ```
 
 Then follow the **Status & Health Checks** and **Troubleshooting & Diagnostics** sections to:
-1. Check coder config (`.coder/coder.json`)
+1. Check plugin status (via `OPENCODE_CODER_DISABLED` env var)
 2. Check beads status and run `bd doctor`
 3. Verify git hooks installation
 4. Check git sync status

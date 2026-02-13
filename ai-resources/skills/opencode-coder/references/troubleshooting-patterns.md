@@ -151,19 +151,18 @@ cat .git/hooks/post-commit
 
 ```bash
 # 1. Remove exclusions from .git/info/exclude
-# 2. Add .beads/ and .coder/ to git
-git add .beads/ .coder/
+# 2. Add .beads/ to git
+git add .beads/
 git commit -m "Switch to team mode"
 ```
 
 **Solution for team to stealth**:
 
 ```bash
-# 1. Remove .beads/ and .coder/ from git
-git rm -r --cached .beads/ .coder/
+# 1. Remove .beads/ from git
+git rm -r --cached .beads/
 # 2. Add to .git/info/exclude
 echo ".beads/" >> .git/info/exclude
-echo ".coder/" >> .git/info/exclude
 ```
 
 **Root Cause**: Mode is determined by whether beads files are tracked in git.
@@ -247,14 +246,16 @@ git push origin main
 **Solution**:
 
 ```bash
-# Check configuration
-cat .coder/coder.json
+# Check if plugin is disabled
+echo $OPENCODE_CODER_DISABLED
 
-# Ensure it's valid JSON with active: true
-echo '{ "active": true }' > .coder/coder.json
+# If "true", enable it by unsetting or setting to false
+unset OPENCODE_CODER_DISABLED
+# or
+export OPENCODE_CODER_DISABLED=false
 ```
 
-**Root Cause**: Missing or invalid `.coder/coder.json` file.
+**Root Cause**: `OPENCODE_CODER_DISABLED` environment variable is set to "true".
 
 **Verification**: Check OpenCode logs for plugin loading errors.
 
@@ -296,8 +297,9 @@ dir $env:APPDATA\opencode\logs\
 **Solution**:
 
 ```bash
-# Verify plugin is loaded
-# Check that .coder/coder.json exists and is valid
+# Verify plugin is not disabled
+echo $OPENCODE_CODER_DISABLED
+# Should be empty or "false"
 
 # Verify knowledge-base structure
 ls -la knowledge-base/command/
@@ -337,14 +339,13 @@ cat .beads/interactions.jsonl | tail -20
 
 ### Beads files showing up in git status (stealth mode)
 
-**Symptoms**: `.beads/` or `.coder/` directories appear in `git status` in stealth mode.
+**Symptoms**: `.beads/` directory appears in `git status` in stealth mode.
 
 **Solution**:
 
 ```bash
 # Ensure exclusions are set
 echo ".beads/" >> .git/info/exclude
-echo ".coder/" >> .git/info/exclude
 echo ".opencode/" >> .git/info/exclude
 
 # Verify exclusions
@@ -359,13 +360,13 @@ cat .git/info/exclude
 
 ### Beads files not showing up in git status (team mode)
 
-**Symptoms**: Can't commit `.beads/` or `.coder/` changes in team mode.
+**Symptoms**: Can't commit `.beads/` changes in team mode.
 
 **Solution**:
 
 ```bash
 # Ensure files are tracked
-git add .beads/ .coder/
+git add .beads/
 
 # Check .gitignore doesn't exclude them
 cat .gitignore
@@ -376,7 +377,7 @@ grep -v "beads.db" .gitignore | grep -q "beads" && echo "Remove .beads/ from .gi
 
 **Root Cause**: Files excluded by .gitignore or not tracked in team mode.
 
-**Best Practice**: In team mode, commit `.beads/` and `.coder/` but always exclude `beads.db`.
+**Best Practice**: In team mode, commit `.beads/` but always exclude `beads.db`.
 
 ---
 

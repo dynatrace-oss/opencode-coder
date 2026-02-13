@@ -21,7 +21,7 @@ Then follow the **Status & Health Checks** section to collect and display:
 - Description and purpose
 
 ### 2. Configuration Status
-- Coder config: active/inactive (check `.coder/coder.json`)
+- Plugin status: active/disabled (check `OPENCODE_CODER_DISABLED` env var)
 - Working directory
 - Beads integration: enabled/disabled (check `.beads/` exists)
 - GitHub integration: enabled/disabled (check `gh` available)

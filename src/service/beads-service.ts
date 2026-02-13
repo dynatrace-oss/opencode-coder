@@ -158,8 +158,13 @@ export class BeadsService {
 
       if (!shouldAutoApproveBeads()) return;
 
+      // Ensure permission is an object (not a string like "allow")
       if (!config.permission) {
         config.permission = {};
+      } else if (typeof config.permission === "string") {
+        // If permission is set to a global "allow"/"deny"/"ask", we skip bd modification
+        // to avoid breaking the user's explicit global permission setting
+        return;
       }
 
       const currentBash = config.permission.bash;

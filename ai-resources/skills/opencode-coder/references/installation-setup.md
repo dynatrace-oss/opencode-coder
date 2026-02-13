@@ -72,7 +72,7 @@ Before initializing, verify:
 
 ```bash
 # 1. Check if already initialized
-ls -la .beads .coder
+ls -la .beads
 
 # 2. If not initialized, run stealth mode setup
 bd init --stealth && bd hooks install
@@ -97,10 +97,10 @@ If you need team collaboration or multi-device sync, see the detailed [Initializ
 First, check if the project is already initialized:
 
 ```bash
-ls -la .beads .coder
+ls -la .beads
 ```
 
-If directories already exist, the project may already be initialized. The initialization process will skip what's already set up.
+If the directory already exists, the project may already be initialized. The initialization process will skip what's already set up.
 
 #### Step 2: Choose Beads Mode
 
@@ -132,23 +132,13 @@ bd init
 bd hooks install
 ```
 
-#### Step 4: Set Up Coder Config
-
-Create the coder configuration directory and file:
-
-```bash
-mkdir -p .coder
-echo '{ "active": true }' > .coder/coder.json
-```
-
-#### Step 5: Handle Git Exclusions
+#### Step 4: Handle Git Exclusions
 
 **For Stealth Mode:**
-The `.beads/`, `.coder/`, and `.opencode/` directories should be added to `.git/info/exclude`:
+The `.beads/` and `.opencode/` directories should be added to `.git/info/exclude`:
 
 ```bash
 echo ".beads/" >> .git/info/exclude
-echo ".coder/" >> .git/info/exclude
 echo ".opencode/" >> .git/info/exclude
 ```
 
@@ -159,11 +149,11 @@ Add the beads database to `.gitignore`:
 echo ".beads/beads.db" >> .gitignore
 ```
 
-#### Step 6: Commit (Team Mode Only)
+#### Step 5: Commit (Team Mode Only)
 
 **For Team Mode:**
 ```bash
-git add .beads/ .coder/ .gitignore AGENTS.md
+git add .beads/ .gitignore AGENTS.md
 git commit -m "chore: initialize coder plugin"
 ```
 
@@ -179,9 +169,6 @@ No commit needed - all files are excluded from git.
   interactions.jsonl # Session interactions
   metadata.json     # Repository metadata
   beads.db          # Local SQLite cache (gitignored)
-
-.coder/
-  coder.json        # Coder plugin configuration
 
 AGENTS.md           # Beads quick reference (optional)
 ```
@@ -220,38 +207,42 @@ bd ready
 
 ## Configuration
 
-The coder plugin uses a simple JSON configuration file located at `.coder/coder.json`.
+The coder plugin is controlled via environment variables. No configuration files are required.
 
-### Configuration File Format
+### Plugin Control
 
-```json
-{
-  "active": true
-}
-```
-
-### Configuration Fields
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `active` | boolean | true | Enables/disables the coder plugin |
+| Environment Variable | Type | Default | Description |
+|---------------------|------|---------|-------------|
+| `OPENCODE_CODER_DISABLED` | boolean | false | When set to "true", disables the entire plugin |
+| `BEADS_AUTO_APPROVE` | boolean | true | When set to "false", requires approval for bd commands |
 
 ### Checking Current Configuration
 
-To view the current configuration and plugin status, check if the `.coder/coder.json` file exists and contains valid JSON:
+To check if the plugin is active:
 
 ```bash
-cat .coder/coder.json
+# Check if plugin is disabled
+echo $OPENCODE_CODER_DISABLED
+
+# If empty or "false", plugin is active
+# If "true", plugin is disabled
 ```
 
 ### Modifying Configuration
 
-Edit `.coder/coder.json` directly to change settings:
+Control the plugin via environment variables:
 
 ```bash
 # Disable the plugin
-echo '{ "active": false }' > .coder/coder.json
+export OPENCODE_CODER_DISABLED=true
 
-# Re-enable the plugin
-echo '{ "active": true }' > .coder/coder.json
+# Re-enable the plugin (unset or set to false)
+unset OPENCODE_CODER_DISABLED
+# or
+export OPENCODE_CODER_DISABLED=false
+
+# Require approval for bd commands
+export BEADS_AUTO_APPROVE=false
 ```
+
+To make these changes permanent, add them to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.).

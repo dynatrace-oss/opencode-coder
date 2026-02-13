@@ -38,11 +38,7 @@ npm install -g beads
 # 2. Initialize project (stealth mode - recommended)
 bd init --stealth && bd hooks install
 
-# 3. Create coder config
-mkdir -p .coder
-echo '{ "active": true }' > .coder/coder.json
-
-# 4. Verify
+# 3. Verify
 bd ready
 ```
 
@@ -50,7 +46,7 @@ bd ready
 
 - **Installation**: Installing bd CLI, verifying installation, upgrading dependencies
 - **Initialization**: Stealth vs team mode, git hooks setup, file structure
-- **Configuration**: `.coder/coder.json` format and options
+- **Configuration**: Environment variables (`OPENCODE_CODER_DISABLED`, `BEADS_AUTO_APPROVE`)
 
 **See [references/installation-setup.md](references/installation-setup.md) for detailed installation and initialization guide.**
 
@@ -64,7 +60,7 @@ Diagnose and resolve issues with the coder plugin.
 
 The plugin includes comprehensive health checks to verify:
 
-1. **Coder Config**: `.coder/coder.json` exists and is valid
+1. **Plugin Status**: `OPENCODE_CODER_DISABLED` is not set to "true"
 2. **Beads**: `.beads/` directory and `bd doctor` status
 3. **Git Hooks**: Hooks are installed and executable
 4. **Git Sync**: No uncommitted beads changes
@@ -84,8 +80,8 @@ bd sync --status
 # Verify git hooks
 ls -la .git/hooks/
 
-# Check coder config
-cat .coder/coder.json
+# Check plugin status
+echo $OPENCODE_CODER_DISABLED
 ```
 
 ### Understanding bd doctor Output
@@ -185,7 +181,7 @@ Monitor the health and status of your coder plugin installation.
 bd --version
 
 # Verify project is initialized
-ls .beads .coder
+ls .beads
 
 # Verify git hooks are installed
 ls .git/hooks/post-commit
@@ -196,8 +192,12 @@ ls .git/hooks/post-commit
 Run a comprehensive check of all components:
 
 ```bash
-# Check coder config
-test -f .coder/coder.json && echo "Coder config: OK" || echo "Coder config: MISSING"
+# Check plugin status
+if [ "$OPENCODE_CODER_DISABLED" = "true" ]; then
+  echo "Plugin: DISABLED"
+else
+  echo "Plugin: ACTIVE"
+fi
 
 # Check beads
 test -d .beads && bd doctor || echo "Beads: NOT INITIALIZED"
@@ -386,7 +386,7 @@ This skill covers the complete lifecycle of using the opencode-coder plugin:
 
 1. **Install** the bd CLI via npm
 2. **Initialize** your project (stealth or team mode)
-3. **Configure** the plugin with `.coder/coder.json`
+3. **Configure** the plugin via environment variables if needed
 4. **Troubleshoot** issues using health checks and diagnostics
 5. **Debug** with proper logging and log analysis
 6. **Report** plugin issues to GitHub

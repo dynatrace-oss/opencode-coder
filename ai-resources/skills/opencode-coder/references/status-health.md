@@ -19,14 +19,15 @@ Monitor the health and status of your coder plugin installation to ensure all co
 
 ### Checking Plugin Status
 
-To view comprehensive plugin status information, including configuration, integrations, and available commands/agents, examine the coder configuration:
+To view comprehensive plugin status information, including configuration, integrations, and available commands/agents:
 
 ```bash
-# Check if plugin is active
-cat .coder/coder.json
+# Check if plugin is disabled
+echo $OPENCODE_CODER_DISABLED
+# If empty or "false", plugin is active; if "true", plugin is disabled
 
-# Verify plugin directory structure
-ls -la .coder/ .beads/
+# Verify beads directory structure
+ls -la .beads/
 ```
 
 ---
@@ -35,7 +36,7 @@ ls -la .coder/ .beads/
 
 A complete health check verifies:
 
-1. **Coder Config**: `.coder/coder.json` exists and is valid JSON
+1. **Plugin Status**: `OPENCODE_CODER_DISABLED` is not set to "true"
 2. **Beads**: `.beads/` directory exists and `bd doctor` passes
 3. **Git Hooks**: Beads git hooks are properly installed
 4. **Git Sync**: No uncommitted beads changes
@@ -43,8 +44,12 @@ A complete health check verifies:
 ### Running a Complete Health Check
 
 ```bash
-# Check coder config
-test -f .coder/coder.json && echo "Coder config: OK" || echo "Coder config: MISSING"
+# Check plugin status
+if [ "$OPENCODE_CODER_DISABLED" = "true" ]; then
+  echo "Plugin: DISABLED"
+else
+  echo "Plugin: ACTIVE"
+fi
 
 # Check beads
 test -d .beads && bd doctor || echo "Beads: NOT INITIALIZED"
@@ -76,7 +81,7 @@ For a quick check, verify the essential components:
 bd --version
 
 # Verify project is initialized
-ls .beads .coder
+ls .beads
 
 # Verify git hooks are installed
 ls .git/hooks/post-commit
@@ -138,18 +143,13 @@ else
 fi
 echo ""
 
-echo "=== Coder Configuration ==="
-if [ -f ".coder/coder.json" ]; then
-    echo "Status: CONFIGURED"
-    if node -e "JSON.parse(require('fs').readFileSync('.coder/coder.json', 'utf8'))" 2>/dev/null; then
-        echo "Validity: VALID JSON"
-    else
-        echo "Validity: INVALID JSON"
-        echo "Action: Fix .coder/coder.json syntax"
-    fi
+echo "=== Plugin Configuration ==="
+if [ "$OPENCODE_CODER_DISABLED" = "true" ]; then
+    echo "Status: DISABLED"
+    echo "Action: Unset OPENCODE_CODER_DISABLED or set to 'false' to enable"
 else
-    echo "Status: NOT CONFIGURED"
-    echo "Action: Run 'coder init' or create .coder/coder.json"
+    echo "Status: ACTIVE"
+    echo "Plugin is enabled and ready"
 fi
 echo ""
 
@@ -180,7 +180,7 @@ fi
 echo ""
 
 echo "=== Overall Status ==="
-if [ -d ".beads" ] && [ -f ".coder/coder.json" ] && [ -f ".git/hooks/post-commit" ] && command -v bd &> /dev/null; then
+if [ -d ".beads" ] && [ "$OPENCODE_CODER_DISABLED" != "true" ] && [ -f ".git/hooks/post-commit" ] && command -v bd &> /dev/null; then
     echo "✓ System is fully configured and ready"
 else
     echo "⚠ Some components are missing or not configured"
@@ -188,12 +188,7 @@ else
 fi
 ```
 
-**Save this script** as `.coder/scripts/status-check.sh` and run:
-
-```bash
-chmod +x .coder/scripts/status-check.sh
-./.coder/scripts/status-check.sh
-```
+**Save this script** as a shell script and run it to check comprehensive status.
 
 ### Example Output
 
@@ -218,9 +213,9 @@ Status: INITIALIZED
 Mode: local
 Directory: .beads/
 
-=== Coder Configuration ===
-Status: CONFIGURED
-Validity: VALID JSON
+=== Plugin Configuration ===
+Status: ACTIVE
+Plugin is enabled and ready
 
 === Git Hooks Status ===
 post-commit: INSTALLED

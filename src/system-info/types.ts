@@ -18,7 +18,7 @@ export interface SessionInfo {
 export interface PluginInfo {
   name: string;              // @hk9890/opencode-coder
   version: string;           // From package.json
-  active: boolean;           // From .coder/coder.json
+  active: boolean;           // From OPENCODE_CODER_DISABLED env var (inverted)
 }
 
 export interface IntegrationInfo {

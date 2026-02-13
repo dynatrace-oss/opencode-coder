@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { AimgrService } from "../aimgr-service";
-import type { Logger } from "../../core/logger";
+import { AimgrService } from "../../../src/service/aimgr-service";
+import type { Logger } from "../../../src/core/logger";
 
 describe("AimgrService", () => {
   let mockLogger: Logger;

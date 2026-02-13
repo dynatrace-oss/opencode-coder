@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, mock } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AimgrService } from "../aimgr-service";
 import type { Logger } from "../../core/logger";
 

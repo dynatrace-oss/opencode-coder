@@ -99,3 +99,64 @@ bun run test:unit           # Unit tests only
 bun run test:integration    # Integration tests
 bun run test:e2e            # E2E tests (requires build + opencode)
 ```
+
+## AimgrService
+
+### Purpose
+
+The `AimgrService` provides automatic integration with aimgr (AI Resource Manager) for discovering and installing AI resources when the plugin starts.
+
+### Key Features
+
+- **Auto-detection**: Checks if aimgr CLI is installed on PATH
+- **Auto-initialization**: Runs `aimgr init` if no `ai.package.yaml` exists
+- **Package installation**: Installs `opencode-coder` package if available
+- **User notifications**: Shows toast messages for initialization status
+- **Graceful degradation**: All errors are logged but don't prevent plugin loading
+
+### Architecture
+
+```typescript
+class AimgrService {
+  // Detection methods (synchronous)
+  isAimgrAvailable(): boolean
+  hasPackageYaml(): boolean
+  isPackageAvailable(packageName: string): boolean
+  
+  // Action methods (synchronous, throw on error)
+  initializeAimgr(): void
+  installPackage(packageName: string): void
+  
+  // Main orchestration (async, catches all errors)
+  autoInitialize(): Promise<void>
+}
+```
+
+### Integration Pattern
+
+The service is instantiated in `src/index.ts` and runs in the background:
+
+```typescript
+// Create service
+const aimgrService = new AimgrService({ logger: log, client });
+
+// Run in background (doesn't block plugin loading)
+aimgrService.autoInitialize()
+  .then(() => log.debug("aimgr initialized"))
+  .catch((err) => log.error("aimgr failed", { error: err }));
+```
+
+### Testing
+
+- All methods are unit tested with mocks for `execSync` and `fs.existsSync`
+- Tests verify both success and failure scenarios
+- `autoInitialize` is tested for all code paths (skip, init, install, error)
+- See `src/service/__tests__/aimgr-service.test.ts`
+
+### Error Handling
+
+- Individual methods (`initializeAimgr`, `installPackage`) throw errors
+- `autoInitialize` catches all errors and logs them
+- Plugin continues loading even if aimgr operations fail
+- This ensures aimgr is optional and doesn't break the plugin
+

@@ -57,6 +57,48 @@ Beads integration is optional. You can use the plugin without beads at all. If y
 - Perfect for: teams adopting beads together
 - Use `bd init` (default) to enable this mode
 
+
+## aimgr Integration (Optional)
+
+The plugin includes automatic integration with [aimgr](https://github.com/hk9890/ai-config-manager), a CLI tool for discovering and managing AI resources (commands, skills, agents).
+
+### How It Works
+
+When the plugin starts, it automatically:
+
+1. **Checks** if `ai.package.yaml` exists in your project
+2. **Detects** if `aimgr` is installed on your system
+3. **Initializes** aimgr if available (`aimgr init`)
+4. **Installs** the `opencode-coder` package if available in your aimgr repository
+5. **Notifies** you via toast when initialization completes
+
+All operations run in the background and won't block the plugin from loading.
+
+### Installing aimgr
+
+To use this feature, install aimgr:
+
+```bash
+# See installation instructions
+https://github.com/hk9890/ai-config-manager
+```
+
+### Disabling Auto-Initialization
+
+If you have aimgr installed but don't want automatic initialization:
+
+- Create an `ai.package.yaml` file in your project (even an empty one)
+- Or uninstall/remove aimgr from your PATH
+
+The plugin will skip auto-initialization in these cases.
+
+### Benefits
+
+- **Auto-discovery**: Automatically finds relevant AI resources for your project
+- **Zero-config**: Works out-of-the-box if aimgr is installed
+- **Non-intrusive**: Fails gracefully if aimgr is not available
+- **Project-specific**: Each project can have its own AI resource configuration
+
 ## Quick Start
 
 ### With Beads

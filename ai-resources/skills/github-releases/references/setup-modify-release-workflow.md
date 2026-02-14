@@ -4,7 +4,9 @@ Guide for creating or updating a project's `docs/RELEASING.md` file.
 
 ## Purpose
 
-The `docs/RELEASING.md` file provides **project-specific release instructions** that override generic workflow steps. This document should answer all questions an AI agent (or human) needs to perform a release without guessing.
+The `docs/RELEASING.md` file provides **project-specific release instructions**
+that override generic workflow steps. This document should answer all questions
+an AI agent (or human) needs to perform a release without guessing.
 
 ## What Goes in RELEASING.md
 
@@ -12,7 +14,7 @@ The `docs/RELEASING.md` file provides **project-specific release instructions** 
 
 Specify exactly how to build the project:
 
-```markdown
+````markdown
 ## Build
 
 ```bash
@@ -22,13 +24,14 @@ bun run build
 # or
 cargo build --release
 ```
-```
+
+````
 
 ### 2. Test Commands
 
 List all tests that must pass:
 
-```markdown
+````markdown
 ## Tests
 
 Run all tests before releasing:
@@ -40,43 +43,48 @@ npm run test:e2e           # E2E tests (if applicable)
 ```
 
 All tests must pass with no failures.
-```
+
+````
 
 ### 3. Version Files
 
 Document which files contain version numbers:
 
-```markdown
+````markdown
 ## Version Files
 
 Update version in these files:
+
 - `package.json` (npm version bump handles this)
 - `Cargo.toml` (for Rust projects)
 - `pyproject.toml` (for Python projects)
 - `src/version.ts` (if version is exported from code)
 - `README.md` (installation instructions)
-```
+
+````
 
 ### 4. Version Bump Strategy
 
 Explain how versioning works for this project:
 
-```markdown
+````markdown
 ## Versioning
 
 This project follows [Semantic Versioning](https://semver.org/):
+
 - **Major (X.0.0)**: Breaking changes
 - **Minor (0.X.0)**: New features, backward compatible
 - **Patch (0.0.X)**: Bug fixes, backward compatible
 
 Use `npm version [major|minor|patch]` to bump version and create git tag.
-```
+
+````
 
 ### 5. Pre-Release Checklist
 
 Project-specific checks beyond generic quality gates:
 
-```markdown
+````markdown
 ## Pre-Release Checklist
 
 - [ ] All tests pass
@@ -86,13 +94,14 @@ Project-specific checks beyond generic quality gates:
 - [ ] Breaking changes documented with migration guide
 - [ ] CI/CD pipeline green on main branch
 - [ ] Dependencies up to date (run `npm audit` or equivalent)
-```
+
+````
 
 ### 6. Release Process
 
 Step-by-step release commands:
 
-```markdown
+````markdown
 ## Release Process
 
 ### Option 1: Automated (Recommended)
@@ -103,7 +112,8 @@ gh workflow run release.yml -f version=patch  # or minor, major
 gh run watch
 ```
 
-The workflow handles: version bump, tag creation, changelog update, npm publish, GitHub release.
+The workflow handles: version bump, tag creation, changelog update, npm
+publish, GitHub release.
 
 ### Option 2: Manual
 
@@ -122,27 +132,30 @@ gh release create v$(node -p "require('./package.json').version") \
   --title "v$(node -p "require('./package.json').version")" \
   --generate-notes
 ```
-```
+
+````
 
 ### 7. Post-Release Steps
 
 What happens after the release:
 
-```markdown
+````markdown
 ## Post-Release
 
 After releasing:
+
 1. Verify package published to npm: `npm view <package-name>`
 2. Check GitHub release appears: `gh release view`
 3. Test installation: `npm install <package-name>@latest` in a clean directory
 4. Announce release (if applicable): Discord, Twitter, changelog newsletter
-```
+
+````
 
 ### 8. Rollback Procedure
 
 How to undo a bad release:
 
-```markdown
+````markdown
 ## Rollback
 
 If a release has critical issues:
@@ -158,13 +171,14 @@ git push origin :refs/tags/v<version>
 ```
 
 Then fix the issue and re-release with a patch version.
-```
+
+````
 
 ## Example RELEASING.md (Node.js/TypeScript Project)
 
 Here's a complete example for a TypeScript plugin:
 
-```markdown
+````markdown
 # Release Process
 
 ## Prerequisites
@@ -199,6 +213,7 @@ All tests must pass.
 ## Versioning
 
 This project follows Semantic Versioning:
+
 - **Major**: Breaking changes to plugin API
 - **Minor**: New features, backward compatible
 - **Patch**: Bug fixes
@@ -253,11 +268,13 @@ gh release delete v<version> -y
 git tag -d v<version>
 git push origin :refs/tags/v<version>
 ```
-```
+
+````
 
 ## When to Update RELEASING.md
 
 Update this file when:
+
 - Build process changes
 - New test suites added
 - Version file locations change
@@ -266,22 +283,24 @@ Update this file when:
 
 ## Tips for Writing RELEASING.md
 
-1. **Be explicit** — don't assume knowledge (e.g., "run tests" → specify exact commands)
-2. **Include outputs** — mention what success looks like ("Output: dist/ directory")
+1. **Be explicit** — don't assume knowledge (e.g., "run tests" → specify exact
+   commands)
+2. **Include outputs** — mention what success looks like ("Output: dist/
+   directory")
 3. **Handle failures** — document common errors and fixes
 4. **Automate where possible** — prefer GitHub Actions over manual steps
 5. **Keep it updated** — outdated docs are worse than no docs
 
 ## Common Mistakes to Avoid
 
-❌ **Too vague**: "Run tests" (which tests? how?)  
+❌ **Too vague**: "Run tests" (which tests? how?)
 ✅ **Specific**: "Run `npm test && npm run test:integration`"
 
-❌ **Missing context**: "Publish to registry"  
+❌ **Missing context**: "Publish to registry"
 ✅ **Clear**: "Publish to npm: `npm publish`"
 
-❌ **Assumes local config**: "Just run the release script"  
+❌ **Assumes local config**: "Just run the release script"
 ✅ **Documents prereqs**: "Ensure npm auth configured: `npm whoami`"
 
-❌ **No verification**: "Push and done"  
+❌ **No verification**: "Push and done"
 ✅ **Includes checks**: "Verify package live: `npm view <pkg>`"

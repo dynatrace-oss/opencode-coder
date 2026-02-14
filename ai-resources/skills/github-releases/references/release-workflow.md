@@ -5,6 +5,7 @@ Complete process for creating a GitHub release.
 ## Prerequisites
 
 Before starting:
+
 1. **Load project-specific instructions** from `docs/RELEASING.md`
 2. Verify environment: `bash scripts/check-release-prereqs.sh`
 
@@ -19,7 +20,8 @@ All quality gates MUST pass before proceeding.
 3. **Build succeeds** — build the project
 4. **CI green** — latest commit passes all checks
 
-If unsure how to build or test the project, check `docs/RELEASING.md` or ask the user.
+If unsure how to build or test the project, check `docs/RELEASING.md` or ask
+the user.
 
 > Check project-specific release guide for custom quality gates.
 
@@ -35,7 +37,8 @@ Key checks:
 2. **CHANGELOG** — entry exists for new version
 3. **Breaking changes** — migration guide if needed
 
-> Check project-specific release guide for additional documentation requirements.
+> Check project-specific release guide for additional documentation
+> requirements.
 
 **Details**: [documentation-checklist.md](documentation-checklist.md)
 

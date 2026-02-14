@@ -1,7 +1,6 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { createLogger } from "./core";
 import { KnowledgeBaseService, BeadsService, GitHubService, AimgrService } from "./service";
-import { systemInfoTool } from "./system-info";
 import { isPluginDisabled } from "./config/env";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
@@ -88,10 +87,6 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
 
     async "permission.ask"(input, output) {
       beadsService.processPermissionAsk(input, output);
-    },
-
-    tool: {
-      system_info: systemInfoTool
     },
   };
 };

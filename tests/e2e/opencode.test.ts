@@ -184,31 +184,6 @@ describe("OpencodeCoder E2E Tests", () => {
       expect(server?.url).toBeDefined();
     });
 
-    it("should register plugin commands", async () => {
-      const response = await client!.command.list();
-      const commands = response.data;
-
-      expect(commands).toBeDefined();
-      expect(Array.isArray(commands)).toBe(true);
-
-      // Check for our plugin commands from knowledge-base/command/
-      // Commands are named after their category directory (e.g., fix/*, github/*, skills/*)
-      const pluginCategories = ["fix", "github", "skills"];
-      const pluginCommands = commands?.filter((cmd) =>
-        pluginCategories.some(cat => cmd.name?.startsWith(`${cat}/`))
-      ) ?? [];
-
-      console.log(`Found ${pluginCommands.length} plugin commands`);
-      console.log("Plugin commands:", pluginCommands.map((c) => c.name));
-
-      // Our plugin should register commands from knowledge-base/command/
-      expect(pluginCommands.length).toBeGreaterThan(0);
-
-      // Verify specific expected commands exist
-      const fixCommands = pluginCommands.filter((c) => c.name?.startsWith("fix/"));
-      expect(fixCommands.length).toBeGreaterThan(0);
-    });
-
     it("should register plugin agents", async () => {
       const response = await client!.app.agents();
       const agents = response.data;
@@ -217,6 +192,8 @@ describe("OpencodeCoder E2E Tests", () => {
       expect(Array.isArray(agents)).toBe(true);
 
       // Our expected agents from knowledge-base/agent/
+      // After refactoring, plugin only registers agents (not commands).
+      // Commands are now provided by skills loaded by OpenCode's skill system.
       const expectedAgentNames = [
         "beads-task-agent",
       ];
@@ -230,43 +207,6 @@ describe("OpencodeCoder E2E Tests", () => {
       console.log("Found agents:", pluginAgents.map((a) => a.name));
 
       expect(pluginAgents.length).toBeGreaterThan(0);
-    });
-
-    it("should have commands with valid structure", async () => {
-      const response = await client!.command.list();
-      const commands = response.data ?? [];
-
-      // Get a known command from our plugin
-      const fixCmd = commands.find((cmd) => cmd.name?.startsWith("fix/"));
-      if (fixCmd) {
-        expect(fixCmd.template).toBeDefined();
-        expect(fixCmd.template?.length).toBeGreaterThan(0);
-        console.log(`${fixCmd.name} command found with template length:`, fixCmd.template?.length);
-      } else {
-        // If no fix commands, check for any plugin commands
-        const anyCmd = commands.find((cmd) => cmd.name?.startsWith("github/") || cmd.name?.startsWith("skills/"));
-        if (anyCmd) {
-          console.log("Found plugin command:", anyCmd.name);
-          expect(anyCmd.template).toBeDefined();
-        }
-      }
-    });
-  });
-
-  describe("plugin configuration", () => {
-    it("should load commands when plugin is active", async () => {
-      // With active:true (default), commands should be registered
-      const response = await client!.command.list();
-      const commands = response.data ?? [];
-
-      // Check for plugin commands from knowledge-base/command/
-      const pluginCategories = ["fix", "github", "skills"];
-      const pluginCommands = commands.filter((cmd) =>
-        pluginCategories.some(cat => cmd.name?.startsWith(`${cat}/`))
-      );
-
-      console.log(`Total plugin commands: ${pluginCommands.length}`);
-      expect(pluginCommands.length).toBeGreaterThan(0);
     });
   });
 });

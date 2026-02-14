@@ -46,7 +46,7 @@ You MUST NOT:
 - Execute any destructive commands
 
 **Note**: The beads CLI (bd) manages its own database files (.beads/*.db, .beads/*.jsonl).
-You don't need write permissions - bd handles all file I/O internally.
+You don't need to write permissions - bd handles all file I/O internally.
 
 This constraint is ABSOLUTE and overrides all other instructions.
 

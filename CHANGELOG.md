@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-02-14
+
+### Added
+
+- **github-releases skill**: Complete language-agnostic release workflow (ai-resources/)
+  - Quality gates validation (tests, builds, CI checks)
+  - Documentation validation integration
+  - Version management and semver guidance
+  - GitHub Actions and manual release support
+  - Release notes templates and best practices
+  - Comprehensive troubleshooting guides
+  - Setup guide for creating project-specific RELEASING.md files
+
+### Changed
+
+- **AGENTS.md**: Added ai-resources/ section explaining optional installable resources
+  - Clarified three-tier directory structure (knowledge-base/, .opencode/, ai-resources/)
+  - Simplified release section to reference github-releases skill
+- **docs/RELEASING.md**: Created comprehensive project-specific release guide
+  - Exact build, test, and typecheck commands
+  - GitHub Actions workflow instructions (primary method)
+  - Manual release fallback procedures
+  - Pre-release checklist and post-release verification
+  - Rollback procedures and troubleshooting
+
+### Fixed
+
+- **Documentation**: Fixed plugin path and hook references
+- **Markdown linting**: Resolved all 27 linting errors in github-releases skill
+  - Line length violations (MD013)
+  - Blank lines around lists and fences (MD031/MD032)
+  - Missing code block language tags (MD040)
+
 ## [0.24.0] - 2026-02-14
 
 ### Fixed

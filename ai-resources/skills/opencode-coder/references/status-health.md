@@ -55,7 +55,7 @@ fi
 test -d .beads && bd doctor || echo "Beads: NOT INITIALIZED"
 
 # Check git hooks
-test -f .git/hooks/post-commit && echo "Git hooks: OK" || echo "Git hooks: MISSING"
+test -f .git/hooks/pre-commit && echo "Git hooks: OK" || echo "Git hooks: MISSING"
 
 # Check sync status (if beads initialized)
 bd sync --status
@@ -84,7 +84,7 @@ bd --version
 ls .beads
 
 # Verify git hooks are installed
-ls .git/hooks/post-commit
+ls .git/hooks/pre-commit
 ```
 
 ---
@@ -115,7 +115,7 @@ fi
 echo ""
 
 echo "=== Plugin Installation ==="
-PLUGIN_PATH="$(npm root -g)/opencode-coder"
+PLUGIN_PATH="$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder"
 if [ -d "$PLUGIN_PATH" ]; then
     echo "Status: INSTALLED"
     if [ -f "$PLUGIN_PATH/package.json" ]; then
@@ -124,7 +124,7 @@ if [ -d "$PLUGIN_PATH" ]; then
     echo "Location: $PLUGIN_PATH"
 else
     echo "Status: NOT INSTALLED"
-    echo "Action: Run 'npm install -g opencode-coder'"
+    echo "Action: Plugin is managed by OpenCode. Check ~/.config/opencode/opencode.json"
 fi
 echo ""
 
@@ -154,11 +154,11 @@ fi
 echo ""
 
 echo "=== Git Hooks Status ==="
-if [ -f ".git/hooks/post-commit" ]; then
-    echo "post-commit: INSTALLED"
-    [ -x ".git/hooks/post-commit" ] && echo "  Executable: YES" || echo "  Executable: NO (run chmod +x)"
+if [ -f ".git/hooks/pre-commit" ]; then
+    echo "pre-commit: INSTALLED"
+    [ -x ".git/hooks/pre-commit" ] && echo "  Executable: YES" || echo "  Executable: NO (run chmod +x)"
 else
-    echo "post-commit: MISSING"
+    echo "pre-commit: MISSING"
 fi
 if [ -f ".git/hooks/post-merge" ]; then
     echo "post-merge: INSTALLED"
@@ -166,7 +166,7 @@ if [ -f ".git/hooks/post-merge" ]; then
 else
     echo "post-merge: MISSING"
 fi
-if [ ! -f ".git/hooks/post-commit" ] || [ ! -f ".git/hooks/post-merge" ]; then
+if [ ! -f ".git/hooks/pre-commit" ] || [ ! -f ".git/hooks/post-merge" ]; then
     echo "Action: Run 'bd init' or 'bd doctor' to install hooks"
 fi
 echo ""
@@ -180,7 +180,7 @@ fi
 echo ""
 
 echo "=== Overall Status ==="
-if [ -d ".beads" ] && [ "$OPENCODE_CODER_DISABLED" != "true" ] && [ -f ".git/hooks/post-commit" ] && command -v bd &> /dev/null; then
+if [ -d ".beads" ] && [ "$OPENCODE_CODER_DISABLED" != "true" ] && [ -f ".git/hooks/pre-commit" ] && command -v bd &> /dev/null; then
     echo "✓ System is fully configured and ready"
 else
     echo "⚠ Some components are missing or not configured"
@@ -218,7 +218,7 @@ Status: ACTIVE
 Plugin is enabled and ready
 
 === Git Hooks Status ===
-post-commit: INSTALLED
+pre-commit: INSTALLED
   Executable: YES
 post-merge: INSTALLED
   Executable: YES
@@ -246,14 +246,17 @@ node --version
 # npm version
 npm --version
 
+# Check installed OpenCode plugins
+ls -la ~/.cache/opencode/node_modules/@hk9890/
+
 # Plugin version
-npm list -g opencode-coder
+cat ~/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json | grep version
 
-# Or check package.json directly
-node -p "require('$(npm root -g)/opencode-coder/package.json').version"
+# Or with node
+node -p "require('$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json').version"
 
-# Check for updates
-npm outdated -g beads opencode-coder
+# Check configured plugins
+cat ~/.config/opencode/opencode.json | grep -A5 '"plugin"'
 ```
 
 ### Troubleshooting Version Issues
@@ -277,17 +280,14 @@ bd --version
 **Problem: Wrong plugin version installed**
 
 ```bash
-# Check current version
-npm list -g opencode-coder
+# Plugins are automatically managed by OpenCode
+# To use a different version, update opencode.json:
+# "plugin": ["@hk9890/opencode-coder@1.2.0"]
 
-# Update to latest
-npm update -g opencode-coder
-
-# Or install specific version
-npm install -g opencode-coder@1.2.0
-
-# Verify update
-npm list -g opencode-coder
+# Then restart OpenCode to trigger reinstallation
+# Or clear cache and restart:
+rm -rf ~/.cache/opencode/node_modules/@hk9890/opencode-coder
+# OpenCode will reinstall on next startup
 ```
 
 **Problem: Version mismatch between beads and plugin**
@@ -296,14 +296,16 @@ The plugin may require specific beads versions. Check compatibility:
 
 ```bash
 # Check plugin's beads dependency
-node -p "require('$(npm root -g)/opencode-coder/package.json').peerDependencies"
+node -p "require('$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json').peerDependencies"
 
-# If mismatch, update both
-npm update -g beads opencode-coder
+# Update beads CLI if needed
+npm update -g beads
+
+# Note: Plugin updates are managed by OpenCode based on opencode.json
 
 # Verify versions match requirements
 bd --version
-npm list -g opencode-coder
+cat ~/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json | grep version
 ```
 
 **Problem: Node.js version too old**

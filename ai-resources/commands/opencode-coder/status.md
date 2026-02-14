@@ -16,7 +16,7 @@ Read the plugin's package.json directly:
 
 ```bash
 # Get plugin installation path
-PLUGIN_PATH="$(npm root -g)/@hk9890/opencode-coder"
+PLUGIN_PATH="$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder"
 
 # Read and parse package.json
 if [ -f "$PLUGIN_PATH/package.json" ]; then
@@ -62,7 +62,7 @@ Check key components:
 
 ```bash
 # Plugin installed
-test -d "$(npm root -g)/@hk9890/opencode-coder" && echo "✓ Plugin installed" || echo "✗ Plugin NOT installed"
+test -d "$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder" && echo "✓ Plugin installed" || echo "✗ Plugin NOT installed"
 
 # Plugin active
 [ "$OPENCODE_CODER_DISABLED" != "true" ] && echo "✓ Plugin active" || echo "✗ Plugin DISABLED"
@@ -74,7 +74,7 @@ command -v bd &> /dev/null && echo "✓ Beads CLI available" || echo "✗ Beads 
 test -d .beads && echo "✓ Beads initialized" || echo "✗ Beads NOT initialized"
 
 # Git hooks
-test -f .git/hooks/post-commit && echo "✓ Git hooks installed" || echo "✗ Git hooks MISSING"
+test -f .git/hooks/pre-commit && echo "✓ Git hooks installed" || echo "✗ Git hooks MISSING"
 ```
 
 ### 4. Format Output

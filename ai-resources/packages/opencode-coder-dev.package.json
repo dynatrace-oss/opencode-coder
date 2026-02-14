@@ -3,6 +3,8 @@
   "description": "Agent resources for opencode coder plugin development ",
   "resources": [
     "command/opencode-coder-dev/analyze-logs",
-    "command/opencode-coder-dev/coder-sync"
+    "command/opencode-coder-dev/coder-sync",
+    "skill/github-task-sync",
+    "skill/task-sync"
   ]
 }

@@ -17,7 +17,7 @@
 
 **Command**:
 ```bash
-PLUGIN_PATH="$(npm root -g)/@hk9890/opencode-coder"
+PLUGIN_PATH="~/.cache/opencode/node_modules/@hk9890/opencode-coder"
 node -p "require('$PLUGIN_PATH/package.json').version"
 ```
 
@@ -96,7 +96,7 @@ cd /tmp && test -d .beads && echo "INITIALIZED" || echo "NOT INITIALIZED"
 
 **Command**:
 ```bash
-test -f .git/hooks/post-commit && echo "INSTALLED" || echo "MISSING"
+test -f .git/hooks/pre-commit && echo "INSTALLED" || echo "MISSING"
 ```
 
 **Result**: ✅ **PASS** - Correctly detected missing hooks
@@ -219,7 +219,7 @@ npm install -g ./hk9890-opencode-coder-*.tgz
 
 ### ✅ Plugin Not Installed
 ```bash
-PLUGIN_PATH="$(npm root -g)/@hk9890/opencode-coder"
+PLUGIN_PATH="~/.cache/opencode/node_modules/@hk9890/opencode-coder"
 test -d "$PLUGIN_PATH" || echo "NOT INSTALLED"
 ```
 **Result**: Correctly detects and reports
@@ -238,7 +238,7 @@ command -v bd &> /dev/null || echo "NOT FOUND"
 
 ### ✅ Git Hooks Missing
 ```bash
-test -f .git/hooks/post-commit || echo "MISSING"
+test -f .git/hooks/pre-commit || echo "MISSING"
 ```
 **Result**: Correctly detects and reports
 

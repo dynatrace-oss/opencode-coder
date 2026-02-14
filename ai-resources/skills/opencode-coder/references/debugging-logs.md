@@ -190,7 +190,7 @@ When analyzing logs for plugin issues:
 | Plugin debug messages | "opencode-coder" (when `OPENCODE_CODER_DEBUG=1`) |
 | Command failures | "command", "error", stack traces |
 | bd CLI issues | "bd", "beads", "spawn", "ENOENT" |
-| Hook failures | "hook", "git", "post-commit" |
+| Hook failures | "hook", "git", "pre-commit" |
 
 **Tip**: When `OPENCODE_CODER_DEBUG=1` is set, plugin debug messages are tagged with the service name `opencode-coder` and log at info level, making them easy to filter from general OpenCode logs.
 

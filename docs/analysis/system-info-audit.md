@@ -67,7 +67,7 @@ For each piece of information provided by system_info, analyze alternatives:
 | Field | Current Method | Bash Alternative | Complexity | Needed? |
 |-------|---------------|------------------|------------|---------|
 | `name` | Hardcoded constant | Hardcoded | N/A | ✅ Yes, but hardcode is fine |
-| `version` | Read package.json (BROKEN) | `node -p "require('$(npm root -g)/@hk9890/opencode-coder/package.json').version"` | Simple | ✅ Yes, bash works better |
+| `version` | Read package.json (BROKEN) | `node -p "require('~/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json').version"` | Simple | ✅ Yes, bash works better |
 | `active` | `!isPluginDisabled()` | `[ "$OPENCODE_CODER_DISABLED" != "true" ]` | Trivial | ✅ Yes, but bash is fine |
 
 **Assessment**: Version detection is currently BROKEN in the tool. Bash alternative is simpler and works reliably. Active status is trivial to check via env var.
@@ -116,7 +116,7 @@ For each piece of information provided by system_info, analyze alternatives:
 
 ```bash
 # Plugin version
-node -p "require('$(npm root -g)/@hk9890/opencode-coder/package.json').version"
+node -p "require('~/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json').version"
 
 # Plugin active
 [ "$OPENCODE_CODER_DISABLED" != "true" ] && echo "ACTIVE" || echo "DISABLED"
@@ -235,7 +235,7 @@ The status command (`ai-resources/commands/opencode-coder/status.md`) has alread
 
 ```bash
 # Get plugin installation path
-PLUGIN_PATH="$(npm root -g)/@hk9890/opencode-coder"
+PLUGIN_PATH="~/.cache/opencode/node_modules/@hk9890/opencode-coder"
 
 # Read version from package.json
 cat "$PLUGIN_PATH/package.json"

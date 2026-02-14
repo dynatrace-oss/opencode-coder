@@ -133,13 +133,13 @@ bd init --stealth
 bd hooks install
 
 # Verify installation
-ls -la .git/hooks/post-commit
-cat .git/hooks/post-commit
+ls -la .git/hooks/pre-commit
+cat .git/hooks/pre-commit
 ```
 
 **Root Cause**: Hooks may not have been installed properly, or were overwritten by another tool.
 
-**Verification**: The post-commit hook should contain beads-specific code.
+**Verification**: The pre-commit hook should contain beads-specific code.
 
 ---
 
@@ -205,12 +205,12 @@ ls -la .git/hooks/
 bd hooks install
 
 # Check if hooks are executable
-chmod +x .git/hooks/post-commit
+chmod +x .git/hooks/pre-commit
 ```
 
 **Root Cause**: Hooks may be missing, not executable, or overwritten by another tool.
 
-**Debugging**: Check `.git/hooks/post-commit` content to verify it's the beads hook.
+**Debugging**: Check `.git/hooks/pre-commit` content to verify it's the beads hook.
 
 ---
 

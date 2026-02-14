@@ -106,7 +106,7 @@ bun run scripts/log-analyzer --session=ses_xxx --level=ERROR   # Filter by level
 ```bash
 bd --version                     # CLI available
 ls .beads                        # Project initialized
-ls .git/hooks/post-commit        # Hooks installed
+ls .git/hooks/pre-commit         # Hooks installed
 bd sync --status                 # Sync status
 ```
 
@@ -115,7 +115,7 @@ bd sync --status                 # Sync status
 ```bash
 [ "$OPENCODE_CODER_DISABLED" = "true" ] && echo "DISABLED" || echo "ACTIVE"
 test -d .beads && bd doctor || echo "NOT INITIALIZED"
-test -f .git/hooks/post-commit && echo "OK" || echo "MISSING"
+test -f .git/hooks/pre-commit && echo "OK" || echo "MISSING"
 bd sync --status
 ```
 
@@ -163,7 +163,7 @@ echo 'export PATH="$(npm bin -g):$PATH"' >> ~/.bashrc      # Permanent
 
 **Git hooks not triggering**
 ```bash
-bd hooks install && chmod +x .git/hooks/post-commit
+bd hooks install && chmod +x .git/hooks/pre-commit
 ```
 
 **Database errors**

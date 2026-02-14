@@ -4,3 +4,4 @@ resources:
     - skill/self-reflection
     - package/opencode-coder
     - skill/fix-documentation
+    - package/opencode-coder-dev

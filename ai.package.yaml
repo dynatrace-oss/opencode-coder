@@ -5,3 +5,5 @@ resources:
     - package/opencode-coder
     - skill/fix-documentation
     - package/opencode-coder-dev
+    - package/skill-development
+    - skill/github-releases

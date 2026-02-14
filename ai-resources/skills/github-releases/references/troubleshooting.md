@@ -35,6 +35,7 @@ gh api rate_limit --jq '.rate'
 ### 403 Forbidden
 
 Missing write permissions. Ensure:
+
 - Token has `repo` scope (check: `gh auth status`)
 - You have push access to the repository
 - Branch protection allows your role
@@ -42,6 +43,7 @@ Missing write permissions. Ensure:
 ### 404 Not Found
 
 Repository doesn't exist or isn't accessible. Check:
+
 - `git remote get-url origin` shows correct repo
 - You have read access
 
@@ -105,6 +107,7 @@ Do NOT release with failing CI. Fix failures first.
 ### No CI configured
 
 If no CI exists, manually run all quality gates:
+
 1. Run tests locally
 2. Run build locally
 3. Verify on a clean checkout if possible
@@ -127,12 +130,14 @@ grep "workflow_dispatch" .github/workflows/release.yml
 ### Release created but package not published
 
 Check workflow logs:
+
 ```bash
 gh run list --workflow=release.yml --limit 1
 gh run view <run-id> --log
 ```
 
 Common causes:
+
 - Missing `NODE_AUTH_TOKEN` or equivalent secret
 - Registry authentication failure
 - Package name conflict

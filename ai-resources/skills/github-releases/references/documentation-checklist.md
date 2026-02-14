@@ -1,6 +1,8 @@
 # Documentation Checklist
 
-> **Preferred**: Load a documentation skill (e.g., `fix-documentation`) to automate these checks. Fall back to manual validation if no skill is available.
+> **Preferred**: Load a documentation skill (e.g., `fix-documentation`) to
+> automate these checks. Fall back to manual validation if no skill is
+> available.
 
 Validate before every release.
 

@@ -19,7 +19,8 @@ git fetch origin && git diff HEAD origin/main --stat
 
 Run the project's full test suite — unit, integration, and E2E tests.
 
-Use the project-specific release guide or standard project tooling to identify test commands. If unsure how to run tests, ask the user.
+Use the project-specific release guide or standard project tooling to identify
+test commands. If unsure how to run tests, ask the user.
 
 All test suites must pass. Do not skip any.
 
@@ -27,7 +28,8 @@ All test suites must pass. Do not skip any.
 
 Build the project using its standard build tooling.
 
-Use the project-specific release guide or standard project tooling to identify the build command. If unsure how to build, ask the user.
+Use the project-specific release guide or standard project tooling to identify
+the build command. If unsure how to build, ask the user.
 
 ## Gate 4: CI Status
 

@@ -20,7 +20,18 @@ Project-specific commands and configuration that are NOT released:
 - ✅ Internal tooling
 - ✅ Project-specific workflows
 
-**Rule**: If it only makes sense for opencode-coder development, it goes in `.opencode/`. If it's useful for any project using this plugin, it goes in `knowledge-base/`.
+### `ai-resources/` - OPTIONAL RESOURCES
+
+AI resources (skills, commands, packages) that are NOT published with the plugin but can be installed separately using the `aimgr` CLI tool.
+
+These resources are available for users who want enhanced functionality:
+- Skills for specialized workflows (github-releases, task-sync, etc.)
+- Commands for plugin management (install, init, doctor, etc.)
+- Resource packages for common use cases
+
+Users can install these via: `aimgr install [resource-name]`
+
+**Rule**: If it only makes sense for opencode-coder development, it goes in `.opencode/`. If it's useful for any project using this plugin, it goes in `knowledge-base/`. If it's an optional enhanced feature, it goes in `ai-resources/`.
 
 ## Required Reading
 
@@ -38,12 +49,7 @@ Key documentation for understanding OpenCode features:
 
 ## Releases
 
-**Use the `release-coder-plugin` skill for all releases.**
-
-Load it with: `skill({ name: "release-coder-plugin" })`
-
-This skill provides the full release workflow documentation.
-
+Use the **github-releases** skill to perform releases. See `docs/RELEASING.md` for details.
 
 ## Landing the Plane (Session Completion)
 

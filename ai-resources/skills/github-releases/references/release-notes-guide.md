@@ -16,7 +16,8 @@
 ⚠️ Dropped Node 16 support
 ```
 
-Common emojis: ✅ fix, 🚀 performance, 📚 docs, 🔧 improvement, ⚠️ breaking, 🗑️ removal, 🐛 bugfix, ✨ new feature
+Common emojis: ✅ fix, 🚀 performance, 📚 docs, 🔧 improvement, ⚠️ breaking,
+🗑️ removal, 🐛 bugfix, ✨ new feature
 
 ### What's Changed (required)
 
@@ -52,13 +53,13 @@ Common emojis: ✅ fix, 🚀 performance, 📚 docs, 🔧 improvement, ⚠️ br
 
 ### Installation (optional)
 
-```markdown
+````markdown
 ## Installation
 
 ```bash
 npm install package@1.2.3
 ```
-```
+````
 
 ## Tips
 

@@ -5,10 +5,10 @@
 `MAJOR.MINOR.PATCH`
 
 | Bump | When | Examples |
-|------|------|----------|
-| **MAJOR** | Breaking changes | Removed API, changed behavior, incompatible config |
-| **MINOR** | New features (backward-compatible) | New endpoint, new option, new command |
-| **PATCH** | Bug fixes (backward-compatible) | Fix crash, fix typo, fix regression |
+| --------- | ---------------------------- | ------------------------------ |
+| **MAJOR** | Breaking changes | Removed API, changed behavior |
+| **MINOR** | New features (backward-compat) | New endpoint, option, command |
+| **PATCH** | Bug fixes (backward-compat) | Fix crash, typo, regression |
 
 ## Analyzing Changes
 
@@ -20,10 +20,12 @@ LAST_TAG=$(gh release view --json tagName --jq '.tagName')
 git log "$LAST_TAG"..HEAD --oneline
 
 # Detailed diff
-gh api "repos/:owner/:repo/compare/$LAST_TAG...HEAD" --jq '.commits[].commit.message'
+gh api "repos/:owner/:repo/compare/$LAST_TAG...HEAD" \
+  --jq '.commits[].commit.message'
 ```
 
 **Bump rules:**
+
 - Any commit with "BREAKING" or removed/changed API → MAJOR
 - Any "feat:" or new functionality → MINOR
 - Only "fix:", "docs:", "chore:" → PATCH
@@ -31,8 +33,8 @@ gh api "repos/:owner/:repo/compare/$LAST_TAG...HEAD" --jq '.commits[].commit.mes
 ## Common Version Files
 
 | File | Update method |
-|------|--------------|
-| package.json | `npm version X.Y.Z --no-git-tag-version` or edit `"version"` field |
+| --------------------- | ------------------------------------------------- |
+| package.json | `npm version X.Y.Z --no-git-tag-version` or edit |
 | pyproject.toml | Edit `version = "X.Y.Z"` |
 | Cargo.toml | Edit `version = "X.Y.Z"` |
 | VERSION / version.txt | Write version string |
@@ -43,5 +45,6 @@ gh api "repos/:owner/:repo/compare/$LAST_TAG...HEAD" --jq '.commits[].commit.mes
 For pre-release testing: `X.Y.Z-alpha.1`, `X.Y.Z-beta.1`, `X.Y.Z-rc.1`
 
 ```bash
-gh release create v2.0.0-rc.1 --prerelease --title "v2.0.0-rc.1" --notes "Release candidate"
+gh release create v2.0.0-rc.1 --prerelease --title "v2.0.0-rc.1" \
+  --notes "Release candidate"
 ```

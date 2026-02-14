@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-02-14
+
+### Fixed
+
+- **E2E test failures**: Removed obsolete command registration tests (bug oc-xbxi)
+  - Plugin now only registers agents; commands provided by OpenCode's skill system
+  - All 148 tests passing (was 146 passing, 2 failing)
+  - Added comprehensive test analysis documentation
+
 ### Removed
 
 - **system_info tool**: Removed in favor of direct bash commands in skill instructions
@@ -25,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Beads integration verification
   - Complete copy-paste ready status script
   - Troubleshooting guides
+- **Test analysis documentation**: Complete analysis of test suite health and coverage
 
 ### Changed
 
@@ -33,6 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - More transparent (LLM sees actual commands)
   - Easier to debug and maintain
 
-## [0.23.0] - Previous Release
+## [0.23.0] - 2026-02-13
 
 *(Previous releases would be documented here)*

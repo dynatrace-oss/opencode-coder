@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-02-15
+
+### Added
+
+- **monitoring-analysis skill**: Agentic log/metric triage for production monitoring (ai-resources/)
+- **Release workflow structure**: Now uses --parent and bd dep add for proper task hierarchy
+
+### Changed
+
+- **github-releases skill**: Enforces epic/task structure to prevent skipped steps
+- **release-workflow.md**: Condensed from 457 to 261 lines with clearer instructions
+
+### Fixed
+
+- **Release workflow**: Strengthened to prevent agents skipping critical steps
+- **Markdown linting**: Resolved errors in release-workflow.md
+
 ## [0.25.0] - 2026-02-14
 
 ### Added

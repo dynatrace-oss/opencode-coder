@@ -15,16 +15,16 @@ This workflow turns monitoring data into tracked issues. The AI agent:
 
 ## Prerequisites
 
-The project must have a `MONITORING.md` file that documents:
+The project must have a `docs/MONITORING.md` file that documents:
 
 - How to query monitoring data
 - What to look for when analyzing
 
-If no `MONITORING.md` exists, use the setup workflow first.
+If no `docs/MONITORING.md` exists, use the setup workflow first.
 
 ## Step 1: Read MONITORING.md
 
-Read the project's `MONITORING.md` to understand:
+Read the project.s `docs/MONITORING.md` to understand:
 
 - What commands or APIs to use for fetching data
 - What kinds of issues are important

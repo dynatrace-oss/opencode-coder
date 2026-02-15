@@ -1,149 +1,148 @@
 # Setup Monitoring Configuration
 
-Guide for helping users create or update their project's `MONITORING.md`
-file.
+Guide for creating or updating a project's `docs/MONITORING.md` file.
 
-## Purpose
+## Before Starting
 
-The `MONITORING.md` file documents how to access and interpret monitoring
-data for a specific project. It's written in natural language for an AI
-agent to understand and act upon.
+Check if any monitoring-specific skills are available that might help:
 
-This is NOT a structured config file — it's documentation that captures:
+- Look for skills like `dynatrace-monitoring`, `cloudwatch-monitoring`,
+  `prometheus-monitoring`, etc.
+- If found, load them — they may provide specific commands and patterns
+  for that monitoring system
 
-1. **How to get the data** — Commands, scripts, APIs, file paths
-2. **What to look for** — Domain knowledge about what matters
+These backend skills can inform what to document in `MONITORING.md`.
 
-## When to Use This Workflow
+## Question Flow
 
-- Project has no `MONITORING.md` file
-- User wants to document their monitoring setup
-- User wants to add or modify data sources
+Ask questions in this order to build a complete picture:
 
-## Step 1: Ask About Monitoring Tools
+### 1. What Monitoring Data Exists?
 
-Start by understanding what the user has. Ask questions like:
+First understand what types of data the project has access to:
 
-- "What monitoring tools or systems do you use?" (Datadog, CloudWatch,
-  Grafana, Prometheus, custom scripts, log files, etc.)
-- "How do you currently query logs, metrics, or traces?"
-- "Are there any dashboards, APIs, or CLI tools you use?"
+- "What types of monitoring data do you have?"
+  - Logs (application logs, system logs, access logs)
+  - Metrics (response times, error rates, resource usage)
+  - Traces/Spans (distributed tracing, request flows)
+  - Events (deployments, alerts, incidents)
+  - Real User Monitoring (page loads, user interactions, errors)
 
-Listen for:
+Let the user describe what's available before asking how to access it.
 
-- Command-line tools they use regularly
-- Log file locations
-- API endpoints for metrics
-- Dashboard URLs they check
-- Error tracking services (Sentry, Bugsnag, etc.)
+### 2. How Do You Access Each Data Type?
 
-## Step 2: Ask About What Matters
+For each data type identified, ask how to get the data:
 
-Understand the domain context:
+- "Where are your logs stored and how do you query them?"
+  - Local disk (file paths, log rotation)
+  - Cloud service (Dynatrace, CloudWatch, Stackdriver, Azure Monitor)
+  - Self-hosted (ELK stack, Loki, Graylog)
+  - Simple web service or API
 
-- "What kinds of issues are important for your project?"
-- "What errors or patterns typically indicate real problems?"
-- "Are there things that look like errors but can be ignored?"
-- "What would make you wake up at 2am vs. what can wait?"
+- "How do you access metrics?"
+  - Monitoring platform (Dynatrace, Prometheus, Grafana, New Relic)
+  - Cloud provider metrics (CloudWatch, Azure Monitor, GCP Monitoring)
+  - Custom dashboards or APIs
 
-This captures the human judgment that guides analysis:
+- "How do you access traces/spans?" (if applicable)
+  - Distributed tracing (Dynatrace, Jaeger, Zipkin, OpenTelemetry)
 
-- Which error codes matter
-- What response times are concerning
-- Which services are most critical
-- What patterns indicate known issues vs. new problems
+- "Are there CLI tools, APIs, or dashboards you use?"
 
-## Step 3: Document the Configuration
+Capture the actual commands, URLs, or scripts needed to fetch data.
 
-Create a `MONITORING.md` file that captures everything in natural language.
+### 3. What Should We Look For?
 
-### What to Include
+Understand what patterns indicate problems:
 
-**Data access methods:**
+- "What errors or log patterns indicate real problems?"
+- "What metrics thresholds are concerning?"
+  - Response time > X ms
+  - Error rate > Y%
+  - Resource usage > Z%
+- "Are there specific events that indicate issues?"
+- "What patterns in traces indicate problems?"
 
-- Actual commands to run (with any auth/environment needed)
-- API endpoints and how to call them
-- File paths for logs
-- Dashboard URLs
+### 4. What Do These Signals Mean?
 
-**Domain knowledge:**
+This is the critical domain knowledge — understanding context:
 
-- What error patterns indicate real problems
-- What can be safely ignored
-- Which components are most critical
-- Any context that helps interpretation
+- "When you see [error X], what does it usually mean?"
+- "What's the typical response when [metric Y] exceeds threshold?"
+- "Are there errors that look bad but are actually harmless?"
+- "What issues wake you up at 2am vs. what can wait until morning?"
+- "Are there known flaky components whose errors can be deprioritized?"
 
-### Example Structure
+This captures the human judgment that's hard to document but essential
+for intelligent triage.
 
-The file doesn't need a rigid format. Here's one approach:
+### 5. How Are Issues Currently Handled?
+
+Understand existing workflows:
+
+- "How do you currently triage monitoring alerts?"
+- "What's your process for creating tickets from monitoring data?"
+- "Are there runbooks or documentation for common issues?"
+
+## Document the Configuration
+
+Create `docs/MONITORING.md` capturing everything in natural language.
+
+### Structure
 
 ```markdown
 # Monitoring Configuration
 
-## How to Get Monitoring Data
+## Available Data
 
-### Application Logs
-Our logs are in CloudWatch. To fetch recent errors:
-\`\`\`bash
-aws logs filter-log-events --log-group-name /app/production \
-  --filter-pattern "ERROR" --start-time $(date -d '1 hour ago' +%s000)
-\`\`\`
+What monitoring data exists for this project.
 
-### Metrics Dashboard
-Main dashboard: https://grafana.internal/d/production
-API for metrics: `curl -H "Authorization: Bearer $GRAFANA_TOKEN" https://grafana.internal/api/...`
+### Logs
+- Where: [location/service]
+- How to query: [commands/API]
+- Format: [structured/unstructured, fields available]
 
-### Error Tracking
-We use Sentry. The CLI can pull recent issues:
-\`\`\`bash
-sentry-cli issues list --project=myapp --status=unresolved
-\`\`\`
+### Metrics
+- Where: [dashboard/service]
+- How to query: [commands/API]
+- Key metrics: [list of important ones]
+
+### Traces (if applicable)
+- Where: [service]
+- How to query: [commands/API]
 
 ## What to Look For
 
-### Critical (needs immediate attention)
-- Database connection failures — usually means the DB is overloaded
-- "CircuitBreaker OPEN" — downstream service is failing
-- HTTP 5xx rates above 1%
+### Critical (immediate attention)
+- [Pattern] — [What it means and why it's critical]
 
 ### Important (should be tracked)
-- Slow queries (>500ms is concerning for our API)
-- Memory warnings from the worker service
-- Rate limit errors from third-party APIs
+- [Pattern] — [What it means]
 
-### Can Usually Ignore
-- 404 errors on `/favicon.ico` — some old clients request this
-- "Connection reset by peer" on websockets — normal client disconnects
-- Timeout errors from the legacy batch job — it's flaky but non-critical
+### Can Ignore
+- [Pattern] — [Why it's safe to ignore]
+
+## Context and Meaning
+
+Domain knowledge for interpreting signals:
+- [Signal] typically means [interpretation]
+- When [X] happens, check [Y] first
+- [Component] is flaky; errors there are lower priority
 ```
-
-## Step 4: Verify and Refine
-
-After creating the initial file:
-
-1. Try running the documented commands to verify they work
-2. Ask if there's anything missing
-3. Suggest they update it as they learn more
-
-## Agentic Guidelines
-
-### Let the User Lead
-
-Don't assume what monitoring tools they use. Ask.
-
-### Capture Real Knowledge
-
-The most valuable content is the domain expertise — what matters, what
-doesn't, and why. Commands are easy to look up; judgment is hard to
-document.
 
 ### Keep It Natural
 
-The file is for an AI agent to read. Natural language is better than
-rigid structure. "Check CloudWatch for ERROR level logs in the last
-hour" is better than a complex YAML schema.
+The file is for an AI agent to read. Natural language works better than
+rigid schemas. Write it like you're explaining to a new team member.
 
-### Iterate
+## Verify and Iterate
 
-The first version won't be perfect. Encourage the user to update it as
-they discover gaps during actual analysis sessions.
+After creating the initial file:
+
+1. Test the documented commands to verify they work
+2. Ask if anything is missing
+3. Note that the file should evolve as gaps are discovered
+
+The first version won't be perfect — encourage updates after real
+analysis sessions reveal missing context.

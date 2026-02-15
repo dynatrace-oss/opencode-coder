@@ -4,6 +4,12 @@ resources:
     - skill/self-reflection
     - package/opencode-coder
     - skill/fix-documentation
-    - package/opencode-coder-dev
     - package/skill-development
     - skill/github-releases
+    - command/opencode-coder-dev/analyze-logs
+    - command/opencode-coder-dev/coder-sync
+    - command/opencode-coder-dev/fix-bugs
+    - command/opencode-coder-dev/import-tasks
+    - command/opencode-coder-dev/release
+    - skill/github-task-sync
+    - skill/task-sync

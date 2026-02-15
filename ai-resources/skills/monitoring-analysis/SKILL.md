@@ -1,69 +1,65 @@
 ---
 name: monitoring-analysis
 description: >
-  Analyze monitoring data (logs, metrics, dashboards) to find issues and
-  create beads for tracking. Use when: (1) User wants to analyze logs,
-  metrics, or monitoring data, (2) User mentions 'check logs', 'analyze
-  errors', 'triage issues', 'review monitoring', (3) User wants to find
-  bugs or issues from observability data, (4) User asks to 'create issues
-  from logs' or 'triage alerts'. Requires MONITORING.md in project root.
+  Analyze monitoring data (logs, metrics, spans, events, RUM) and triage
+  issues into beads. Use when: (1) User wants to analyze logs, metrics,
+  or monitoring data, (2) User mentions 'check logs', 'analyze errors',
+  'triage issues', 'review monitoring', (3) User wants to find bugs from
+  observability data, (4) User asks to 'create issues from logs' or
+  'triage alerts', (5) User wants to set up monitoring analysis for a
+  project.
 ---
 
 # Monitoring Analysis
 
-Analyze monitoring data to find issues and track them in beads.
-
-## About This Skill
-
-This skill helps turn monitoring data into tracked issues. It works with
-any monitoring setup — logs, metrics, dashboards, error tracking — by
-reading project-specific configuration that documents how to access and
-interpret the data.
-
-Key principles:
-
-- **Project-specific** — Each project documents its own monitoring setup
-- **LLM judgment** — No rigid parsing or hard thresholds; interpret data
-- **Agentic autonomy** — Execute safe actions, ask about uncertain ones
-
-## Prerequisites
-
-This skill requires a `MONITORING.md` file in the project root that
-documents:
-
-- How to query monitoring data (commands, APIs, file paths)
-- What to look for when analyzing (domain knowledge, what matters)
-
-If no `MONITORING.md` exists, use the setup workflow to create one.
+Analyze monitoring data and triage issues into beads.
 
 ## Workflows
 
+This skill has two workflows. **Choose based on whether `docs/MONITORING.md`
+exists:**
+
 ### 1. Setup Monitoring Configuration
 
-Use when the project needs a `MONITORING.md` file, or when updating an
-existing one.
+**Use when:** `docs/MONITORING.md` does not exist, OR user wants to update
+the monitoring configuration.
+
+**Also use when:** User asks to analyze monitoring data but no
+`docs/MONITORING.md` exists — create it first, then proceed to workflow 2.
 
 **[setup-monitoring-config.md](references/setup-monitoring-config.md)** —
-Interactive guide for documenting the project's monitoring setup through
-conversation with the user.
+Interactive guide for creating `docs/MONITORING.md` through conversation
+with the user.
 
 ### 2. Analyze and Triage
 
-Use when analyzing monitoring data and creating issues from findings.
+**Use when:** `docs/MONITORING.md` exists and user wants to analyze
+monitoring data.
 
-**[analyze-and-triage.md](references/analyze-and-triage.md)** — Workflow
-for fetching data, identifying issues, checking for duplicates, and
-creating or updating beads.
+**[analyze-and-triage.md](references/analyze-and-triage.md)** — Fetch
+monitoring data, identify issues, check for duplicates, create or update
+beads.
 
-## Quick Start
+## Decision Flow
 
-1. Check if `MONITORING.md` exists in the project root
-2. If not, use the setup workflow to create it
-3. Use the analyze workflow to check monitoring data and create issues
-
-## References
-
-- **[setup-monitoring-config.md](references/setup-monitoring-config.md)**
-  — Creating/updating MONITORING.md
-- **[analyze-and-triage.md](references/analyze-and-triage.md)** — Analyze
-  data and create beads
+```text
+User asks about monitoring
+          │
+          ▼
+  docs/MONITORING.md exists?
+          │
+    ┌─────┴─────┐
+    │           │
+   No          Yes
+    │           │
+    ▼           ▼
+Workflow 1   Workflow 2
+ (Setup)    (Analyze)
+    │           │
+    └─────┬─────┘
+          │
+          ▼
+   (After setup,
+    continue to
+    Workflow 2)
+```

@@ -11,30 +11,61 @@ Before starting:
 
 Project-specific instructions override the generic phases below.
 
-## MANDATORY: Create Release Epic
+## MANDATORY: Create Release Structure
 
 Before executing ANY release steps, you MUST:
 
-1. Create an epic for this release (e.g., "Release v1.2.3")
-2. Create a task for EACH phase below (Quality Gates, Documentation, Version Bump, Create Release, Release Notes)
-3. Create a verification gate as the final step
+1. Create a parent task for this release (e.g., "Release v1.2.3")
+2. Create child tasks for EACH phase below, linked with `--parent`
+3. Add sequential dependencies so tasks unlock in order
 4. Execute tasks using subagents (beads-task-agent)
 
-**Why**: This prevents context loss, ensures all steps are tracked, and enables verification.
+**Why**: This prevents context loss, ensures all steps are tracked, and enables verification. Only the first task is "ready" initially—each task unlocks the next.
 
 DO NOT execute release steps directly. Create the structure first, then delegate.
 
-### Example Epic Structure
+### Creating the Release Structure
+
+```bash
+# 1. Create parent release task
+bd create --title="Release v1.2.3" --type=task
+
+# 2. Create child tasks with --parent (replace PARENT_ID with actual ID)
+bd create --title="Quality Gates for v1.2.3" --type=task --parent=PARENT_ID
+bd create --title="Documentation Check for v1.2.3" --type=task --parent=PARENT_ID
+bd create --title="Version Bump to v1.2.3" --type=task --parent=PARENT_ID
+bd create --title="Create GitHub Release v1.2.3" --type=task --parent=PARENT_ID
+bd create --title="Write Release Notes for v1.2.3" --type=task --parent=PARENT_ID
+bd create --title="Release Verification v1.2.3" --type=task --parent=PARENT_ID
+
+# 3. Add sequential dependencies (each task depends on the previous)
+# Use actual task IDs from the create output
+bd dep add DOC_ID QUALITY_ID --type blocks      # Docs blocked by Quality Gates
+bd dep add VERSION_ID DOC_ID --type blocks      # Version blocked by Docs
+bd dep add RELEASE_ID VERSION_ID --type blocks  # Release blocked by Version
+bd dep add NOTES_ID RELEASE_ID --type blocks    # Notes blocked by Release
+bd dep add VERIFY_ID NOTES_ID --type blocks     # Verify blocked by Notes
+```
+
+### Example Release Structure
 
 ```
-Epic: Release v1.2.3
-├── Task: Quality Gates for v1.2.3
-├── Task: Documentation Check for v1.2.3
-├── Task: Version Bump to v1.2.3
-├── Task: Create GitHub Release v1.2.3
-├── Task: Write Release Notes for v1.2.3
-└── Gate: Release Verification v1.2.3
+Task: Release v1.2.3 (parent)
+│
+├── Task: Quality Gates for v1.2.3        ← READY (no dependencies)
+│     ↓ blocks
+├── Task: Documentation Check for v1.2.3  ← blocked until Quality Gates done
+│     ↓ blocks
+├── Task: Version Bump to v1.2.3          ← blocked until Docs done
+│     ↓ blocks
+├── Task: Create GitHub Release v1.2.3    ← blocked until Version done
+│     ↓ blocks
+├── Task: Write Release Notes for v1.2.3  ← blocked until Release done
+│     ↓ blocks
+└── Task: Release Verification v1.2.3     ← blocked until Notes done
 ```
+
+**Key point**: Only "Quality Gates" shows as ready initially. As you close each task, the next one becomes unblocked and ready.
 
 ## Execution: Use Task Agents
 
@@ -62,7 +93,7 @@ Create all tasks first, then execute them sequentially using beads-task-agent.
 
 ## REQUIRED: Verification Gate
 
-Every release MUST include a verification gate. Create this gate when you create the epic:
+Every release MUST include a verification gate. Create this gate when you create the release structure:
 
 ### Gate Template
 

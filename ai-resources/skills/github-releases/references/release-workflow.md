@@ -2,14 +2,40 @@
 
 Complete process for creating a GitHub release.
 
-## Prerequisites
+## STOP: Prerequisites Check
 
-Before starting:
+Before doing ANYTHING else, run this command:
+
+    bash scripts/check-release-prereqs.sh
+
+If this fails, STOP. Fix the issues before proceeding.
+
+If this passes, also:
 
 1. **Load project-specific instructions** from `docs/RELEASING.md`
-2. Verify environment: `bash scripts/check-release-prereqs.sh`
+2. Note any project-specific overrides for the phases below
 
-Project-specific instructions override the generic phases below.
+Only after prerequisites pass, continue to "Create Release Structure".
+
+## STOP: Did You Run Prerequisites?
+
+If you have not run `check-release-prereqs.sh` yet, go back and do it now.
+
+DO NOT create any tasks until prerequisites pass.
+
+## ALL Phases Are REQUIRED
+
+You MUST create tasks for ALL 5 phases. No exceptions. No skipping.
+
+1. Quality Gates - REQUIRED
+2. Documentation Check - REQUIRED
+3. Version Bump - REQUIRED
+4. Create GitHub Release - REQUIRED
+5. Release Notes - REQUIRED
+
+Plus: Verification Gate - REQUIRED
+
+Skipping any phase is NOT acceptable. Every phase exists for a reason.
 
 ## MANDATORY: Create Release Structure
 
@@ -24,28 +50,65 @@ Before executing ANY release steps, you MUST:
 
 DO NOT execute release steps directly. Create the structure first, then delegate.
 
-### Creating the Release Structure
+### Step 1: Create Parent Task
 
-```bash
-# 1. Create parent release task
-bd create --title="Release v1.2.3" --type=task
+Run this command:
 
-# 2. Create child tasks with --parent (replace PARENT_ID with actual ID)
-bd create --title="Quality Gates for v1.2.3" --type=task --parent=PARENT_ID
-bd create --title="Documentation Check for v1.2.3" --type=task --parent=PARENT_ID
-bd create --title="Version Bump to v1.2.3" --type=task --parent=PARENT_ID
-bd create --title="Create GitHub Release v1.2.3" --type=task --parent=PARENT_ID
-bd create --title="Write Release Notes for v1.2.3" --type=task --parent=PARENT_ID
-bd create --title="Release Verification v1.2.3" --type=task --parent=PARENT_ID
+    bd create --title="Release vX.Y.Z" --type=task --priority=1
 
-# 3. Add sequential dependencies (each task depends on the previous)
-# Use actual task IDs from the create output
-bd dep add DOC_ID QUALITY_ID --type blocks      # Docs blocked by Quality Gates
-bd dep add VERSION_ID DOC_ID --type blocks      # Version blocked by Docs
-bd dep add RELEASE_ID VERSION_ID --type blocks  # Release blocked by Version
-bd dep add NOTES_ID RELEASE_ID --type blocks    # Notes blocked by Release
-bd dep add VERIFY_ID NOTES_ID --type blocks     # Verify blocked by Notes
-```
+Save the returned ID as PARENT_ID. You will need it for Step 2.
+
+### Step 2: Create Child Tasks
+
+Run these commands (replace PARENT_ID with actual ID from Step 1):
+
+    bd create --title="Quality Gates for vX.Y.Z" --type=task --parent=PARENT_ID
+
+Save the returned ID as QUALITY_ID.
+
+    bd create --title="Documentation Check for vX.Y.Z" --type=task --parent=PARENT_ID
+
+Save the returned ID as DOC_ID.
+
+    bd create --title="Version Bump to vX.Y.Z" --type=task --parent=PARENT_ID
+
+Save the returned ID as VERSION_ID.
+
+    bd create --title="Create GitHub Release vX.Y.Z" --type=task --parent=PARENT_ID
+
+Save the returned ID as RELEASE_ID.
+
+    bd create --title="Write Release Notes for vX.Y.Z" --type=task --parent=PARENT_ID
+
+Save the returned ID as NOTES_ID.
+
+    bd create --title="Release Verification vX.Y.Z" --type=task --parent=PARENT_ID
+
+Save the returned ID as VERIFY_ID.
+
+### Step 3: Set Dependencies
+
+Run these commands (replace IDs with actual IDs from Step 2):
+
+    bd dep add DOC_ID QUALITY_ID --type blocks
+
+This makes Documentation Check blocked by Quality Gates.
+
+    bd dep add VERSION_ID DOC_ID --type blocks
+
+This makes Version Bump blocked by Documentation Check.
+
+    bd dep add RELEASE_ID VERSION_ID --type blocks
+
+This makes Create GitHub Release blocked by Version Bump.
+
+    bd dep add NOTES_ID RELEASE_ID --type blocks
+
+This makes Release Notes blocked by Create GitHub Release.
+
+    bd dep add VERIFY_ID NOTES_ID --type blocks
+
+This makes Release Verification blocked by Release Notes.
 
 ### Example Release Structure
 
@@ -80,16 +143,16 @@ Create all tasks first, then execute them sequentially using beads-task-agent.
 4. Verify it succeeded before moving to the next task
 
 ### DO NOT do this:
-❌ Running test commands directly
-❌ Running build commands directly
-❌ Running git tag/push commands directly
-❌ Running gh release commands directly
+- Running test commands directly
+- Running build commands directly
+- Running git tag/push commands directly
+- Running gh release commands directly
 
 ### DO this instead:
-✅ Create task with commands in instructions
-✅ Spawn beads-task-agent to execute
-✅ Wait for completion
-✅ Move to next task
+- Create task with commands in instructions
+- Spawn beads-task-agent to execute
+- Wait for completion
+- Move to next task
 
 ## REQUIRED: Verification Gate
 
@@ -135,13 +198,13 @@ This gate MUST be verified by beads-verify-agent before the release is considere
 
 The following excuses are NEVER acceptable for proceeding with a release:
 
-❌ "Tests were already failing before my changes"
-❌ "These failures are unrelated to the release"
-❌ "Only 2 tests failed, the rest passed"
-❌ "It's a flaky test"
-❌ "The test is outdated"
-❌ "We can fix it in the next release"
-❌ "It passes locally, just not in CI"
+- "Tests were already failing before my changes"
+- "These failures are unrelated to the release"
+- "Only 2 tests failed, the rest passed"
+- "It's a flaky test"
+- "The test is outdated"
+- "We can fix it in the next release"
+- "It passes locally, just not in CI"
 
 ### What To Do When Tests Fail
 
@@ -162,7 +225,7 @@ If the user explicitly approves proceeding with failing tests:
 
 **A release with failing tests is a FAILED release unless explicitly approved by the user.**
 
-## Phase 1: Quality Gates
+## Phase 1: Quality Gates (REQUIRED)
 
 All quality gates MUST pass before proceeding.
 
@@ -206,7 +269,7 @@ If ANY criterion fails:
 
 Spawn beads-task-agent to execute this task.
 
-## Phase 2: Documentation
+## Phase 2: Documentation (REQUIRED)
 
 Load a documentation skill to validate and fix documentation before release.
 
@@ -249,7 +312,7 @@ If ANY criterion fails:
 
 Spawn beads-task-agent to execute this task.
 
-## Phase 3: Version Bump
+## Phase 3: Version Bump (REQUIRED)
 
 1. **Analyze changes** since last release tag
 2. **Determine bump** — major (breaking), minor (features), patch (fixes)
@@ -288,7 +351,7 @@ If ANY criterion fails:
 
 Spawn beads-task-agent to execute this task.
 
-## Phase 4: Create Release
+## Phase 4: Create Release (REQUIRED)
 
 **Option A — GitHub Actions workflow exists:**
 
@@ -341,7 +404,7 @@ If ANY criterion fails:
 
 Spawn beads-task-agent to execute this task.
 
-## Phase 5: Release Notes
+## Phase 5: Release Notes (REQUIRED)
 
 Write clear, structured release notes:
 

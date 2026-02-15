@@ -18,13 +18,6 @@ grep -rn "v[0-9]\+\.[0-9]\+\.[0-9]\+" README.md docs/ 2>/dev/null
 
 All version references must match the release version.
 
-## CHANGELOG
-
-- [ ] Entry exists for the new version
-- [ ] Release date is set (not "Unreleased" or "TBD")
-- [ ] All notable changes listed under correct category
-- [ ] Format follows [Keep a Changelog](https://keepachangelog.com) or project convention
-
 ## README
 
 - [ ] Installation instructions reference current version

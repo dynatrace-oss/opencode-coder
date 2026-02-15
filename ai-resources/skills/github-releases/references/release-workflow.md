@@ -40,7 +40,8 @@ Before executing ANY release steps, you MUST:
 3. Add sequential dependencies so tasks unlock in order
 4. Execute tasks using subagents (beads-task-agent)
 
-**Why**: This prevents context loss, ensures all steps are tracked, and enables verification.
+**Why**: This prevents context loss, ensures all steps are tracked,
+and enables verification.
 
 DO NOT execute release steps directly. Create the structure first, then delegate.
 
@@ -75,7 +76,7 @@ bd dep add VERIFY_ID NOTES_ID --type blocks
 
 ### Example Release Structure
 
-```
+```text
 Task: Release v1.2.3 (parent)
 │
 ├── Task: Quality Gates for v1.2.3        ← READY (no dependencies)
@@ -91,7 +92,8 @@ Task: Release v1.2.3 (parent)
 └── Task: Release Verification v1.2.3     ← blocked until Notes done
 ```
 
-**Key point**: Only "Quality Gates" shows as ready initially. As you close each task, the next one becomes unblocked.
+**Key point**: Only "Quality Gates" shows as ready initially.
+As you close each task, the next one becomes unblocked.
 
 ## Execution: Use Task Agents
 
@@ -100,7 +102,8 @@ Create all tasks first, then execute them sequentially using beads-task-agent.
 **DO NOT** run release commands directly — create tasks and spawn agents instead.
 
 - ❌ Running test/build/git/gh commands directly
-- ✅ Create task with commands → spawn beads-task-agent → wait for completion → move to next
+- ✅ Create task with commands →
+  spawn beads-task-agent → wait for completion → move to next
 
 ## REQUIRED: Verification Gate
 
@@ -128,6 +131,7 @@ npm view <package>@X.Y.Z      # Must show new version (if npm)
 **Tests MUST pass. ALL of them. ZERO failures. No exceptions.**
 
 ### Unacceptable Excuses
+
 - "Tests were already failing before my changes"
 - "Only 2 tests failed, the rest passed"
 - "We can fix it in the next release"
@@ -139,9 +143,11 @@ npm view <package>@X.Y.Z      # Must show new version (if npm)
 3. **Report** to the user: "Release blocked: X tests failing"
 4. **Options**: Fix failing tests, get EXPLICIT user approval, or abort
 
-If user explicitly approves proceeding despite failures: document in release notes under "Known Issues" and create follow-up task.
+If user explicitly approves proceeding despite failures:
+document in release notes under "Known Issues" and create follow-up task.
 
-**A release with failing tests is a FAILED release unless explicitly approved by the user.**
+**A release with failing tests is a FAILED release
+unless explicitly approved by the user.**
 
 ## Phase 1: Quality Gates (REQUIRED)
 
@@ -152,12 +158,13 @@ All quality gates MUST pass before proceeding.
 3. **Build succeeds** — build the project
 4. **CI green** — latest commit passes all checks
 
-### Task Template
+### Quality Gates Task
 
 ```markdown
 ### Task: Quality Gates for vX.Y.Z
 
-**Instructions**: Verify clean tree (`git status`), run tests, run build, check CI (`gh run list --limit 1`)
+**Instructions**: Verify clean tree (`git status`), run tests, run build,
+check CI (`gh run list --limit 1`)
 
 **Criteria**: Clean tree, ALL tests pass (zero failures), build succeeds, CI green
 
@@ -172,12 +179,13 @@ Key checks:
 2. **CHANGELOG** — entry exists for new version
 3. **Breaking changes** — migration guide if needed
 
-### Task Template
+### Documentation Task
 
 ```markdown
 ### Task: Documentation Check for vX.Y.Z
 
-**Instructions**: Check version refs in README/package.json/docs, verify CHANGELOG entry for vX.Y.Z, check migration guide if breaking changes
+**Instructions**: Check version refs in README/package.json/docs,
+verify CHANGELOG entry for vX.Y.Z, check migration guide if breaking changes
 
 **Criteria**: Version refs updated, CHANGELOG entry exists, breaking changes documented
 
@@ -191,12 +199,13 @@ Key checks:
 3. **Update version files** — detect and update all relevant files
 4. **Commit** — `release: vX.Y.Z`
 
-### Task Template
+### Version Bump Task
 
 ```markdown
 ### Task: Version Bump to vX.Y.Z
 
-**Instructions**: Identify version files, update to X.Y.Z, commit with "release: vX.Y.Z"
+**Instructions**: Identify version files, update to X.Y.Z,
+commit with "release: vX.Y.Z"
 
 **Criteria**: Version updated in all files, commit created, clean tree after commit
 
@@ -220,14 +229,16 @@ git push origin main && git push origin v1.2.3
 gh release create v1.2.3 --title "v1.2.3" --generate-notes
 ```
 
-### Task Template
+### Create Release Task
 
 ```markdown
 ### Task: Create GitHub Release vX.Y.Z
 
-**Instructions**: Check for workflow (`ls .github/workflows/release*`), run workflow or manual release
+**Instructions**: Check for workflow (`ls .github/workflows/release*`),
+run workflow or manual release
 
-**Criteria**: Tag exists, pushed to origin, GitHub release visible, `gh release view` shows it
+**Criteria**: Tag exists, pushed to origin, GitHub release visible,
+`gh release view` shows it
 
 **STOP if ANY fails** — report to user, do NOT proceed
 ```
@@ -240,14 +251,17 @@ Write clear, structured release notes:
 - **What's Changed** — Added / Changed / Fixed / Removed
 - **Breaking Changes** — if applicable, with migration guide
 
-### Task Template
+### Release Notes Task
 
 ```markdown
 ### Task: Write Release Notes for vX.Y.Z
 
-**Instructions**: Get changes (`gh api repos/:owner/:repo/compare/vPREVIOUS...vX.Y.Z`), write notes, update release
+**Instructions**: Get changes
+(`gh api repos/:owner/:repo/compare/vPREVIOUS...vX.Y.Z`),
+write notes, update release
 
-**Criteria**: Highlights section, What's Changed section, breaking changes documented, release updated
+**Criteria**: Highlights section, What's Changed section,
+breaking changes documented, release updated
 
 **STOP if ANY fails** — report to user, do NOT proceed
 ```

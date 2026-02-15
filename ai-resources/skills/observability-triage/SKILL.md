@@ -1,5 +1,5 @@
 ---
-name: monitoring-analysis
+name: observability-triage
 description: >
   Analyze monitoring data (logs, metrics, spans, events, RUM) and triage
   issues into beads. Use when: (1) User wants to analyze logs, metrics,
@@ -10,7 +10,7 @@ description: >
   project.
 ---
 
-# Monitoring Analysis
+# Observability Triage
 
 Analyze monitoring data and triage issues into beads.
 

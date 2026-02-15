@@ -11,6 +11,126 @@ Before starting:
 
 Project-specific instructions override the generic phases below.
 
+## MANDATORY: Create Release Epic
+
+Before executing ANY release steps, you MUST:
+
+1. Create an epic for this release (e.g., "Release v1.2.3")
+2. Create a task for EACH phase below (Quality Gates, Documentation, Version Bump, Create Release, Release Notes)
+3. Create a verification gate as the final step
+4. Execute tasks using subagents (beads-task-agent)
+
+**Why**: This prevents context loss, ensures all steps are tracked, and enables verification.
+
+DO NOT execute release steps directly. Create the structure first, then delegate.
+
+### Example Epic Structure
+
+```
+Epic: Release v1.2.3
+├── Task: Quality Gates for v1.2.3
+├── Task: Documentation Check for v1.2.3
+├── Task: Version Bump to v1.2.3
+├── Task: Create GitHub Release v1.2.3
+├── Task: Write Release Notes for v1.2.3
+└── Gate: Release Verification v1.2.3
+```
+
+## Execution: Use Task Agents
+
+Create all tasks first, then execute them sequentially using beads-task-agent.
+
+**DO NOT run release commands directly.** Create a task with the commands, then spawn an agent to execute it.
+
+### For each task:
+1. Create the task with detailed instructions
+2. Spawn beads-task-agent: "Execute task <task-id>"
+3. Wait for completion
+4. Verify it succeeded before moving to the next task
+
+### DO NOT do this:
+❌ Running test commands directly
+❌ Running build commands directly
+❌ Running git tag/push commands directly
+❌ Running gh release commands directly
+
+### DO this instead:
+✅ Create task with commands in instructions
+✅ Spawn beads-task-agent to execute
+✅ Wait for completion
+✅ Move to next task
+
+## REQUIRED: Verification Gate
+
+Every release MUST include a verification gate. Create this gate when you create the epic:
+
+### Gate Template
+
+```markdown
+## Gate: Release Verification for vX.Y.Z
+
+### Checklist
+- [ ] All quality gates passed (tests, build, CI - with ZERO failures)
+- [ ] Version bumped correctly in all files
+- [ ] CHANGELOG updated with correct version and date
+- [ ] Git tag created and pushed
+- [ ] GitHub release created with notes
+- [ ] Package published successfully (if applicable)
+- [ ] Post-release verification completed (installation test)
+
+### Critical Questions (MUST answer YES to all)
+- Did ALL tests pass with ZERO failures?
+- Is the working tree completely clean?
+- Does `gh release view` show the correct release?
+- Can the package be installed from the registry?
+
+### Verification Commands
+```bash
+git status                    # Must show clean tree
+gh release view vX.Y.Z        # Must show the release
+npm view <package>@X.Y.Z      # Must show new version (if npm)
+```
+```
+
+This gate MUST be verified by beads-verify-agent before the release is considered complete.
+
+**A release without a passing verification gate is NOT complete.**
+
+## ABSOLUTE RULE: No Exceptions for Failing Tests
+
+**Tests MUST pass. ALL of them. ZERO failures. No exceptions.**
+
+### Unacceptable Excuses
+
+The following excuses are NEVER acceptable for proceeding with a release:
+
+❌ "Tests were already failing before my changes"
+❌ "These failures are unrelated to the release"
+❌ "Only 2 tests failed, the rest passed"
+❌ "It's a flaky test"
+❌ "The test is outdated"
+❌ "We can fix it in the next release"
+❌ "It passes locally, just not in CI"
+
+### What To Do When Tests Fail
+
+1. **STOP** the release process immediately
+2. **DO NOT** proceed to the next phase
+3. **Report** to the user: "Release blocked: X tests failing"
+4. **Options**:
+   - Fix the failing tests (create a task)
+   - Get EXPLICIT user approval to proceed (must be documented)
+   - Abort the release
+
+### If User Approves Proceeding Despite Failures
+
+If the user explicitly approves proceeding with failing tests:
+1. Document this in the release notes under "Known Issues"
+2. Create a follow-up task to fix the tests
+3. Add a comment to the release gate explaining the exception
+
+**A release with failing tests is a FAILED release unless explicitly approved by the user.**
+
 ## Phase 1: Quality Gates
 
 All quality gates MUST pass before proceeding.
@@ -27,6 +147,34 @@ the user.
 
 **Details**: [quality-gates.md](quality-gates.md)
 
+### Task Template
+
+Create this task for your release:
+
+```markdown
+### Task: Quality Gates for vX.Y.Z
+
+## Instructions
+1. Verify clean working tree: `git status`
+2. Run full test suite: [use command from RELEASING.md]
+3. Run build: [use command from RELEASING.md]
+4. Check CI status: `gh run list --limit 1`
+
+## Acceptance Criteria
+- [ ] Working tree is clean (zero uncommitted changes)
+- [ ] ALL tests pass (zero failures - no exceptions)
+- [ ] Build succeeds with no errors
+- [ ] CI is green on main branch
+
+## STOP Conditions
+If ANY criterion fails:
+1. STOP immediately
+2. Do NOT proceed to next phase
+3. Report failure to user
+```
+
+Spawn beads-task-agent to execute this task.
+
 ## Phase 2: Documentation
 
 Load a documentation skill to validate and fix documentation before release.
@@ -42,6 +190,34 @@ Key checks:
 
 **Details**: [documentation-checklist.md](documentation-checklist.md)
 
+### Task Template
+
+Create this task for your release:
+
+```markdown
+### Task: Documentation Check for vX.Y.Z
+
+## Instructions
+1. Load fix-documentation skill if available
+2. Check version references in README.md, package.json, docs/
+3. Verify CHANGELOG.md has entry for vX.Y.Z with today's date
+4. If breaking changes, verify migration guide exists
+
+## Acceptance Criteria
+- [ ] All version references updated to vX.Y.Z
+- [ ] CHANGELOG.md entry exists for vX.Y.Z
+- [ ] Breaking changes documented with migration guide (if applicable)
+- [ ] No stale documentation referencing old versions
+
+## STOP Conditions
+If ANY criterion fails:
+1. STOP immediately
+2. Do NOT proceed to next phase
+3. Report failure to user
+```
+
+Spawn beads-task-agent to execute this task.
+
 ## Phase 3: Version Bump
 
 1. **Analyze changes** since last release tag
@@ -52,6 +228,34 @@ Key checks:
 > Check project-specific release guide for custom version file locations.
 
 **Details**: [version-management.md](version-management.md)
+
+### Task Template
+
+Create this task for your release:
+
+```markdown
+### Task: Version Bump to vX.Y.Z
+
+## Instructions
+1. Identify all version files: package.json, version.go, etc.
+2. Update version to X.Y.Z in all identified files
+3. Run any version-related scripts from RELEASING.md
+4. Commit changes: `git commit -m "release: vX.Y.Z"`
+
+## Acceptance Criteria
+- [ ] Version updated in all relevant files
+- [ ] Commit created with message "release: vX.Y.Z"
+- [ ] No other uncommitted changes
+- [ ] Working tree is clean after commit
+
+## STOP Conditions
+If ANY criterion fails:
+1. STOP immediately
+2. Do NOT proceed to next phase
+3. Report failure to user
+```
+
+Spawn beads-task-agent to execute this task.
 
 ## Phase 4: Create Release
 
@@ -74,6 +278,38 @@ gh release create v1.2.3 --title "v1.2.3" --notes-file release-notes.md
 
 **Details**: [gh-release-commands.md](gh-release-commands.md)
 
+### Task Template
+
+Create this task for your release:
+
+```markdown
+### Task: Create GitHub Release vX.Y.Z
+
+## Instructions
+1. Check if release workflow exists: `ls .github/workflows/release*`
+2. If workflow exists:
+   - Run: `gh workflow run release.yml -f version="X.Y.Z"`
+   - Monitor: `gh run watch`
+3. If manual release:
+   - Create tag: `git tag -a vX.Y.Z -m "vX.Y.Z"`
+   - Push: `git push origin main && git push origin vX.Y.Z`
+   - Create release: `gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes`
+
+## Acceptance Criteria
+- [ ] Git tag vX.Y.Z exists
+- [ ] Tag is pushed to origin
+- [ ] GitHub release created and visible
+- [ ] `gh release view vX.Y.Z` shows correct release
+
+## STOP Conditions
+If ANY criterion fails:
+1. STOP immediately
+2. Do NOT proceed to next phase
+3. Report failure to user
+```
+
+Spawn beads-task-agent to execute this task.
+
 ## Phase 5: Release Notes
 
 Write clear, structured release notes:
@@ -85,6 +321,37 @@ Write clear, structured release notes:
 > Check project-specific release guide for release notes format.
 
 **Details**: [release-notes-guide.md](release-notes-guide.md)
+
+### Task Template
+
+Create this task for your release:
+
+```markdown
+### Task: Write Release Notes for vX.Y.Z
+
+## Instructions
+1. Get changes since last release: `gh api repos/:owner/:repo/compare/vPREVIOUS...vX.Y.Z`
+2. Write release notes with sections:
+   - Highlights (3-5 key changes with emojis)
+   - What's Changed (Added/Changed/Fixed/Removed)
+   - Breaking Changes (if any, with migration guide)
+3. Update GitHub release: `gh release edit vX.Y.Z --notes-file release-notes.md`
+
+## Acceptance Criteria
+- [ ] Release notes include Highlights section
+- [ ] Release notes include What's Changed section
+- [ ] Breaking changes documented (if applicable)
+- [ ] GitHub release updated with notes
+- [ ] `gh release view vX.Y.Z` shows complete notes
+
+## STOP Conditions
+If ANY criterion fails:
+1. STOP immediately
+2. Do NOT proceed to next phase
+3. Report failure to user
+```
+
+Spawn beads-task-agent to execute this task.
 
 ## Quick Reference
 

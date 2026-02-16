@@ -23,7 +23,7 @@ fi
 
 echo "Creating release task structure for v$VERSION..."
 
-# Create parent task
+# Create parent epic
 PARENT=$(bd create \
     --title="Release v$VERSION" \
     --type=epic \
@@ -32,7 +32,7 @@ PARENT=$(bd create \
     --json | jq -r '.id')
 
 if [ -z "$PARENT" ] || [ "$PARENT" = "null" ]; then
-    echo "Error: Failed to create parent task"
+    echo "Error: Failed to create parent epic"
     exit 1
 fi
 
@@ -53,12 +53,13 @@ Run all quality gates before proceeding with release.
 - [ ] All tests pass (ZERO failures)
 - [ ] Build succeeds
 - [ ] CI green (latest commit passes)
+- [ ] TODO: Add project-specific checks here (if needed)
 
-### Common Commands
+### Commands to Fill In
 \`\`\`bash
 git status
-npm test  # or: pytest, cargo test, go test, etc.
-npm run build  # or: cargo build, go build, etc.
+# TODO: Add test command (e.g., npm test, cargo test, pytest, go test)
+# TODO: Add build command (e.g., npm run build, cargo build, go build)
 gh run list --limit 1
 \`\`\`
 
@@ -79,12 +80,13 @@ Verify all documentation is ready for release.
 - [ ] Version references updated in README
 - [ ] Breaking changes documented (if any)
 - [ ] Migration guide exists (if needed)
+- [ ] TODO: Add project-specific documentation checks here (if needed)
 
-### Common Files to Check
+### Files to Check
 - CHANGELOG.md
 - README.md
-- package.json / Cargo.toml / pyproject.toml
-- docs/ directory
+- TODO: Add project-specific version files
+- TODO: Add project-specific documentation paths
 
 ### STOP if ANY fails
 Report to user, do NOT proceed to next phase." \
@@ -103,12 +105,12 @@ Update version number across all project files.
 - [ ] Update to v$VERSION
 - [ ] Commit with message: \"release: v$VERSION\"
 - [ ] Verify clean tree after commit
+- [ ] TODO: Add project-specific version update steps (if needed)
 
-### Common Version Files
-- package.json: \`npm version $VERSION --no-git-tag-version\`
-- Cargo.toml: Update \`version = \"$VERSION\"\`
-- pyproject.toml: Update \`version = \"$VERSION\"\`
-- src/version.* (language-specific version constant)
+### Files to Update (Examples - Replace with Actual)
+- TODO: Add version file location (e.g., package.json, Cargo.toml, pyproject.toml, VERSION)
+- TODO: Add version update command (if tool exists)
+- TODO: Add other files with version references
 
 ### STOP if ANY fails
 Report to user, do NOT proceed to next phase." \
@@ -127,9 +129,9 @@ Create the GitHub release and push tags.
 # Check if release workflow exists
 ls .github/workflows/release*
 
-# Trigger workflow
-gh workflow run release.yml -f version=\"$VERSION\"
-gh run watch
+# TODO: Add workflow trigger command (if workflow exists)
+# Example: gh workflow run release.yml -f version=\"$VERSION\"
+# gh run watch
 \`\`\`
 
 ### Option B: Manual Release
@@ -163,6 +165,7 @@ Write clear, structured release notes for the GitHub release.
 - **Highlights**: 3-5 key changes (emoji-prefixed)
 - **What's Changed**: Added / Changed / Fixed / Removed
 - **Breaking Changes**: If applicable, with migration guide
+- TODO: Add project-specific sections (if needed)
 
 ### Get Changes Since Last Release
 \`\`\`bash
@@ -189,7 +192,7 @@ VERIFY=$(bd create \
     --title="Release Verification for v$VERSION" \
     --type=task \
     --parent="$PARENT" \
-    --description="## TODO: Add package-specific verification
+    --description="## TODO: Add package-specific verification commands
 
 Final verification that release is complete and published.
 
@@ -198,26 +201,29 @@ Final verification that release is complete and published.
 - [ ] GitHub release visible
 - [ ] Package published (if applicable)
 - [ ] Installation works from published source
+- [ ] TODO: Add project-specific verification checks (if needed)
 
 ### Verification Commands
 \`\`\`bash
 # GitHub release
 gh release view v$VERSION
 
-# Package registries (if applicable)
-npm view <package>@$VERSION  # npm
-cargo search <package>  # crates.io
-pip show <package>  # PyPI
+# TODO: Add package registry verification command (if applicable)
+# Examples (choose what applies to your project):
+#   npm view <package>@$VERSION
+#   cargo search <package>
+#   pip show <package>
+#   docker pull <image>:$VERSION
 \`\`\`
 
 ### Final Check
-Try installing from the published release:
 \`\`\`bash
-# npm example
-npm install <package>@$VERSION
-
-# cargo example
-cargo install <package> --version $VERSION
+# TODO: Add installation test command (if applicable)
+# Examples (choose what applies to your project):
+#   npm install <package>@$VERSION
+#   cargo install <package> --version $VERSION
+#   pip install <package>==$VERSION
+#   docker run <image>:$VERSION --version
 \`\`\`
 
 ### STOP if ANY fails
@@ -262,7 +268,7 @@ bd dep add "$CLEANUP" "$VERIFY" --type blocks
 echo ""
 echo "✅ Release task structure created successfully!"
 echo ""
-echo "Parent task: $PARENT"
+echo "Parent epic: $PARENT"
 echo "First ready: $QUALITY (Quality Gates for v$VERSION)"
 echo ""
 echo "Next steps:"

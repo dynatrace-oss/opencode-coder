@@ -18,6 +18,9 @@ bash scripts/create-release-tasks.sh <version>
 
 # 3. Fill TODOs in all tasks (read docs/RELEASING.md)
 
+# Validate TODOs filled
+bash scripts/validate-release-tasks.sh <epic-id>
+
 # 4. Spawn beads-review-agent to review
 
 # 5. Spawn beads-task-agent for each ready task

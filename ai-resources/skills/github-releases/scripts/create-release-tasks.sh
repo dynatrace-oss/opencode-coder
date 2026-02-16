@@ -26,7 +26,7 @@ echo "Creating release task structure for v$VERSION..."
 # Create parent task
 PARENT=$(bd create \
     --title="Release v$VERSION" \
-    --type=task \
+    --type=epic \
     --priority=1 \
     --description="Complete GitHub release workflow for version $VERSION" \
     --json | jq -r '.id')
@@ -36,7 +36,7 @@ if [ -z "$PARENT" ] || [ "$PARENT" = "null" ]; then
     exit 1
 fi
 
-echo "✓ Created parent task: $PARENT"
+echo "✓ Created parent epic: $PARENT"
 
 # Create child tasks with TODO templates
 

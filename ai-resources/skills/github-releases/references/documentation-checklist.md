@@ -1,10 +1,8 @@
 # Documentation Checklist
 
-> **Preferred**: Load a documentation skill (e.g., `fix-documentation`) to
-> automate these checks. Fall back to manual validation if no skill is
-> available.
+**YOU MUST follow the rules in the documentation skill if available.**
 
-Validate before every release.
+Load a documentation skill (e.g., `fix-documentation`) to automate these checks. Only use manual validation if no skill is available.
 
 ## Version Consistency
 
@@ -16,7 +14,7 @@ grep -r "version" package.json setup.py pyproject.toml Cargo.toml 2>/dev/null
 grep -rn "v[0-9]\+\.[0-9]\+\.[0-9]\+" README.md docs/ 2>/dev/null
 ```
 
-All version references must match the release version.
+All version references MUST match the release version.
 
 ## README
 

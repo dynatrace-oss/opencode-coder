@@ -19,17 +19,15 @@ git fetch origin && git diff HEAD origin/main --stat
 
 Run the project's full test suite — unit, integration, and E2E tests.
 
-Use the project-specific release guide or standard project tooling to identify
-test commands. If unsure how to run tests, ask the user.
+Use the project-specific release guide (`docs/RELEASING.md`) to identify test commands. If unsure, ask the user.
 
-All test suites must pass. Do not skip any.
+All test suites MUST pass. Do not skip any.
 
 ## Gate 3: Build Succeeds
 
 Build the project using its standard build tooling.
 
-Use the project-specific release guide or standard project tooling to identify
-the build command. If unsure how to build, ask the user.
+Use the project-specific release guide (`docs/RELEASING.md`) to identify the build command. If unsure, ask the user.
 
 ## Gate 4: CI Status
 
@@ -42,4 +40,4 @@ gh run view <run-id>
 gh pr checks
 ```
 
-All CI checks must be green. Do not release with failing CI.
+All CI checks MUST be green. Do not release with failing CI.

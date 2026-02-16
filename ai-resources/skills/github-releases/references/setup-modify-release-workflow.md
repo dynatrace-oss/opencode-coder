@@ -1,306 +1,292 @@
 # Setup or Modify Release Workflow
 
-Guide for creating or updating a project's `docs/RELEASING.md` file.
+Guide for creating or updating `docs/RELEASING.md`.
 
-## Purpose
+## Overview
 
-The `docs/RELEASING.md` file provides **project-specific release instructions**
-that override generic workflow steps. This document should answer all questions
-an AI agent (or human) needs to perform a release without guessing.
+**Step 1:** Check if `docs/RELEASING.md` exists
+- If **NO** → Run **Creation Process**
+- If **YES** → Run **Update Process**
 
-## What Goes in RELEASING.md
+## RELEASING.md Required Sections
 
-### 1. Build Commands
+The file MUST contain these sections:
 
-Specify exactly how to build the project:
+1. **Build** - How to build the project
+2. **Tests** - All test commands (unit, integration, e2e)
+3. **Version Files** - Which files contain version numbers
+4. **Release Steps** - Exact commands to release
+5. **Verification** - How to verify release succeeded
 
-````markdown
-## Build
+Optional but recommended:
+- Prerequisites (dependencies, auth setup)
+- Pre-Release Checklist
+- Post-Release Steps
+- Rollback Procedure
 
-```bash
-npm run build
-# or
-bun run build
-# or
-cargo build --release
-```
+## Creation Process
 
-````
+### 1. Analyze Project
 
-### 2. Test Commands
-
-List all tests that must pass:
-
-````markdown
-## Tests
-
-Run all tests before releasing:
+Detect project characteristics:
 
 ```bash
-npm test                    # Unit tests
-npm run test:integration    # Integration tests
-npm run test:e2e           # E2E tests (if applicable)
+# Check build system
+[ -f package.json ] && echo "npm/node project"
+[ -f Cargo.toml ] && echo "Rust project"
+[ -f go.mod ] && echo "Go project"
+[ -f pyproject.toml ] && echo "Python project"
+
+# Find test commands
+grep -E "test|spec" package.json 2>/dev/null
+ls -la tests/ test/ __tests__/ 2>/dev/null
+
+# Find build commands
+grep -E "build|compile" package.json 2>/dev/null
+ls -la Makefile CMakeLists.txt 2>/dev/null
+
+# Find version locations
+grep -r "version" package.json setup.py pyproject.toml Cargo.toml 2>/dev/null
 ```
 
-All tests must pass with no failures.
+### 2. Determine Required Information
 
-````
+For each section, identify:
 
-### 3. Version Files
+**Build:**
+- What command builds the project?
+- What output is produced?
+- Are there build variants (debug/release)?
 
-Document which files contain version numbers:
+**Tests:**
+- What are ALL test commands?
+- Unit tests command?
+- Integration tests command?
+- E2E tests command?
+- Do all tests need to pass?
 
-````markdown
-## Version Files
+**Version Files:**
+- Which files contain version numbers?
+- How to update them (manually or via tool)?
 
-Update version in these files:
+**Release Steps:**
+- Is there a GitHub Actions workflow?
+- Manual release commands?
+- Where is package published (npm/crates.io/PyPI/etc)?
 
-- `package.json` (npm version bump handles this)
-- `Cargo.toml` (for Rust projects)
-- `pyproject.toml` (for Python projects)
-- `src/version.ts` (if version is exported from code)
-- `README.md` (installation instructions)
+**Verification:**
+- How to check release succeeded?
+- How to test installation?
 
-````
+### 3. Ask User for Confirmation
 
-### 4. Version Bump Strategy
+**Present findings to user:**
 
-Explain how versioning works for this project:
+```
+I analyzed the project and found:
 
-````markdown
-## Versioning
+Build: npm run build (creates dist/ directory)
+Tests:
+  - Unit: npm test
+  - Integration: npm run test:integration
+  - E2E: (none found)
 
-This project follows [Semantic Versioning](https://semver.org/):
+Version Files:
+  - package.json
+  - src/version.ts (contains VERSION constant)
 
-- **Major (X.0.0)**: Breaking changes
-- **Minor (0.X.0)**: New features, backward compatible
-- **Patch (0.0.X)**: Bug fixes, backward compatible
+Release: GitHub Actions workflow detected (.github/workflows/release.yml)
 
-Use `npm version [major|minor|patch]` to bump version and create git tag.
+Publish: npm registry
 
-````
+Does this look correct? Should I:
+1. Add/modify any commands?
+2. Include additional test suites?
+3. Add other version file locations?
+```
 
-### 5. Pre-Release Checklist
+**ONLY proceed if user confirms accuracy.**
 
-Project-specific checks beyond generic quality gates:
+If user says something is wrong or missing, ask for corrections.
 
-````markdown
-## Pre-Release Checklist
+### 4. Create RELEASING.md
 
-- [ ] All tests pass
-- [ ] Build succeeds with no warnings
-- [ ] CHANGELOG.md updated with new version
-- [ ] Documentation updated (if API changed)
-- [ ] Breaking changes documented with migration guide
-- [ ] CI/CD pipeline green on main branch
-- [ ] Dependencies up to date (run `npm audit` or equivalent)
+Write `docs/RELEASING.md` with confirmed information.
 
-````
+### 5. CRITICAL: Verify Information
 
-### 6. Release Process
-
-Step-by-step release commands:
-
-````markdown
-## Release Process
-
-### Option 1: Automated (Recommended)
+**YOU MUST actually execute the commands to verify they work:**
 
 ```bash
-# Trigger GitHub Actions release workflow
-gh workflow run release.yml -f version=patch  # or minor, major
-gh run watch
+# Verify build works
+<build-command>  # e.g., npm run build
+# Check: Did it succeed? Output created?
+
+# Verify tests work
+<test-command>   # e.g., npm test
+# Check: Do tests run? What's the result?
+
+# Verify version files exist
+ls -la <version-files>  # e.g., package.json src/version.ts
+# Check: Do files exist?
+
+# Verify workflow exists (if applicable)
+ls -la .github/workflows/release.yml
+# Check: Does file exist?
 ```
 
-The workflow handles: version bump, tag creation, changelog update, npm
-publish, GitHub release.
+**If ANY verification fails:**
+1. Report to user what failed
+2. Ask how to fix it
+3. Update RELEASING.md with correct information
+4. Re-verify
 
-### Option 2: Manual
+**Only mark complete when all commands execute successfully.**
+
+## Update Process
+
+### 1. Check Current RELEASING.md
+
+Verify all required sections exist:
 
 ```bash
-# 1. Bump version and create tag
-npm version patch -m "release: v%s"
-
-# 2. Push to GitHub
-git push origin main && git push --tags
-
-# 3. Publish to npm
-npm publish
-
-# 4. Create GitHub release
-gh release create v$(node -p "require('./package.json').version") \
-  --title "v$(node -p "require('./package.json').version")" \
-  --generate-notes
+# Check for required sections
+grep -i "## Build" docs/RELEASING.md
+grep -i "## Test" docs/RELEASING.md
+grep -i "## Version" docs/RELEASING.md
+grep -i "## Release" docs/RELEASING.md
+grep -i "## Verif" docs/RELEASING.md
 ```
 
-````
+### 2. Verify Current Information
 
-### 7. Post-Release Steps
-
-What happens after the release:
-
-````markdown
-## Post-Release
-
-After releasing:
-
-1. Verify package published to npm: `npm view <package-name>`
-2. Check GitHub release appears: `gh release view`
-3. Test installation: `npm install <package-name>@latest` in a clean directory
-4. Announce release (if applicable): Discord, Twitter, changelog newsletter
-
-````
-
-### 8. Rollback Procedure
-
-How to undo a bad release:
-
-````markdown
-## Rollback
-
-If a release has critical issues:
+**Execute all commands in RELEASING.md:**
 
 ```bash
-# Unpublish from npm (within 72 hours)
-npm unpublish <package-name>@<version>
+# Run build command from RELEASING.md
+<build-command-from-file>
+# Check: Does it still work?
 
-# Delete GitHub release and tag
-gh release delete v<version> -y
-git tag -d v<version>
-git push origin :refs/tags/v<version>
+# Run ALL test commands from RELEASING.md
+<test-command-from-file>
+# Check: Do they still work? Are there new tests not documented?
+
+# Check version files from RELEASING.md
+<version-files-from-file>
+# Check: Do files still exist? Are there new version files?
+
+# Check release commands from RELEASING.md
+# Check: Are they still accurate? Has workflow changed?
 ```
 
-Then fix the issue and re-release with a patch version.
+### 3. Detect Changes in Project
 
-````
-
-## Example RELEASING.md (Node.js/TypeScript Project)
-
-Here's a complete example for a TypeScript plugin:
-
-````markdown
-# Release Process
-
-## Prerequisites
-
-- Node.js 18+ installed
-- npm authentication configured: `npm whoami`
-- GitHub CLI authenticated: `gh auth status`
-
-## Build
+**Compare current project to RELEASING.md:**
 
 ```bash
-bun install
-bun run build
+# Check for new test files/commands
+grep -E "test|spec" package.json  # Compare with documented tests
+ls tests/ test/ __tests__/ e2e/   # New test directories?
+
+# Check for build changes
+grep -E "build" package.json  # Build command changed?
+
+# Check for new version files
+find . -name "version.*" -o -name "VERSION"  # New version files?
+
+# Check for workflow changes
+git log --oneline -n 10 .github/workflows/  # Workflow updated?
 ```
 
-Output: `dist/` directory with compiled JavaScript and types.
+### 4. Ask User for Confirmation
 
-## Tests
+**Present findings:**
+
+```
+I verified docs/RELEASING.md and found:
+
+✅ Build command works: npm run build
+✅ Unit tests work: npm test
+✅ Integration tests work: npm run test:integration
+❌ E2E tests found but not documented: npm run test:e2e
+❌ New version file found: README.md (has version in install command)
+
+Should I update RELEASING.md to include:
+1. E2E test command: npm run test:e2e
+2. Version file: README.md (installation instructions)
+```
+
+**ONLY proceed if user confirms.**
+
+### 5. Update RELEASING.md
+
+Apply approved updates.
+
+### 6. CRITICAL: Re-Verify
+
+**Execute ALL commands again to confirm:**
 
 ```bash
-bun test                    # Unit tests
-bun run test:integration    # Integration tests
+# Run all documented commands
+<build-command>
+<all-test-commands>
+# Check version files exist
+# Verify workflow exists
 ```
 
-All tests must pass.
+**Only mark complete when everything verified.**
 
-## Version Files
+## When to Ask User
 
-- `package.json` (npm handles this automatically)
-- `package-lock.json` (auto-updated)
+**Always ask if:**
+- Information is ambiguous or missing
+- Multiple options exist (which build command?)
+- Verification fails (command doesn't work)
+- Proposed changes impact release process
 
-## Versioning
+**Never assume.** Always confirm with user.
 
-This project follows Semantic Versioning:
+## Example Interaction
 
-- **Major**: Breaking changes to plugin API
-- **Minor**: New features, backward compatible
-- **Patch**: Bug fixes
+```
+Agent: I checked docs/RELEASING.md and found:
+- Build: npm run build ✅ (works)
+- Tests: npm test ✅ (works)
+- Missing: E2E tests (found npm run test:e2e in package.json)
+- Missing: Integration tests (found test:integration script)
 
-## Pre-Release Checklist
+Should I add these test commands to RELEASING.md?
 
-- [ ] All tests pass (`bun test`)
-- [ ] Build succeeds (`bun run build`)
-- [ ] CHANGELOG.md updated with new version
-- [ ] No uncommitted changes
-- [ ] CI green on main branch
+User: Yes, add both. E2E tests must pass for release.
 
-## Release Process
+Agent: Got it. I'll add:
+- npm run test:integration
+- npm run test:e2e
 
-### Automated Release (Recommended)
+Both will be marked as required for release. Updating now...
 
-```bash
-gh workflow run release.yml -f version=patch  # or minor, major
-gh run watch
+Agent: Updated RELEASING.md. Verifying commands work...
+
+Agent: ✅ npm run test:integration - passed (45 tests)
+Agent: ✅ npm run test:e2e - passed (12 tests)
+
+All verified. RELEASING.md is up to date.
 ```
 
-### Manual Release
+## Summary
 
-```bash
-# 1. Bump version
-npm version patch -m "release: v%s"
+**Creation Process:**
+1. Analyze project → detect build/test/version info
+2. Ask user confirmation → get approval
+3. Create RELEASING.md → write file
+4. Verify ALL commands → execute to confirm they work
 
-# 2. Push changes
-git push origin main --follow-tags
+**Update Process:**
+1. Check current RELEASING.md → verify sections exist
+2. Verify current info → execute all documented commands
+3. Detect changes → compare project to docs
+4. Ask user confirmation → get approval for updates
+5. Update RELEASING.md → apply changes
+6. Re-verify ALL → execute to confirm everything works
 
-# 3. Publish to npm
-npm publish
-
-# 4. Create GitHub release
-gh release create v$(node -p "require('./package.json').version") \
-  --generate-notes
-```
-
-## Post-Release
-
-1. Verify: `npm view opencode-coder`
-2. Test: `npm install -g opencode-coder@latest`
-3. Announce in Discord #releases channel
-
-## Rollback
-
-If needed:
-
-```bash
-npm unpublish opencode-coder@<version>
-gh release delete v<version> -y
-git tag -d v<version>
-git push origin :refs/tags/v<version>
-```
-
-````
-
-## When to Update RELEASING.md
-
-Update this file when:
-
-- Build process changes
-- New test suites added
-- Version file locations change
-- Release automation changes (CI/CD updates)
-- Publishing targets change (new registries, platforms)
-
-## Tips for Writing RELEASING.md
-
-1. **Be explicit** — don't assume knowledge (e.g., "run tests" → specify exact
-   commands)
-2. **Include outputs** — mention what success looks like ("Output: dist/
-   directory")
-3. **Handle failures** — document common errors and fixes
-4. **Automate where possible** — prefer GitHub Actions over manual steps
-5. **Keep it updated** — outdated docs are worse than no docs
-
-## Common Mistakes to Avoid
-
-❌ **Too vague**: "Run tests" (which tests? how?)
-✅ **Specific**: "Run `npm test && npm run test:integration`"
-
-❌ **Missing context**: "Publish to registry"
-✅ **Clear**: "Publish to npm: `npm publish`"
-
-❌ **Assumes local config**: "Just run the release script"
-✅ **Documents prereqs**: "Ensure npm auth configured: `npm whoami`"
-
-❌ **No verification**: "Push and done"
-✅ **Includes checks**: "Verify package live: `npm view <pkg>`"
+**Golden Rule:** Always verify by actually running commands. Never trust documentation without testing it.

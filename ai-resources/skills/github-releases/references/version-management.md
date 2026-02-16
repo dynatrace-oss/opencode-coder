@@ -30,15 +30,11 @@ gh api "repos/:owner/:repo/compare/$LAST_TAG...HEAD" \
 - Any "feat:" or new functionality → MINOR
 - Only "fix:", "docs:", "chore:" → PATCH
 
-## Common Version Files
+## Version Files
 
-| File | Update method |
-| --------------------- | ------------------------------------------------- |
-| package.json | `npm version X.Y.Z --no-git-tag-version` or edit |
-| pyproject.toml | Edit `version = "X.Y.Z"` |
-| Cargo.toml | Edit `version = "X.Y.Z"` |
-| VERSION / version.txt | Write version string |
-| setup.py | Edit `version="X.Y.Z"` |
+Use `docs/RELEASING.md` to identify which files contain version numbers.
+
+Common patterns: `package.json`, `pyproject.toml`, `Cargo.toml`, `VERSION`, `setup.py`
 
 ## Pre-release Versions
 

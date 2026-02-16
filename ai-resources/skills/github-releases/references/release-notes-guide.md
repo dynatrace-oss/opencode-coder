@@ -43,23 +43,13 @@ Common emojis: ✅ fix, 🚀 performance, 📚 docs, 🔧 improvement, ⚠️ br
 ## Breaking Changes
 
 - Config key `oldName` renamed to `newName`
-- Minimum Node.js version is now 18
+- Minimum version requirement changed
 
 ## Migration
 
 1. Rename `oldName` to `newName` in config
-2. Update Node.js to v18+
+2. Update to required version
 ```
-
-### Installation (optional)
-
-````markdown
-## Installation
-
-```bash
-npm install package@1.2.3
-```
-````
 
 ## Tips
 

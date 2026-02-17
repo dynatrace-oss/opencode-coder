@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-02-17
+
+### Added
+
+- **github-releases skill**: TODO validation script to verify all placeholders filled
+- **github-releases skill**: Script-based task generation for releases
+
+### Fixed
+
+- **github-releases skill**: Removed technology assumptions, added TODO markers for customization
+- **github-releases skill**: Corrected task parent type from task to epic
+
+### Changed
+
+- **Beads**: Updated migration hint for better clarity
+
 ## [0.26.0] - 2026-02-15
 
 ### Added

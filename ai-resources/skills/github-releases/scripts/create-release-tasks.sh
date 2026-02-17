@@ -234,23 +234,26 @@ CLEANUP=$(bd create \
     --title="Cleanup Release Tasks" \
     --type=task \
     --parent="$PARENT" \
-    --description="## Cleanup: Archive release and remove task scaffolding
+    --description="## Cleanup: Mark release tasks for compaction
 
-Create permanent release record and clean up temporary tasks.
+Close the epic and mark all tasks with label for future compaction.
 
 ### Steps
 \`\`\`bash
-# Create permanent outcome record
-bd create --title=\"✓ Released v$VERSION\" --type=note \\
-  --description=\"Release v$VERSION completed successfully on \$(date +%Y-%m-%d).
+# Close the epic
+bd update \$PARENT --status=closed
 
-GitHub Release: https://github.com/\$(git remote get-url origin | sed 's/.*github.com[:/]\\(.*\\)\\.git/\\1/')/releases/tag/v$VERSION\"
+# Mark epic and all tasks for compaction
+bd update \$PARENT --add-label=marked-for-compaction
+for task_id in \$QUALITY \$DOCS \$BUMP \$RELEASE \$NOTES \$VERIFY; do
+  bd update \$task_id --add-label=marked-for-compaction
+done
 
-# Delete task scaffolding (keeps database clean)
-bd delete $PARENT
+# Mark cleanup task itself
+bd update \$CLEANUP --add-label=marked-for-compaction
 \`\`\`
 
-This cleanup keeps the beads database clean while preserving release outcomes." \
+This keeps the release history for analysis. Later, these can be compacted into a single summary task." \
     --json | jq -r '.id')
 
 echo "✓ Created tasks: quality=$QUALITY, docs=$DOCS, bump=$BUMP, release=$RELEASE, notes=$NOTES, verify=$VERIFY, cleanup=$CLEANUP"

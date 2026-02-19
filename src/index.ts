@@ -1,6 +1,7 @@
 import { type Plugin } from "@opencode-ai/plugin";
-import { createLogger } from "./core";
-import { KnowledgeBaseService, BeadsService, GitHubService, AimgrService } from "./service";
+import { createLogger, getVersionInfo } from "./core";
+import { KnowledgeBaseService, BeadsService, GitHubService, AimgrService, SessionExportService } from "./service";
+import { createCoderTool } from "./tool";
 import { isPluginDisabled } from "./config/env";
 
 export const OpencodeCoder: Plugin = async ({ client }) => {
@@ -48,8 +49,14 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("KnowledgeBaseService created", { durationMs: Date.now() - kbStart });
 
-  // 6. Check beads availability and show toast if needed
-  // This runs in the background and doesn't block plugin loading
+  // 6. Create session export service and coder tool
+  const versionInfo = await getVersionInfo();
+  const sessionExportService = new SessionExportService({ logger: log, client });
+  const coderTool = createCoderTool({ sessionExportService, versionInfo });
+  log.debug("Coder tool created");
+
+  // 7. Check beads availability and show toast if needed
+  // Runs in the background and doesn't block plugin loading
   const beadsCheckStart = Date.now();
   beadsService.checkBeadsAvailability()
     .then(() => {
@@ -59,8 +66,8 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
       log.error("Failed to check beads availability", { error: String(err) });
     });
 
-  // 7. Auto-initialize aimgr if available
-  // This runs in the background and doesn't block plugin loading
+  // 8. Auto-initialize aimgr if available
+  // Runs in the background and doesn't block plugin loading
   const aimgrInitStart = Date.now();
   aimgrService.autoInitialize()
     .then(() => {
@@ -87,6 +94,10 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
 
     async "permission.ask"(input, output) {
       beadsService.processPermissionAsk(input, output);
+    },
+
+    tool: {
+      coder: coderTool,
     },
   };
 };

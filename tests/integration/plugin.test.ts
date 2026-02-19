@@ -58,19 +58,20 @@ describe("OpencodeCoder Plugin Integration", () => {
   });
 
   describe("real knowledge base loading", () => {
-    it("should not load coder commands from plugin (loaded from ai-resources instead)", async () => {
+    it("should load plugin-shipped coder commands from knowledge-base", async () => {
       const mockInput = createMockPluginInput();
       const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
 
       const config: Config = {};
       await hooks.config?.(config);
 
-      // Plugin should NOT load coder commands - they're in ai-resources/commands/opencode-coder/
-      // which are loaded by OpenCode itself, not by the plugin
+      // Plugin ships coder/dump-session in knowledge-base/command/coder/
+      // Other coder commands live in ai-resources/ and are loaded by OpenCode itself
       const coderCommands = Object.keys(config.command ?? {}).filter((k) =>
         k.startsWith("coder/") || k.startsWith("opencode-coder/")
       );
-      expect(coderCommands.length).toBe(0);
+      expect(coderCommands.length).toBe(1);
+      expect(coderCommands).toContain("coder/dump-session");
     });
 
     it("should load agents with proper configuration", async () => {

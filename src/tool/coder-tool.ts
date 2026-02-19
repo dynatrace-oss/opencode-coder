@@ -26,14 +26,14 @@ export function createCoderTool(options: CoderToolOptions): ToolDefinition {
 Available commands:
 - "session" — returns current session metadata (ID, title, timestamps, summary)
 - "version" — returns the coder plugin name and version
-- "session-export <path>" — exports full session data (messages, tool calls, tokens, diffs) to the specified folder path. Creates the folder if it doesn't exist.
+- "session-export <path> [session-id]" — exports full session data (messages, tool calls, tokens, diffs) to the specified folder path. Creates the folder if it doesn't exist. If session-id omitted, exports current session.
 - "tokens" — returns token usage summary (input, output, reasoning, cache, cost) for the current session
 - "list-sessions" — lists all OpenCode sessions (id, title, timestamps)`,
     args: {
       command: tool.schema
         .string()
         .describe(
-          'The command to execute. One of: "session", "version", "session-export <path>", "tokens", "list-sessions"',
+          'The command to execute. One of: "session", "version", "session-export <path> [session-id]", "tokens", "list-sessions"',
         ),
     },
     async execute(args, context: ToolContext) {
@@ -52,15 +52,16 @@ Available commands:
           return `${versionInfo.name} v${versionInfo.version}`;
 
         case "session-export": {
-          const exportPath = parts.slice(1).join(" ");
+          const exportPath = parts[1];
+          const targetSessionID = parts[2] || sessionID;
           if (!exportPath) {
-            return "Error: session-export requires a path argument. Usage: session-export <folder-path>";
+            return "Error: session-export requires a path argument. Usage: session-export <path> [session-id]";
           }
           const resolvedPath = isAbsolute(exportPath)
             ? exportPath
             : join(context.directory, exportPath);
 
-          const result = await sessionExportService.exportSession(sessionID, resolvedPath);
+          const result = await sessionExportService.exportSession(targetSessionID, resolvedPath);
           return `Session exported successfully.\nPath: ${result.outputPath}\nMessages: ${result.messageCount}\nTotal tokens: ${result.totalTokens}\nTotal cost: $${result.totalCost.toFixed(4)}`;
         }
 
@@ -71,7 +72,7 @@ Available commands:
           return await sessionExportService.formatSessionList();
 
         default:
-          return `Unknown command: "${subCommand}". Available commands: session, version, session-export <path>, tokens, list-sessions`;
+          return `Unknown command: "${subCommand}". Available commands: session, version, session-export <path> [session-id], tokens, list-sessions`;
       }
     },
   });

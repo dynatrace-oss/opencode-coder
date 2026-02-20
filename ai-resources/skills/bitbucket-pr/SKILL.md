@@ -1,85 +1,84 @@
 ---
 name: bitbucket-pr
-description: [TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]
+description: "Manage Bitbucket Server/Data Center pull requests: create/update PRs, review code changes, process PR feedback and tasks. Use when: (1) User asks to create or update a Bitbucket PR, (2) User wants to review a PR on Bitbucket Server, (3) User mentions 'Bitbucket', 'BB PR', or 'code review on Bitbucket', (4) User wants to process PR comments or tasks, (5) User wants to resolve or reply to PR feedback. NOTE: Bitbucket Server/Data Center only (REST API 1.0) — does NOT support Bitbucket Cloud."
 ---
 
-# Bitbucket Pr
+# Bitbucket PR Management
 
-## Overview
+## Prerequisites
 
-[TODO: 1-2 sentences explaining what this skill enables]
+- `BITBUCKET_TOKEN` env var set (personal access token from
+  [Bitbucket access tokens](https://bitbucket.lab.dynatrace.org/plugins/servlet/access-tokens/manage))
+- `curl` and `jq` installed
+- Git repo with Bitbucket remote
+- **Bitbucket Server/Data Center only** — not compatible with Bitbucket Cloud
 
-## Structuring This Skill
+Run `bash scripts/check-prerequisites.sh` to verify.
 
-[TODO: Choose the structure that best fits this skill's purpose. Common patterns:
+## Use Case 1: Create or Update PR
 
-**1. Workflow-Based** (best for sequential processes)
-- Works well when there are clear step-by-step procedures
-- Example: DOCX skill with "Workflow Decision Tree" → "Reading" → "Creating" → "Editing"
-- Structure: ## Overview → ## Workflow Decision Tree → ## Step 1 → ## Step 2...
+Use when creating a new PR from the current branch or updating an existing PR's title, description, or reviewers.
+`BB_PROJECT` and `BB_REPO` are auto-detected from the git remote; set them explicitly if needed.
 
-**2. Task-Based** (best for tool collections)
-- Works well when the skill offers different operations/capabilities
-- Example: PDF skill with "Quick Start" → "Merge PDFs" → "Split PDFs" → "Extract Text"
-- Structure: ## Overview → ## Quick Start → ## Task Category 1 → ## Task Category 2...
+```bash
+# Check prerequisites
+bash scripts/check-prerequisites.sh
 
-**3. Reference/Guidelines** (best for standards or specifications)
-- Works well for brand guidelines, coding standards, or requirements
-- Example: Brand styling with "Brand Guidelines" → "Colors" → "Typography" → "Features"
-- Structure: ## Overview → ## Guidelines → ## Specifications → ## Usage...
+# Create PR from current branch
+bash scripts/create-or-update-pr.sh create [--title "..."] [--description "..."] [--dry-run]
 
-**4. Capabilities-Based** (best for integrated systems)
-- Works well when the skill provides multiple interrelated features
-- Example: Product Management with "Core Capabilities" → numbered capability list
-- Structure: ## Overview → ## Core Capabilities → ### 1. Feature → ### 2. Feature...
+# Update existing PR
+bash scripts/create-or-update-pr.sh update <pr-id-or-url> [--title "..."] [--description "..."]
+```
 
-Patterns can be mixed and matched as needed. Most skills combine patterns (e.g., start with task-based, add workflow for complex operations).
+See [references/create-update-workflow.md](references/create-update-workflow.md) for full workflow details.
 
-Delete this entire "Structuring This Skill" section when done - it's just guidance.]
+## Use Case 2: Review PR
 
-## [TODO: Replace with the first main section based on chosen structure]
+Use when reviewing code changes in a PR and providing structured feedback with inline comments.
+`BB_PROJECT` and `BB_REPO` are auto-detected from the git remote; set them explicitly if needed.
 
-[TODO: Add content here. See examples in existing skills:
-- Code samples for technical skills
-- Decision trees for complex workflows
-- Concrete examples with realistic user requests
-- References to scripts/templates/references as needed]
+```bash
+# Check prerequisites
+bash scripts/check-prerequisites.sh
 
-## Resources
+# Phase 1: Fetch PR data for analysis
+BB_PROJECT=PFS BB_REPO=myrepo bash scripts/review-pr.sh fetch <pr-id-or-url>
 
-This skill includes example resource directories that demonstrate how to organize different types of bundled resources:
+# Phase 2: Post feedback (agent generates feedback JSON, pipes to script)
+echo '<feedback-json>' | bash scripts/review-pr.sh post <pr-id-or-url> [--dry-run]
+```
 
-### scripts/
-Executable code (Python/Bash/etc.) that can be run directly to perform specific operations.
+See [references/review-workflow.md](references/review-workflow.md) for feedback JSON schema and project discovery.
 
-**Examples from other skills:**
-- PDF skill: `fill_fillable_fields.py`, `extract_form_field_info.py` - utilities for PDF manipulation
-- DOCX skill: `document.py`, `utilities.py` - Python modules for document processing
+## Use Case 3: Process PR Feedback
 
-**Appropriate for:** Python scripts, shell scripts, or any executable code that performs automation, data processing, or specific operations.
+Use when a PR has been reviewed and you need to address comments, resolve tasks, or reply to feedback.
+`BB_PROJECT` and `BB_REPO` are auto-detected from the git remote; set them explicitly if needed.
 
-**Note:** Scripts may be executed without loading into context, but can still be read by Claude for patching or environment adjustments.
+```bash
+# Check prerequisites
+bash scripts/check-prerequisites.sh
 
-### references/
-Documentation and reference material intended to be loaded into context to inform Claude's process and thinking.
+# Phase 1: Fetch all comments and tasks
+BB_PROJECT=PFS BB_REPO=myrepo bash scripts/process-pr-feedback.sh fetch <pr-id-or-url>
 
-**Examples from other skills:**
-- Product management: `communication.md`, `context_building.md` - detailed workflow guides
-- BigQuery: API reference documentation and query examples
-- Finance: Schema documentation, company policies
+# Phase 2: Execute actions
+echo '<actions-json>' | bash scripts/process-pr-feedback.sh act <pr-id-or-url> [--dry-run]
+```
 
-**Appropriate for:** In-depth documentation, API references, database schemas, comprehensive guides, or any detailed information that Claude should reference while working.
+See [references/feedback-workflow.md](references/feedback-workflow.md) for actions JSON schema.
 
-### assets/
-Files not intended to be loaded into context, but rather used within the output Claude produces.
+## Scripts
 
-**Examples from other skills:**
-- Brand styling: PowerPoint template files (.pptx), logo files
-- Frontend builder: HTML/React boilerplate project directories
-- Typography: Font files (.ttf, .woff2)
+- `check-prerequisites.sh` — Verify environment (token, tools, git remote)
+- `bb-api.sh` — Core API library (sourced by other scripts, not called directly)
+- `create-or-update-pr.sh` — Use case 1
+- `review-pr.sh` — Use case 2
+- `process-pr-feedback.sh` — Use case 3
 
-**Appropriate for:** Templates, boilerplate code, document templates, images, icons, fonts, or any files meant to be copied or used in the final output.
+## References
 
----
-
-**Any unneeded directories can be deleted.** Not every skill requires all three types of resources.
+- [references/create-update-workflow.md](references/create-update-workflow.md) — PR creation and update workflow
+- [references/review-workflow.md](references/review-workflow.md) — Code review workflow and feedback JSON schema
+- [references/feedback-workflow.md](references/feedback-workflow.md) — PR feedback processing and actions JSON schema

@@ -14,18 +14,57 @@ const TEST_PROJECT_DIR = join(PROJECT_ROOT, "tests", "e2e", ".test-project");
 
 /**
  * Check if opencode CLI is available (required by SDK's createOpencodeServer)
+ * Returns diagnostic info if not available
  */
-async function isOpencodeAvailable(): Promise<boolean> {
+async function checkOpencodeAvailability(): Promise<{ available: boolean; diagnostics?: string }> {
   try {
     const result = await $`which opencode`.quiet();
-    return result.exitCode === 0;
+    if (result.exitCode === 0) {
+      return { available: true };
+    }
   } catch {
-    return false;
+    // fall through to diagnostics
   }
+
+  // Build diagnostic message
+  const diagnostics: string[] = [
+    "opencode binary not found in PATH.",
+    "",
+    "This usually happens when:",
+    "  1. OpenCode was recently updated via mise",
+    "  2. The current shell/session has a stale PATH",
+    "",
+    "To fix: Restart OpenCode to refresh the PATH environment.",
+    "",
+    "Diagnostic info:",
+  ];
+
+  // Check if opencode exists in mise installs
+  try {
+    const miseCheck = await $`ls -d ~/.local/share/mise/installs/opencode/*/opencode 2>/dev/null`.quiet();
+    if (miseCheck.exitCode === 0) {
+      diagnostics.push(`  Found mise install: ${miseCheck.stdout.toString().trim()}`);
+      diagnostics.push("  -> OpenCode IS installed but not in current PATH");
+      diagnostics.push("  -> Restart OpenCode to pick up the new PATH");
+    }
+  } catch {
+    diagnostics.push("  No mise opencode installation found");
+  }
+
+  // Show PATH entries with opencode
+  const pathEntries = process.env.PATH?.split(":").filter((p) => p.includes("opencode")) || [];
+  if (pathEntries.length > 0) {
+    diagnostics.push(`  PATH entries with 'opencode': ${pathEntries.join(", ")}`);
+  }
+
+  return { available: false, diagnostics: diagnostics.join("\n") };
 }
 
 // Check availability before defining tests - SDK requires opencode binary
-const canRunE2E = await isOpencodeAvailable();
+const opencodeCheck = await checkOpencodeAvailability();
+if (!opencodeCheck.available && opencodeCheck.diagnostics) {
+  console.warn("\n" + opencodeCheck.diagnostics + "\n");
+}
 
 /**
  * Find an available port
@@ -114,7 +153,7 @@ async function cleanupTestProject(): Promise<void> {
   }
 }
 
-describe.skipIf(!canRunE2E)("OpencodeCoder E2E Tests", () => {
+describe.skipIf(!opencodeCheck.available)("OpencodeCoder E2E Tests", () => {
   let server: { url: string; close: () => void } | null = null;
   let client: OpencodeClient | null = null;
 

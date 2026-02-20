@@ -351,16 +351,35 @@ bb_get_pr_comments() {
     printf '%s' "$activities" | jq '[.[] | select(.action == "COMMENTED")]'
 }
 
-# bb_get_pr_tasks — Get all tasks on a PR (all pages merged)
+# bb_get_pr_tasks — Get all tasks on a PR
+#
+# In Bitbucket Server, tasks are comments with severity="BLOCKER".
+# They are retrieved via the activities endpoint and filtered by severity.
 #
 # Usage: bb_get_pr_tasks <project> <repo> <pr_id>
-# Output: JSON array of task objects
+# Output: JSON array of task objects with shape:
+#   { id, text, state ("OPEN"|"RESOLVED"), version, author, anchor }
 bb_get_pr_tasks() {
     local project="$1"
     local repo="$2"
     local pr_id="$3"
 
-    _bb_paginate "${BB_BASE_URL}/projects/${project}/repos/${repo}/pull-requests/${pr_id}/tasks"
+    local activities
+    activities=$(_bb_paginate "${BB_BASE_URL}/projects/${project}/repos/${repo}/pull-requests/${pr_id}/activities")
+
+    # Filter to COMMENTED activities where the comment severity is BLOCKER (these are tasks)
+    printf '%s' "$activities" | jq '[
+        .[] | select(.action == "COMMENTED") | .comment |
+        select(.severity == "BLOCKER") |
+        {
+            id:      .id,
+            text:    (.text // ""),
+            state:   (.state // "OPEN"),
+            version: (.version // 0),
+            author:  (.author.name // .author.slug // "unknown"),
+            anchor:  (.anchor // null)
+        }
+    ]'
 }
 
 # bb_get_pr_diff — Get the diff for a PR (full or file-specific)
@@ -525,13 +544,13 @@ bb_add_file_comment() {
 
 # bb_create_task — Create a task anchored to an existing comment
 #
-# In Bitbucket Server, tasks are created as comments with a special task flag,
-# then attached to a parent comment via the tasks endpoint.
+# In Bitbucket Server, tasks are comments with severity="BLOCKER".
+# A task anchored to a parent comment is a reply with severity="BLOCKER".
 #
 # Usage: bb_create_task <project> <repo> <pr_id> <comment_id> <text>
-#   comment_id — ID of the comment to attach the task to
+#   comment_id — ID of the parent comment to attach the task to
 #
-# Output: Created task as JSON (includes task ID)
+# Output: Created task/comment as JSON (includes comment ID)
 bb_create_task() {
     local project="$1"
     local repo="$2"
@@ -542,38 +561,44 @@ bb_create_task() {
     local payload
     payload=$(jq -n \
         --arg text "$text" \
-        --argjson comment_id "$comment_id" \
+        --argjson parent_id "$comment_id" \
         '{
-            text: $text,
-            state: "OPEN",
-            anchor: {
-                id: $comment_id,
-                type: "COMMENT"
-            }
+            text:     $text,
+            severity: "BLOCKER",
+            parent:   { id: $parent_id }
         }')
 
     _bb_curl POST \
-        "${BB_BASE_URL}/projects/${project}/repos/${repo}/pull-requests/${pr_id}/tasks" \
+        "${BB_BASE_URL}/projects/${project}/repos/${repo}/pull-requests/${pr_id}/comments" \
         --data "$payload"
 }
 
-# bb_resolve_task — Mark a task as RESOLVED
+# bb_resolve_task — Mark a task (BLOCKER comment) as RESOLVED
 #
-# Usage: bb_resolve_task <task_id>
-#   task_id — the numeric ID of the task (from bb_create_task or bb_get_pr_tasks)
+# In Bitbucket Server, tasks are comments with severity="BLOCKER".
+# Resolving a task means setting the comment's state to "RESOLVED"
+# via PUT /projects/{project}/repos/{repo}/pull-requests/{pr_id}/comments/{comment_id}.
 #
-# Note: Task operations use the top-level /tasks endpoint, not per-PR.
-# Output: Updated task as JSON
+# Usage: bb_resolve_task <project> <repo> <pr_id> <task_id> <version>
+#   task_id — the comment ID of the task (from bb_get_pr_tasks)
+#   version — current version of the comment (required for optimistic locking)
+#
+# Output: Updated comment as JSON
 bb_resolve_task() {
-    local task_id="$1"
+    local project="$1"
+    local repo="$2"
+    local pr_id="$3"
+    local task_id="$4"
+    local version="$5"
 
     local payload
     payload=$(jq -n \
-        --argjson id "$task_id" \
-        '{ id: $id, state: "RESOLVED" }')
+        --argjson id      "$task_id" \
+        --argjson version "$version" \
+        '{ id: $id, version: $version, state: "RESOLVED" }')
 
     _bb_curl PUT \
-        "${BB_BASE_URL}/tasks/${task_id}" \
+        "${BB_BASE_URL}/projects/${project}/repos/${repo}/pull-requests/${pr_id}/comments/${task_id}" \
         --data "$payload"
 }
 

@@ -167,9 +167,9 @@ cmd_fetch() {
 
         {
             open_tasks: ($open_tasks | map({
-                id:         .id,
-                text:       (.text // ""),
-                comment_id: (.anchor.id // null)
+                id:      .id,
+                text:    (.text // ""),
+                version: (.version // 0)
             })),
             resolved_tasks: ($resolved_tasks | map({
                 id:   .id,
@@ -233,7 +233,12 @@ cmd_act() {
         if [[ "$dry_run" == "true" ]]; then
             echo "[dry-run] Would resolve task ${task_id}"
         else
-            if bb_resolve_task "$task_id" > /dev/null 2>&1; then
+            # Fetch the current task/comment version for optimistic locking
+            local task_version
+            task_version=$(_bb_curl GET \
+                "${BB_BASE_URL}/projects/${BB_PROJECT}/repos/${BB_REPO}/pull-requests/${PR_ID}/comments/${task_id}" \
+                2>/dev/null | jq -r '.version // 0')
+            if bb_resolve_task "$BB_PROJECT" "$BB_REPO" "$PR_ID" "$task_id" "$task_version" > /dev/null 2>&1; then
                 echo "Resolved task ${task_id}"
                 (( resolved_count++ )) || true
             else

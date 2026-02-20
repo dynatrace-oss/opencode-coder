@@ -145,7 +145,11 @@ cmd_fetch() {
 
     # --- 4. Per-file diffs ---
     # Build a JSON object: { "file/path": "<diff text>", ... }
-    local diffs_obj="{}"
+    # Use a temp file to avoid "Argument list too long" when diffs are large.
+    local diffs_tmp
+    diffs_tmp=$(mktemp)
+    printf '{}' > "$diffs_tmp"
+
     local file_list
     # Read file paths as a newline-separated list for bash iteration
     file_list=$(printf '%s' "$changed_files" | jq -r '.[]')
@@ -155,28 +159,26 @@ cmd_fetch() {
         local diff_text
         # On diff failure (binary file, etc.) use empty string — don't abort
         if diff_text=$(bb_get_pr_diff "$PR_PROJECT" "$PR_REPO" "$PR_ID" "$filepath" 2>/dev/null); then
-            diffs_obj=$(printf '%s' "$diffs_obj" | jq \
-                --arg k "$filepath" \
-                --arg v "$diff_text" \
-                '. + {($k): $v}')
+            jq --arg k "$filepath" --arg v "$diff_text" '. + {($k): $v}' "$diffs_tmp" > "${diffs_tmp}.tmp" \
+                && mv "${diffs_tmp}.tmp" "$diffs_tmp"
         else
-            diffs_obj=$(printf '%s' "$diffs_obj" | jq \
-                --arg k "$filepath" \
-                '. + {($k): ""}')
+            jq --arg k "$filepath" '. + {($k): ""}' "$diffs_tmp" > "${diffs_tmp}.tmp" \
+                && mv "${diffs_tmp}.tmp" "$diffs_tmp"
         fi
     done <<< "$file_list"
 
     # --- 5. Assemble and output final JSON ---
+    # Use --slurpfile to load diffs from file (avoids shell arg size limits)
     jq -n \
-        --argjson pr_id    "$pr_id" \
-        --arg     title    "$pr_title" \
+        --argjson pr_id      "$pr_id" \
+        --arg     title      "$pr_title" \
         --arg     description "$pr_description" \
-        --arg     author   "$pr_author" \
-        --arg     target   "$pr_target" \
-        --arg     source   "$pr_source" \
-        --argjson files    "$changed_files" \
-        --argjson commits  "$commits" \
-        --argjson diffs    "$diffs_obj" \
+        --arg     author     "$pr_author" \
+        --arg     target     "$pr_target" \
+        --arg     source     "$pr_source" \
+        --argjson files      "$changed_files" \
+        --argjson commits    "$commits" \
+        --slurpfile diffs    "$diffs_tmp" \
         '{
             pr: {
                 id:           $pr_id,
@@ -188,8 +190,9 @@ cmd_fetch() {
             },
             changed_files: $files,
             commits:       $commits,
-            diffs:         $diffs
+            diffs:         $diffs[0]
         }'
+    rm -f "$diffs_tmp"
 }
 
 # ---------------------------------------------------------------------------
@@ -229,8 +232,10 @@ cmd_post() {
         _resolve_pr_ref "$ref"
     else
         # In dry-run mode: still resolve project/repo/id for display, but skip API init
-        # We need BB_PROJECT/BB_REPO set for _resolve_pr_ref, so try to extract from git
-        bb_extract_repo_info 2>/dev/null || true
+        # Only auto-detect BB_PROJECT/BB_REPO from git remote if not already set by caller
+        if [[ -z "${BB_PROJECT:-}" || -z "${BB_REPO:-}" ]]; then
+            bb_extract_repo_info 2>/dev/null || true
+        fi
         _resolve_pr_ref "$ref"
     fi
 

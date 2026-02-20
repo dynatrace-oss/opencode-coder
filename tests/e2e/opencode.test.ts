@@ -13,6 +13,21 @@ const PLUGIN_PATH = join(PROJECT_ROOT, "dist", "opencode-coder.js");
 const TEST_PROJECT_DIR = join(PROJECT_ROOT, "tests", "e2e", ".test-project");
 
 /**
+ * Check if opencode CLI is available (required by SDK's createOpencodeServer)
+ */
+async function isOpencodeAvailable(): Promise<boolean> {
+  try {
+    const result = await $`which opencode`.quiet();
+    return result.exitCode === 0;
+  } catch {
+    return false;
+  }
+}
+
+// Check availability before defining tests - SDK requires opencode binary
+const canRunE2E = await isOpencodeAvailable();
+
+/**
  * Find an available port
  */
 async function findAvailablePort(): Promise<number> {
@@ -29,18 +44,6 @@ async function findAvailablePort(): Promise<number> {
     });
     server.on("error", reject);
   });
-}
-
-/**
- * Check if opencode CLI is available
- */
-async function isOpencodeAvailable(): Promise<boolean> {
-  try {
-    const result = await $`which opencode`.quiet();
-    return result.exitCode === 0;
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -111,18 +114,11 @@ async function cleanupTestProject(): Promise<void> {
   }
 }
 
-describe("OpencodeCoder E2E Tests", () => {
-  let opencodeAvailable = false;
+describe.skipIf(!canRunE2E)("OpencodeCoder E2E Tests", () => {
   let server: { url: string; close: () => void } | null = null;
   let client: OpencodeClient | null = null;
 
   beforeAll(async () => {
-    // Check if opencode is available
-    opencodeAvailable = await isOpencodeAvailable();
-    if (!opencodeAvailable) {
-      throw new Error("E2E tests require opencode CLI to be installed. Install it or skip this test file.");
-    }
-
     // Build plugin if needed
     if (!(await isPluginBuilt())) {
       console.log("Building plugin...");
@@ -174,11 +170,6 @@ describe("OpencodeCoder E2E Tests", () => {
   });
 
   describe("plugin registration", () => {
-    it("should have opencode available", () => {
-      // Sanity check - beforeAll guarantees this
-      expect(opencodeAvailable).toBe(true);
-    });
-
     it("should have server running", () => {
       expect(server).not.toBeNull();
       expect(server?.url).toBeDefined();

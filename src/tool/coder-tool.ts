@@ -86,8 +86,8 @@ Examples:
           return await sessionExportService.formatSessionList();
 
         case "plugin": {
-          const disabled = process.env.OPENCODE_CODER_DISABLED === "true";
-          const debugEnabled = process.env.OPENCODE_CODER_DEBUG === "1";
+          const disabled = process.env["OPENCODE_CODER_DISABLED"] === "true";
+          const debugEnabled = process.env["OPENCODE_CODER_DEBUG"] === "1";
 
           return `Plugin: ${versionInfo.name}
 Version: ${versionInfo.version}
@@ -147,7 +147,7 @@ Directory: ${beadsDir}`;
             logDir = path.join(homeDir, "Library", "Logs", "opencode");
           } else if (platform === "win32") {
             logDir = path.join(
-              process.env.APPDATA || path.join(homeDir, "AppData", "Roaming"),
+              process.env["APPDATA"] || path.join(homeDir, "AppData", "Roaming"),
               "opencode",
               "logs",
             );
@@ -167,7 +167,7 @@ Directory: ${beadsDir}`;
               const sorted = files
                 .map((f) => ({ name: f, mtime: fs.statSync(path.join(logDir, f)).mtime }))
                 .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
-              latestFile = sorted[0].name;
+              latestFile = sorted[0]?.name || "none";
             }
           }
 

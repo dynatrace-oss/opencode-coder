@@ -1,34 +1,14 @@
 # Status & Health Checks
 
-Complete guide for monitoring the health and status of your coder plugin installation.
+Guide for monitoring the health and status of your coder plugin installation.
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Health Check Components](#health-check-components)
-3. [Quick Health Verification](#quick-health-verification)
-4. [Comprehensive Status Check](#comprehensive-status-check)
-5. [Version Checking](#version-checking)
-6. [Regular Maintenance](#regular-maintenance)
-
----
-
-## Overview
-
-Monitor the health and status of your coder plugin installation to ensure all components are working correctly.
-
-### Checking Plugin Status
-
-To view comprehensive plugin status information, including configuration, integrations, and available commands/agents:
-
-```bash
-# Check if plugin is disabled
-echo $OPENCODE_CODER_DISABLED
-# If empty or "false", plugin is active; if "true", plugin is disabled
-
-# Verify beads directory structure
-ls -la .beads/
-```
+1. [Health Check Components](#health-check-components)
+2. [Quick Health Verification](#quick-health-verification)
+3. [Comprehensive Status Check](#comprehensive-status-check)
+4. [Version Checking](#version-checking)
+5. [Regular Maintenance](#regular-maintenance)
 
 ---
 
@@ -40,26 +20,6 @@ A complete health check verifies:
 2. **Beads**: `.beads/` directory exists and `bd doctor` passes
 3. **Git Hooks**: Beads git hooks are properly installed
 4. **Git Sync**: No uncommitted beads changes
-
-### Running a Complete Health Check
-
-```bash
-# Check plugin status
-if [ "$OPENCODE_CODER_DISABLED" = "true" ]; then
-  echo "Plugin: DISABLED"
-else
-  echo "Plugin: ACTIVE"
-fi
-
-# Check beads
-test -d .beads && bd doctor || echo "Beads: NOT INITIALIZED"
-
-# Check git hooks
-test -f .git/hooks/pre-commit && echo "Git hooks: OK" || echo "Git hooks: MISSING"
-
-# Check sync status (if beads initialized)
-bd sync --status
-```
 
 ### Component Status Meanings
 
@@ -77,164 +37,58 @@ bd sync --status
 For a quick check, verify the essential components:
 
 ```bash
-# Verify bd CLI is available
-bd --version
-
-# Verify project is initialized
-ls .beads
-
-# Verify git hooks are installed
-ls .git/hooks/pre-commit
+bd --version                     # CLI available
+ls .beads                        # Project initialized
+ls .git/hooks/pre-commit         # Hooks installed
+bd sync --status                 # Sync status
 ```
 
 ---
 
 ## Comprehensive Status Check
 
-For a complete system status including versions and configuration, run this comprehensive check sequence:
+Use this checklist to verify your installation:
 
+### 1. Plugin Status
 ```bash
-#!/bin/bash
-# Comprehensive Coder Plugin Status Check
-
-echo "=== System Information ==="
-echo "OS: $(uname -s) $(uname -r)"
-echo "Node.js: $(node --version 2>/dev/null || echo 'NOT INSTALLED')"
-echo "npm: $(npm --version 2>/dev/null || echo 'NOT INSTALLED')"
-echo ""
-
-echo "=== Beads CLI Installation ==="
-if command -v bd &> /dev/null; then
-    echo "Status: INSTALLED"
-    echo "Version: $(bd --version 2>&1)"
-    echo "Location: $(which bd)"
-else
-    echo "Status: NOT INSTALLED"
-    echo "Action: Run 'npm install -g beads'"
-fi
-echo ""
-
-echo "=== Plugin Installation ==="
-PLUGIN_PATH="$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder"
-if [ -d "$PLUGIN_PATH" ]; then
-    echo "Status: INSTALLED"
-    if [ -f "$PLUGIN_PATH/package.json" ]; then
-        echo "Version: $(node -p "require('$PLUGIN_PATH/package.json').version" 2>/dev/null || echo 'UNKNOWN')"
-    fi
-    echo "Location: $PLUGIN_PATH"
-else
-    echo "Status: NOT INSTALLED"
-    echo "Action: Plugin is managed by OpenCode. Check ~/.config/opencode/opencode.json"
-fi
-echo ""
-
-echo "=== Beads Initialization ==="
-if [ -d ".beads" ]; then
-    echo "Status: INITIALIZED"
-    if [ -f ".beads/config.json" ]; then
-        echo "Mode: $(node -p "require('./.beads/config.json').mode || 'local'" 2>/dev/null || echo 'local')"
-    else
-        echo "Mode: local (default)"
-    fi
-    echo "Directory: .beads/"
-else
-    echo "Status: NOT INITIALIZED"
-    echo "Action: Run 'bd init'"
-fi
-echo ""
-
-echo "=== Plugin Configuration ==="
-if [ "$OPENCODE_CODER_DISABLED" = "true" ]; then
-    echo "Status: DISABLED"
-    echo "Action: Unset OPENCODE_CODER_DISABLED or set to 'false' to enable"
-else
-    echo "Status: ACTIVE"
-    echo "Plugin is enabled and ready"
-fi
-echo ""
-
-echo "=== Git Hooks Status ==="
-if [ -f ".git/hooks/pre-commit" ]; then
-    echo "pre-commit: INSTALLED"
-    [ -x ".git/hooks/pre-commit" ] && echo "  Executable: YES" || echo "  Executable: NO (run chmod +x)"
-else
-    echo "pre-commit: MISSING"
-fi
-if [ -f ".git/hooks/post-merge" ]; then
-    echo "post-merge: INSTALLED"
-    [ -x ".git/hooks/post-merge" ] && echo "  Executable: YES" || echo "  Executable: NO (run chmod +x)"
-else
-    echo "post-merge: MISSING"
-fi
-if [ ! -f ".git/hooks/pre-commit" ] || [ ! -f ".git/hooks/post-merge" ]; then
-    echo "Action: Run 'bd init' or 'bd doctor' to install hooks"
-fi
-echo ""
-
-echo "=== Sync Status ==="
-if [ -d ".beads" ] && command -v bd &> /dev/null; then
-    bd sync --status 2>&1 | head -n 5
-else
-    echo "Status: N/A (beads not initialized)"
-fi
-echo ""
-
-echo "=== Overall Status ==="
-if [ -d ".beads" ] && [ "$OPENCODE_CODER_DISABLED" != "true" ] && [ -f ".git/hooks/pre-commit" ] && command -v bd &> /dev/null; then
-    echo "✓ System is fully configured and ready"
-else
-    echo "⚠ Some components are missing or not configured"
-    echo "Review the sections above for required actions"
-fi
+echo $OPENCODE_CODER_DISABLED    # Should be empty or "false"
 ```
 
-**Save this script** as a shell script and run it to check comprehensive status.
-
-### Example Output
-
+### 2. Beads CLI
+```bash
+bd --version                     # Should show version
+which bd                         # Shows install location
 ```
-=== System Information ===
-OS: Linux 5.15.0
-Node.js: v20.11.0
-npm: 10.2.4
 
-=== Beads CLI Installation ===
-Status: INSTALLED
-Version: 0.5.2
-Location: /usr/local/bin/bd
+### 3. Beads Initialization
+```bash
+ls -la .beads/                   # Should exist
+bd doctor                        # Should pass
+```
 
-=== Plugin Installation ===
-Status: INSTALLED
-Version: 1.2.0
-Location: /usr/local/lib/node_modules/opencode-coder
+### 4. Git Hooks
+```bash
+ls -la .git/hooks/pre-commit     # Should exist and be executable
+ls -la .git/hooks/post-merge     # Should exist and be executable
+```
+If missing: `bd hooks install`
 
-=== Beads Initialization ===
-Status: INITIALIZED
-Mode: local
-Directory: .beads/
+### 5. Sync Status
+```bash
+bd sync --status                 # Should show no uncommitted changes
+```
 
-=== Plugin Configuration ===
-Status: ACTIVE
-Plugin is enabled and ready
-
-=== Git Hooks Status ===
-pre-commit: INSTALLED
-  Executable: YES
-post-merge: INSTALLED
-  Executable: YES
-
-=== Sync Status ===
-✓ No uncommitted changes
-
-=== Overall Status ===
-✓ System is fully configured and ready
+### 6. System Requirements
+```bash
+node --version                   # Node.js 18+ required
+npm --version                    # npm available
 ```
 
 ---
 
 ## Version Checking
 
-Check individual component versions:
+### Check Installed Versions
 
 ```bash
 # Beads CLI version
@@ -246,22 +100,11 @@ node --version
 # npm version
 npm --version
 
-# Check installed OpenCode plugins
-ls -la ~/.cache/opencode/node_modules/@hk9890/
-
-# Plugin version
-cat ~/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json | grep version
-
-# Or with node
-node -p "require('$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json').version"
-
-# Check configured plugins
+# Check configured plugins in OpenCode config
 cat ~/.config/opencode/opencode.json | grep -A5 '"plugin"'
 ```
 
-### Troubleshooting Version Issues
-
-**Problem: Wrong beads version installed**
+### Update Beads
 
 ```bash
 # Check current version
@@ -277,59 +120,24 @@ npm install -g beads@0.5.2
 bd --version
 ```
 
-**Problem: Wrong plugin version installed**
+### Troubleshooting Version Issues
 
-```bash
-# Plugins are automatically managed by OpenCode
-# To use a different version, update opencode.json:
-# "plugin": ["@hk9890/opencode-coder@1.2.0"]
-
-# Then restart OpenCode to trigger reinstallation
-# Or clear cache and restart:
-rm -rf ~/.cache/opencode/node_modules/@hk9890/opencode-coder
-# OpenCode will reinstall on next startup
+**Wrong plugin version**: Update `opencode.json` to specify version:
+```json
+"plugin": ["@hk9890/opencode-coder@1.2.0"]
 ```
+Then restart OpenCode.
 
-**Problem: Version mismatch between beads and plugin**
-
-The plugin may require specific beads versions. Check compatibility:
-
+**Node.js too old**: Plugin requires Node.js 18+
 ```bash
-# Check plugin's beads dependency
-node -p "require('$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json').peerDependencies"
-
-# Update beads CLI if needed
-npm update -g beads
-
-# Note: Plugin updates are managed by OpenCode based on opencode.json
-
-# Verify versions match requirements
-bd --version
-cat ~/.cache/opencode/node_modules/@hk9890/opencode-coder/package.json | grep version
-```
-
-**Problem: Node.js version too old**
-
-```bash
-# Check current version
-node --version
-
-# Plugin requires Node.js 18+
-# Update using your Node version manager (nvm, n, etc.)
-
 # With nvm:
 nvm install 20
 nvm use 20
-
-# Verify
-node --version
 ```
 
 ---
 
 ## Regular Maintenance
-
-Perform these checks regularly:
 
 **Daily (when active):**
 - Check for uncommitted changes: `bd sync --status`
@@ -339,6 +147,6 @@ Perform these checks regularly:
 - Check for beads updates: `npm outdated -g beads`
 
 **After Updates:**
-- Run full health check after updating beads
+- Run quick health check
 - Verify configuration is still valid
 - Test basic commands (`bd ready`, `bd list`)

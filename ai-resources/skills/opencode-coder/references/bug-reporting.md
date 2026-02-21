@@ -8,6 +8,8 @@ Complete guide for reporting bugs and issues with the opencode-coder plugin.
 2. [Before Reporting](#before-reporting)
 3. [Information to Include](#information-to-include)
 4. [Creating a GitHub Issue](#creating-a-github-issue)
+   - [Collecting System Information](#collecting-system-information)
+   - [Session Export](#session-export)
 5. [Issue Classification](#issue-classification)
 6. [Getting Help](#getting-help)
 
@@ -71,6 +73,8 @@ Issues should be reported to: https://github.com/hk9890/opencode-coder
 
 A structured template is available at [`assets/bug-report-template.md`](../assets/bug-report-template.md) to help you include all necessary information.
 
+> **Tip**: For complex issues that are hard to reproduce, consider including a session export (see Session Export section below) to provide full context of what happened.
+
 ### Collecting System Information
 
 **Automated Collection:**
@@ -91,6 +95,19 @@ This script collects:
 - Beads health check output (if applicable)
 
 Copy the output and paste it into the Environment section of your bug report.
+
+**AI-Assisted Collection:**
+
+When working with an AI assistant that has the opencode-coder plugin loaded, you can use the `coder` tool to collect information:
+
+```
+coder("version")   # Plugin version and build info
+coder("plugin")    # Plugin loading status and configuration
+coder("beads")     # Beads configuration and .beads/ status
+coder("logs")      # Log directory location and available logs
+```
+
+The assistant can include this information directly in your bug report.
 
 **Manual Collection:**
 
@@ -116,6 +133,49 @@ echo $SHELL
 # bd health check (if using beads)
 bd doctor
 ```
+
+### Session Export
+
+For complex issues that are hard to reproduce or describe, you can export your entire session. This captures all messages, tool calls, and file changes made during the session.
+
+**When to use session export:**
+- Issue is hard to reproduce manually
+- Multiple steps or interactions led to the problem
+- You need to show exactly what happened, not just describe it
+- The AI assistant made unexpected decisions
+
+**How to export:**
+
+Ask your AI assistant to export the session:
+
+```
+coder("session")                                    # Get current session ID
+coder("session-export private/session-dump/<id>")  # Export to private directory
+```
+
+The export creates a `session.json` file containing:
+- All messages exchanged during the session
+- Every tool call and its result
+- Token usage and cost information
+- File diffs showing changes made
+
+**Privacy considerations:**
+
+> **Important**: Review the exported session data before sharing. The export may contain:
+> - File contents from your project
+> - Environment information
+> - Paths and directory structures
+> - Any sensitive data discussed in the session
+>
+> Sanitize or redact sensitive information before attaching to a bug report.
+
+**Including in your report:**
+
+For issues reported via GitHub:
+1. Export the session to a private directory
+2. Review the JSON for sensitive data
+3. Either attach the file or include relevant excerpts
+4. Reference the session in your bug report description
 
 ### Quick Report Pattern
 
@@ -179,6 +239,32 @@ cp ai-resources/skills/using-coder-plugin/assets/bug-report-template.md /tmp/bug
 gh issue create --repo hk9890/opencode-coder \
   --title "[component] Short description" \
   --body-file /tmp/bug-report.md
+```
+
+**With Session Export (for complex issues):**
+
+If the issue is hard to reproduce or involves complex AI assistant interactions:
+
+```bash
+# Ask the AI assistant to export the session first:
+# coder("session-export private/session-dump/<session-id>")
+
+# Review and sanitize the export
+# Then include in your bug report
+
+gh issue create --repo hk9890/opencode-coder \
+  --title "[component] Short description" \
+  --body "$(cat <<'EOF'
+## Problem
+[Description of the issue]
+
+## Session Export
+A session export is attached showing the full interaction.
+See: private/session-dump/<session-id>/session.json
+
+[Include relevant excerpts or attach the file]
+EOF
+)"
 ```
 
 **Complete Example:**

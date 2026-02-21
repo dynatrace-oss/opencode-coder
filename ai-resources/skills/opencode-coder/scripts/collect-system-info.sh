@@ -1,101 +1,40 @@
 #!/usr/bin/env bash
 # collect-system-info.sh
 # Collects system information for bug reports
+# Note: AI assistants use the coder tool instead for richer information
 
 set -euo pipefail
 
-echo "=== OpenCode Coder Plugin - System Information ==="
+echo "=== System Information ==="
 echo ""
 
-# Operating System
-echo "Operating System:"
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        echo "  $NAME $VERSION"
-    else
-        echo "  Linux (unknown distribution)"
-    fi
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "  macOS $(sw_vers -productVersion)"
-elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
-    echo "  Windows"
-else
-    echo "  Unknown: $OSTYPE"
-fi
-echo ""
+# OS Info
+echo "Operating System: $(uname -s) $(uname -r)"
 
-# Node.js version
-echo "Node.js Version:"
-if command -v node &> /dev/null; then
-    echo "  $(node --version)"
-else
-    echo "  NOT FOUND"
-fi
-echo ""
+# Node.js
+echo "Node.js: $(node --version 2>/dev/null || echo 'NOT FOUND')"
 
-# npm version
-echo "npm Version:"
-if command -v npm &> /dev/null; then
-    echo "  $(npm --version)"
-else
-    echo "  NOT FOUND"
-fi
-echo ""
+# npm
+echo "npm: $(npm --version 2>/dev/null || echo 'NOT FOUND')"
 
-# bd CLI version
-echo "bd CLI Version:"
-if command -v bd &> /dev/null; then
-    bd --version 2>&1 | sed 's/^/  /'
-else
-    echo "  NOT FOUND"
-fi
-echo ""
-
-# Plugin version
-echo "Plugin Version:"
-if [ -f "package.json" ]; then
-    if command -v jq &> /dev/null; then
-        version=$(jq -r '.dependencies["opencode-coder"] // .devDependencies["opencode-coder"] // "NOT FOUND"' package.json)
-        echo "  $version"
-    else
-        # Fallback without jq
-        grep -A1 '"opencode-coder"' package.json | grep -oP '"\K[^"]+(?=")' | tail -1 || echo "  NOT FOUND (install jq for better detection)"
-    fi
-else
-    echo "  NOT FOUND (no package.json in current directory)"
-fi
-echo ""
-
-# Shell
-echo "Shell:"
-echo "  $SHELL"
-echo ""
+# bd CLI
+echo "bd CLI: $(bd --version 2>&1 || echo 'NOT FOUND')"
 
 # Current directory
-echo "Current Directory:"
-echo "  $(pwd)"
-echo ""
+echo "Working Directory: $(pwd)"
 
-# Git status (if in a git repo)
-if git rev-parse --git-dir > /dev/null 2>&1; then
-    echo "Git Repository:"
-    echo "  Branch: $(git rev-parse --abbrev-ref HEAD)"
-    echo "  Commit: $(git rev-parse --short HEAD)"
-    echo ""
-fi
-
-# Check if .beads directory exists
+# Beads status
 if [ -d ".beads" ]; then
-    echo "Beads Status:"
-    echo "  .beads directory exists: YES"
-    if command -v bd &> /dev/null; then
-        echo "  bd doctor output:"
-        bd doctor 2>&1 | sed 's/^/    /' || echo "    (bd doctor failed)"
-    fi
-    echo ""
+    echo "Beads: initialized"
+    echo "  Mode: $(cat .beads/config.yaml 2>/dev/null | grep mode || echo 'unknown')"
+    echo "  Doctor output:"
+    bd doctor 2>&1 | head -5 | sed 's/^/    /' || true
+else
+    echo "Beads: not initialized"
 fi
 
-echo "=== End System Information ==="
 echo ""
-echo "Copy the above information into your bug report."
+echo "=== End ==="
+echo ""
+echo "Note: For AI-assisted bug reports, the assistant uses the coder tool"
+echo "which provides more detailed information automatically."

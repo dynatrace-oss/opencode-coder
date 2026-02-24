@@ -4,32 +4,76 @@ description: Initialize project for opencode-coder plugin
 
 # Initialize Coder Project
 
-Load the opencode-coder skill to initialize the current project for use with the coder plugin.
+Complete project setup: skill discovery, beads initialization, and AGENTS.md creation.
 
 ## Task
 
-Use the skill tool to load comprehensive initialization guidance:
+Load the opencode-coder skill for detailed guidance:
 
 ```
 skill({ name: "opencode-coder" })
 ```
 
-Then follow the **Installation & Setup** section to:
+Follow the **Installation & Setup** section which has three main steps:
+
+### Step 1: Skill Discovery
+
+Analyze the project and suggest relevant skills:
+1. Check if aimgr is available (`aimgr --version`)
+2. Detect project type (package.json, file structure)
+3. Search for relevant skills based on project type
+
+**MANDATORY USER INTERACTION POINT - STOP HERE**
+
+4. MUST use the `question()` tool to present skill options to the user:
+   - Present 3-5 most relevant skill suggestions as options
+   - Include descriptions for each skill
+   - Allow multiple selections
+   - DO NOT proceed until user responds
+
+5. Install ONLY user-selected skills - DO NOT auto-install
+
+See skill for keyword search patterns by use case.
+
+### Step 2: Beads Initialization
+
+Initialize beads for issue tracking:
 1. Verify prerequisites (git, bd CLI)
-2. Prompt user for beads mode (stealth or team)
-3. Run appropriate beads initialization
-4. Handle git exclusions based on mode
-5. Report what was created/configured
+2. Check if beads is already initialized (`bd status`)
 
-The skill provides detailed initialization procedures including:
-- Stealth vs team mode selection
-- File structure explanations
-- Idempotent behavior handling
-- Next steps guidance
+**MANDATORY USER INTERACTION POINT - STOP HERE (if not initialized)**
 
-## AI Resource Discovery (Optional but Recommended)
+3. If beads is NOT initialized, MUST use the `question()` tool to ask:
+   - "Which beads mode would you like to use?"
+   - Options: "stealth" (local-only, gitignored) and "team" (shared with team)
+   - DO NOT proceed until user selects a mode
 
-After beads initialization is complete, offer to discover and install relevant AI resources using aimgr.
+4. Run beads initialization with hooks using the selected mode
+5. Handle git exclusions based on mode
+
+### Step 3: AGENTS.md Creation
+
+Generate or update AGENTS.md based on installed skills:
+
+1. **Check for helper skills** - Look for AGENTS.md generation skills first (e.g., fix-documentation skill)
+   - If a helper skill exists, load it and follow its workflow instead
+   
+2. **Determine mode** - Create if doesn't exist, update if exists (no prompting)
+3. **Analyze codebase** - Gather project info (name, build commands, conventions)
+4. **Detect sections** - Only include sections where relevant skill/tool is installed
+5. **Generate AGENTS.md** - Use generic skill references, target ~150 lines
+6. **Verify** - Ensure all commands valid and paths exist
+
+**Key principle**: AGENTS.md adapts to installed skills - sections like "Releases" only appear if a release skill is installed.
+
+## Optional: Additional Resource Discovery
+
+**MANDATORY USER INTERACTION POINT - STOP HERE**
+
+Before proceeding with additional discovery, MUST use the `question()` tool to ask:
+- "Would you like to discover additional AI resources for your project?"
+- Options: "Yes, discover more resources" and "No, initialization is complete"
+- DO NOT proceed with discovery unless user explicitly selects yes
 
 ### Step 1: Check if aimgr is available
 
@@ -82,23 +126,22 @@ aimgr repo list *react* *component* *ui* *frontend*
 
 ### Step 3: Present discovered resources
 
-Display the discovered resources in a user-friendly format:
+**MANDATORY USER INTERACTION POINT - STOP HERE**
 
-> **Discovered AI Resources for your React project:**
-> 
-> **Skills:**
-> - `skill/react-component-builder` - Build React components with best practices
-> - `skill/frontend-testing` - Testing toolkit for React apps
-> 
-> **Commands:**
-> - `command/create-component` - Scaffold new React components
-> - `command/optimize-bundle` - Analyze and optimize bundle size
-> 
-> Would you like to install any of these resources?
+MUST use the `question()` tool to present discovered resources:
+- List each discovered resource as a selectable option with description
+- Allow multiple selections
+- Include a "Skip - don't install any" option
+- DO NOT proceed until user responds
 
-### Step 4: Offer installation
+Example format for question options:
+- `skill/react-component-builder` - "Build React components with best practices"
+- `skill/frontend-testing` - "Testing toolkit for React apps"
+- `command/create-component` - "Scaffold new React components"
 
-If the user selects resources to install, use aimgr install:
+### Step 4: Install selected resources
+
+Install ONLY user-selected resources using aimgr:
 
 ```bash
 aimgr install skill/react-component-builder command/create-component
@@ -112,28 +155,57 @@ aimgr install skill/react-component-builder command/create-component
 
 ### Step 5: Report completion
 
-After installation (or if skipped), summarize what was done:
+Summarize the full initialization:
 
 > **Initialization Complete!**
 > 
+> ✓ Skills discovered and installed: 2 (release, task-sync)
 > ✓ Beads initialized in stealth mode
 > ✓ Git hooks installed
-> ✓ AI resources discovered and installed:
->   - skill/react-component-builder
->   - command/create-component
+> ✓ AGENTS.md created with 5 sections (adapted to installed skills)
+> ✓ Additional AI resources installed: 1 (react-component-builder)
 > 
 > **Next steps:**
 > - Run `bd ready` to find available work
 > - Run `bd create "Task description" --type task` to create new issues
-> - Explore installed resources with `aimgr list`
+> - Review AGENTS.md for project conventions
+> - Re-run `/init` after installing new skills to update AGENTS.md
 
 ## Guidelines for Agents
 
-- **Make aimgr discovery optional**: Ask the user if they want to discover resources
-- **Be intelligent about keywords**: Use project context to choose relevant search terms
-- **Don't overwhelm**: Present 3-5 most relevant resources, not dozens
-- **Allow selection**: Let user choose which resources to install
-- **Handle missing aimgr gracefully**: Inform but don't fail initialization
-- **Combine searches**: Use multiple keywords to find relevant resources (e.g., `*react* *test*`)
-- **Explain benefits**: Briefly describe what each resource does
-- **Skip if no matches**: If no relevant resources found, inform user and move on
+### CRITICAL: User Interaction Requirements
+
+- **NEVER proceed autonomously past a checkpoint** - STOP and WAIT for user response
+- **MUST use `question()` tool** at every marked interaction point
+- **DO NOT make decisions for the user** - present options and wait
+- **DO NOT skip interaction points** even if you think you know the answer
+
+### Workflow Rules
+
+- **Follow the 3-step workflow**: Skill discovery → Beads init → AGENTS.md creation
+- **AGENTS.md is skill-aware**: Sections adapt to what's installed
+- **Use generic language**: Don't hardcode skill names in AGENTS.md
+- **Additional discovery is OPT-IN**: MUST ask before proceeding
+- **Don't overwhelm**: Present 3-5 most relevant resources as options
+- **Handle missing tools gracefully**: Continue if aimgr not installed
+- **Re-running is safe**: /init can be re-run to update AGENTS.md after changes
+
+### Using the question() Tool
+
+At each **MANDATORY USER INTERACTION POINT**, structure your question call like:
+
+```
+question({
+  questions: [{
+    header: "Brief header",
+    question: "Full question text",
+    options: [
+      { label: "Option 1", description: "What this does" },
+      { label: "Option 2", description: "What this does" }
+    ],
+    multiple: true/false  // as appropriate
+  }]
+})
+```
+
+WAIT for the response before taking any further action.

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-02-24
+
+### Added
+
+- **New template**: AGENTS.md template file for project initialization
+
+### Changed
+
+- **AGENTS.md**: Complete rewrite with comprehensive coding conventions, build/test commands, directory structure, code style guidelines, async patterns, error handling, and naming conventions
+- **Enhanced /init command**: Enhanced with 3-step workflow — skill discovery → beads init → AGENTS.md creation, with mandatory user interaction points
+- **Enhanced opencode-coder skill**: Step-by-step init workflow with project type detection and framework analysis
+
 ## [0.26.1] - 2026-02-17
 
 ### Added

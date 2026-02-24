@@ -84,7 +84,11 @@ jobs:
       - name: Commit version bump
         run: |
           git add package.json
-          git commit -m "release: v${{ inputs.version }}"
+          if git diff --cached --quiet; then
+            echo "Version already at ${{ inputs.version }}, nothing to commit"
+          else
+            git commit -m "release: v${{ inputs.version }}"
+          fi
 
       - name: Create and push tag
         run: |

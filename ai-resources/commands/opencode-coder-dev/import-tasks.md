@@ -14,4 +14,4 @@ Import GitHub issues (excluding bugs) into beads for triage.
 4. Follow task-sync import workflow (dedupe, map metadata, add `source:external`)
 5. Result: Non-bug issues imported for triage and planning
 
-Use `/internal/fix-bugs` for importing bugs instead.
+Use `/opencode-coder-dev fix-bugs` for importing bugs instead.

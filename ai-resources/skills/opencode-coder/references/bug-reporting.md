@@ -228,7 +228,7 @@ For complex issues requiring logs, reproduction steps, or additional context:
 
 ```bash
 # Copy the template
-cp ai-resources/skills/opencode-coder/assets/bug-report-template.md /tmp/bug-report.md
+cp ../assets/bug-report-template.md /tmp/bug-report.md
 
 # Collect system info
 ./scripts/collect-system-info.sh > /tmp/system-info.txt

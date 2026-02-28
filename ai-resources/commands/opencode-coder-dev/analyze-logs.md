@@ -198,7 +198,7 @@ Error detected in OpenCode logs during session analysis.
 ```
 
 ## Notes
-This bug was automatically created by /internal/analyze-logs from log analysis.
+This bug was automatically created by /opencode-coder-dev analyze-logs from log analysis.
 BUGEOF
 ```
 
@@ -266,7 +266,7 @@ Make sure you're in the opencode-coder project root and run:
 If no log sessions exist:
 ```
 No log sessions found. OpenCode may not have generated logs yet.
-Try running some commands first, then re-run /internal/analyze-logs.
+Try running some commands first, then re-run /opencode-coder-dev analyze-logs.
 ```
 
 ### bd CLI Errors

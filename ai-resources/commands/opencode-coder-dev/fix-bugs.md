@@ -16,4 +16,4 @@ Import GitHub bugs into beads, triage by priority, and coordinate fixes.
 6. For P0/P1 bugs with `source:external`: create post-mortem tasks
 7. Coordinate fixes: spawn task agents for high-priority bugs
 
-Use `/internal/import-tasks` for non-bug issues.
+Use `/opencode-coder-dev import-tasks` for non-bug issues.

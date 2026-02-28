@@ -85,7 +85,7 @@ Present information in a clean, readable format with sections and status indicat
 
 For complete bash command examples, troubleshooting, and a ready-to-use status script, see:
 
-**Skill Reference**: Load the `opencode-coder` skill and refer to `references/status-checks-reference.md`
+**Skill Reference**: Load the `opencode-coder` skill and refer to `references/status-health.md`
 
 ## Example Output Format
 

@@ -17,4 +17,4 @@ Reference hub for the opencode-coder plugin. Load specific documents based on wh
 | Check system/plugin health | [references/status-health.md](references/status-health.md) |
 | Report a plugin bug | [references/bug-reporting.md](references/bug-reporting.md) |
 | Troubleshoot common problems | [references/troubleshooting-patterns.md](references/troubleshooting-patterns.md) |
-| Generate or update AGENTS.md | [references/agents-md-template.md](references/age****nts-md-template.md) |
+| Generate or update AGENTS.md | [references/agents-md-template.md](references/agents-md-template.md) |

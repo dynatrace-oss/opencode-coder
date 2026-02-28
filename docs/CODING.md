@@ -45,60 +45,23 @@ export type { Frontmatter, ParsedDocument } from "./parser";
 - Export both values AND types explicitly
 - Keep implementation details private (not exported)
 
-## 3. Test Structure
+## 3. Unit Testing
 
-### Three Test Levels
+One test file per source module (e.g., `config.test.ts` → `src/config/`):
 
-```
-tests/
-├── unit/          # Fast, isolated tests with mocks
-├── integration/   # Tests with real dependencies
-├── e2e/           # Full plugin tests with opencode
-├── helpers/       # Shared test utilities
-│   ├── mock-client.ts
-│   └── mock-logger.ts
-└── fixtures/      # Test data files
-    ├── configs/   # JSON config fixtures
-    └── markdown/  # Command/agent fixtures
-```
-
-### Unit Tests (`tests/unit/`)
-
-- One test file per source module (e.g., `config.test.ts` → `src/config/`)
 - Use mocks via helpers (`createMockLogger`, `createMockPluginInput`)
 - Test edge cases and error handling
 - Fast, no external dependencies
 
-### Integration Tests (`tests/integration/`)
-
-- Test real component interactions
-- Uses actual knowledge-base files
-- Verifies config merging, command loading
-
-### E2E Tests (`tests/e2e/`)
-
-- Requires built plugin (`dist/opencode-coder.js`)
-- Requires opencode CLI installed
-- Tests full plugin lifecycle with real opencode server
-
-### Test Helpers (`tests/helpers/`)
-
-- `mock-logger.ts` - Logger with assertion helpers (`hasLogged()`)
-- `mock-client.ts` - OpenCode client mock
-
-### Test Fixtures (`tests/fixtures/`)
-
-- Real file fixtures for testing loaders
-- Organized by type (configs, markdown)
-
-## 4. Running Tests
-
 ```bash
-bun test                    # All tests
-bun run test:unit           # Unit tests only
-bun run test:integration    # Integration tests
-bun run test:e2e            # E2E tests (requires build + opencode)
+bun test                                # All tests
+bun test tests/unit                     # Unit tests only
+bun test tests/unit/parser.test.ts      # Single test file
+bun test --test-name-pattern "pattern"  # Pattern match
 ```
+
+For integration tests, e2e tests, fixtures, and test helpers, see [TESTING.md](TESTING.md).
+
 
 ## AimgrService
 

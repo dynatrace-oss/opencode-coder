@@ -68,7 +68,7 @@ Project-specific commands and configuration that are NOT published:
 
 ## Coding Guidelines
 
-For detailed architecture patterns and conventions, see [`docs/coding-guidelines.md`](docs/coding-guidelines.md).
+For detailed architecture patterns and conventions, see [`docs/CODING.md`](docs/CODING.md).
 
 ### Key Patterns
 

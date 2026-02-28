@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-02-28
+
+### Added
+
+- **opencode-coder-dev skill**: New internal skill separating developer-facing content from the public opencode-coder skill
+- **Project context discovery**: All agents now discover and use project-specific context automatically
+
+### Changed
+
+- **Agent architecture**: Redesigned to 4 focused agents (orchestrator, reviewer, tasker, verifier); skill serves as reference hub
+- **AI resources consolidation**: Slimmed skill, inlined CLI reference, promoted /init command
+- **AGENTS.md**: Rewritten as a routing table; coding guidelines moved to CODING.md; TESTING.md added
+- **ai-resources template**: Slimmed down template, added update-agent-md command, fixed package list
+
+### Fixed
+
+- **Skill links**: Repaired broken links in opencode-coder and opencode-coder-dev skills
+- **JSON blocks**: Fixed invalid JSON blocks in bitbucket-pr skill; added orphaned reference link in github-releases skill
+- **Cross-skill references**: Replaced hard-coded skill name references with capability descriptions
+
+### Removed
+
+- **Beads injection machinery**: Removed BeadsContext and KnowledgeBaseService; simplified beads integration
+
 ## [0.28.0] - 2026-02-24
 
 ### Added

@@ -274,7 +274,7 @@ gh issue create --repo hk9890/opencode-coder \
   --title "[agent] Task agent creates duplicate commits" \
   --body "$(cat <<'EOF'
 ## Problem
-The beads-task-agent is creating duplicate git commits when closing tasks, resulting in redundant commit history.
+The tasker agent is creating duplicate git commits when closing tasks, resulting in redundant commit history.
 
 ## Expected Behavior
 Task agent should create a single commit when closing a task, following the git safety protocol.

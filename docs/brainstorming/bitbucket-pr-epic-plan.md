@@ -675,7 +675,7 @@ Final verification that the Bitbucket PR skill is complete and ready for use.
 - [ ] No critical bugs or issues
 - [ ] User approves final skill
 
-**Owner**: beads-verify-agent
+**Owner**: verifier
 
 ---
 

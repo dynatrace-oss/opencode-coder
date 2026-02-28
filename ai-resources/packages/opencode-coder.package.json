@@ -1,7 +1,11 @@
 {
   "name": "opencode-coder",
-  "description": "Complete opencode-coder plugin toolkit - all commands and skills for installation, troubleshooting, health checks, bug reporting, and managing the beads workflow system",
+  "description": "Complete opencode-coder plugin toolkit - agents, commands, and skills for beads workflow, installation, troubleshooting, health checks, and bug reporting",
   "resources": [
+    "agent/orchestrator",
+    "agent/reviewer",
+    "agent/tasker",
+    "agent/verifier",
     "command/opencode-coder/doctor",
     "command/opencode-coder/init",
     "command/opencode-coder/install",

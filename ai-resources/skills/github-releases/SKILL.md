@@ -21,11 +21,11 @@ bash scripts/create-release-tasks.sh <version>
 # Validate TODOs filled
 bash scripts/validate-release-tasks.sh <epic-id>
 
-# 4. Spawn beads-review-agent to review
+# 4. Spawn reviewer to review
 
-# 5. Spawn beads-task-agent for each ready task
+# 5. Spawn tasker for each ready task
 
-# 6. Spawn beads-verify-agent to verify
+# 6. Spawn verifier to verify
 ```
 
 ## Filling TODOs

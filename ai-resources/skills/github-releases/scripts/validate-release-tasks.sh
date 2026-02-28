@@ -84,7 +84,7 @@ else
     echo "✅ VALIDATION PASSED"
     echo ""
     echo "All tasks ready for execution."
-    echo "Next: Review plan with beads-review-agent"
+    echo "Next: Review plan with reviewer agent"
     echo ""
     exit 0
 fi

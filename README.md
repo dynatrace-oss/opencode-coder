@@ -179,10 +179,10 @@ For detailed workflow documentation, see the skills at `ai-resources/skills/task
 
 | Agent | Role |
 |-------|------|
-| `beads-planner-agent` | Planning, structure, orchestration - creates epics and tasks, delegates implementation |
-| `beads-review-agent` | Reviews plans and structure (not code) |
-| `beads-task-agent` | Implements tasks and closes them when complete |
-| `beads-verify-agent` | Verifies outcomes and owns acceptance gates |
+| `orchestrator` | Planning, structure, orchestration - creates epics and tasks, delegates implementation |
+| `reviewer` | Reviews plans and structure (not code) |
+| `tasker` | Implements tasks and closes them when complete |
+| `verifier` | Verifies outcomes and owns acceptance gates |
 
 ### Workflow
 

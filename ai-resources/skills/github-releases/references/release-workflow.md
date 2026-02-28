@@ -21,14 +21,14 @@ Read `docs/RELEASING.md` and replace TODO markers with project-specific commands
 ## 4. Review
 
 ```
-Task(subagent_type: "beads-review-agent", 
+Task(subagent_type: "reviewer", 
      prompt: "Review release structure for v<version>")
 ```
 
 ## 5. Execute
 
 ```
-Task(subagent_type: "beads-task-agent",
+Task(subagent_type: "tasker",
      prompt: "Execute task <id>")
 ```
 
@@ -37,7 +37,7 @@ Repeat for each ready task.
 ## 6. Verify
 
 ```
-Task(subagent_type: "beads-verify-agent",
+Task(subagent_type: "verifier",
      prompt: "Verify task <id>")
 ```
 

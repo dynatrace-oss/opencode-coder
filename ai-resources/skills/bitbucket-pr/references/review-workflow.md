@@ -142,7 +142,7 @@ explicitly in feedback messages (e.g. "per CONTRIBUTING.md §3: …").
 
 This is the JSON the agent must produce and pipe to `review-pr.sh post`:
 
-```json
+```jsonc
 {
   "summary": "string — overall review assessment (required)",
   "items": [
@@ -284,9 +284,7 @@ Base URL: `https://bitbucket.lab.dynatrace.org/rest/api/1.0`
 
 ```json
 {
-  "text": "🔴 **ERROR** · `security`\n\nThis token is logged to stdout,
-           exposing it in CI logs.\n\n**Suggestion:** Use `logger.debug()`
-           with a redacted token or remove the log statement.",
+  "text": "🔴 **ERROR** · `security`\n\nThis token is logged to stdout, exposing it in CI logs.\n\n**Suggestion:** Use `logger.debug()` with a redacted token or remove the log statement.",
   "anchor": {
     "line": 42,
     "lineType": "ADDED",

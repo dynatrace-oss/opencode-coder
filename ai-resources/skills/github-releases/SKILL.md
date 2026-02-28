@@ -48,3 +48,4 @@ Read `docs/RELEASING.md` and replace TODO markers with actual project commands.
 - [version-management.md](references/version-management.md) — Semver guide
 - [release-notes-guide.md](references/release-notes-guide.md) — Writing notes
 - [troubleshooting.md](references/troubleshooting.md) — Common issues
+- [setup-modify-release-workflow.md](references/setup-modify-release-workflow.md) — Setup and customize release workflow

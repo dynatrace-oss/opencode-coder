@@ -48,20 +48,16 @@ question({
 
 Check which backend skills are available:
 
-- Look for `github-task-sync` skill
-- Look for `jira-task-sync` skill (future)
-- Look for other task system skills
+- Look for a skill that syncs with GitHub Issues
+- Look for a skill that syncs with Jira (future)
+- Look for other task system sync skills
 
 If exactly one backend available → use it automatically
 If multiple backends available OR none → ask user which system to sync with
 
 ### 3. Load Backend Skill
 
-Load the appropriate backend skill using skill tool:
-
-```
-skill({ name: "github-task-sync" })
-```
+Load the appropriate backend skill for the detected task system using the skill tool.
 
 Pass context about sync direction to backend. Backend follows workflows defined in reference files.
 

@@ -2,7 +2,7 @@
 
 **YOU MUST follow the rules in the documentation skill if available.**
 
-Load a documentation skill (e.g., `fix-documentation`) to automate these checks. Only use manual validation if no skill is available.
+Load a skill that fixes and validates documentation to automate these checks. Only use manual validation if no skill is available.
 
 ## Version Consistency
 

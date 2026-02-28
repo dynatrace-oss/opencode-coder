@@ -196,4 +196,4 @@ Or remove them from your shell configuration file.
 
 ---
 
-> **Plugin developers**: For the log analyzer CLI tool (`bun run scripts/log-analyzer`), load the `opencode-coder-dev` skill.
+> **Plugin developers**: For the log analyzer CLI tool (`bun run scripts/log-analyzer`), load the internal plugin development skill.

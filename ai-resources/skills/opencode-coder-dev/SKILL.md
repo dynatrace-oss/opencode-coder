@@ -12,7 +12,7 @@ Internal dev reference hub for the opencode-coder plugin repository. Load specif
 | Need | Load |
 |------|------|
 | Analyze OpenCode log files | [references/log-analyzer.md](references/log-analyzer.md) |
-| Release a new plugin version | `docs/RELEASING.md` + `github-releases` skill |
+| Release a new plugin version | `docs/RELEASING.md` + a GitHub release workflow skill |
 | Import bugs from GitHub issues | Run `/opencode-coder-dev import-tasks` command |
 | Fix and triage open bugs | Run `/opencode-coder-dev fix-bugs` command |
 

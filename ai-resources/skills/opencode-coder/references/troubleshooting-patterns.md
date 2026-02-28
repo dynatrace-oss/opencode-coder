@@ -284,7 +284,7 @@ dir $env:APPDATA\opencode\logs\
 
 **Root Cause**: Log location varies by operating system.
 
-**Tip**: Load the `opencode-coder-dev` skill to parse logs efficiently using its log-analyzer reference.
+**Tip**: Load the internal plugin development skill to parse logs efficiently using its log-analyzer reference.
 
 ---
 
@@ -433,7 +433,7 @@ unset OPENCODE_DEFAULT_OPTIONS
 
 If your issue isn't covered here:
 
-1. **Enable debug logging** and examine logs by loading the `opencode-coder-dev` skill
+1. **Enable debug logging** and examine logs by loading the internal plugin development skill
 2. **Run health checks**: `bd doctor` and `bd sync --status`
 3. **Search existing issues**: https://github.com/hk9890/opencode-coder/issues
 4. **Create a discussion**: https://github.com/hk9890/opencode-coder/discussions

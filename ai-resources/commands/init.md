@@ -53,18 +53,13 @@ Initialize beads for issue tracking:
 
 ### Step 3: AGENTS.md Creation
 
-Generate or update AGENTS.md based on installed skills:
+Generate or update AGENTS.md using the template:
 
-1. **Check for helper skills** - Look for AGENTS.md generation skills first (e.g., fix-documentation skill)
-   - If a helper skill exists, load it and follow its workflow instead
-   
-2. **Determine mode** - Create if doesn't exist, update if exists (no prompting)
-3. **Analyze codebase** - Gather project info (name, build commands, conventions)
-4. **Detect sections** - Only include sections where relevant skill/tool is installed
-5. **Generate AGENTS.md** - Use generic skill references, target ~150 lines
-6. **Verify** - Ensure all commands valid and paths exist
+1. Load the `opencode-coder` skill and read `references/agents-md-template.md`
+2. Follow the full workflow from the template (explore → map docs → migration decision → generate)
+3. This includes asking the user about migrating to standard file names if non-standard docs are found
 
-**Key principle**: AGENTS.md adapts to installed skills - sections like "Releases" only appear if a release skill is installed.
+**Key principle**: AGENTS.md is a routing table — each section points to the right docs and skills. Content lives in standard files (`docs/CODING.md`, `docs/TESTING.md`, etc.), not in AGENTS.md itself.
 
 ## Optional: Additional Resource Discovery
 

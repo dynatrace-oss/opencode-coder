@@ -1,5 +1,6 @@
 ---
 description: Verifies outcomes at task, epic, and project level — owns gates
+model: github-copilot/claude-sonnet-4.6
 mode: subagent
 ---
 

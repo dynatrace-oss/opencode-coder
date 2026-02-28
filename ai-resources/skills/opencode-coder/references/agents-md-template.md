@@ -1,206 +1,171 @@
-# AGENTS.md Template Structure
+# Generating AGENTS.md
 
-Reference for generating adaptive AGENTS.md files during `/init`. The template adapts to installed skills and project structure.
+Instructions for generating or updating an AGENTS.md file for any project.
 
-## Overview
+**Goal**: Produce a small AGENTS.md that acts as a routing table — each section points agents to the right documents and skills for a given use case. No inline content except Project Overview and Landing the Plane.
 
-**Purpose**: Generate AGENTS.md as a quick reference for AI assistants during development.
-
-**Target Size**: ~100-120 lines (varies by installed skills)
-
-**Behavior**:
-- Always update existing AGENTS.md (no prompting)
-- Create if doesn't exist
-- Adapt sections based on installed skills
+**Target size**: 30-60 lines.
 
 ---
 
-## Skill Detection
+## Standard File Convention
 
-### Methods
+Each section maps to a standard file in `docs/`:
 
-**Method 1: Check `.opencode/skills/` directory (Recommended)**
-```bash
-ls .opencode/skills/ 2>/dev/null
-```
-Returns list of installed skill directories.
-
-**Method 2: Use aimgr CLI**
-```bash
-aimgr list 2>/dev/null
-```
-Returns table with NAME, STATUS columns. Skills show as `skill/<name>`.
-
-### Detection Logic
-
-For each use case section, check if relevant skills exist:
-
-```
-Use Case            | Look for skills containing keywords
---------------------|------------------------------------
-Releasing           | "release", "publish", "ship"
-Task Synchronization| "task-sync", "github-task"
-Monitoring/Triage   | "observability", "triage", "monitoring", "logs"
-Code Review         | "review", "pr", "pull-request"
-Documentation       | "documentation", "docs", "fix-doc"
-AI Resources        | "ai-resource", "aimgr"
-```
-
-### Checking Beads
-
-Beads (bd CLI) is a special case - check directly:
-```bash
-bd --version 2>/dev/null && ls .beads/ 2>/dev/null
-```
-If both succeed, beads is installed and initialized.
+| Section | Standard File | Always Present |
+|---------|--------------|----------------|
+| Project Overview | *(inline)* | Yes |
+| Coding | `docs/CODING.md` | Yes |
+| Testing | `docs/TESTING.md` | Only if relevant docs/skills exist |
+| Releases | `docs/RELEASING.md` | Only if relevant docs/skills exist |
+| Monitoring | `docs/MONITORING.md` | Only if relevant docs/skills exist |
+| Landing the Plane | *(inline)* | Only if beads is installed |
 
 ---
 
-## Template Structure
+## Workflow
 
-### Required Sections (Always Include)
+### Step 1: Gather Context
 
-#### 1. Project Overview (3-5 lines)
+Spawn an **explore agent** with the following prompt:
+
+> Analyze this project and return a structured summary with:
+>
+> 1. **Project identity** — Name, one-sentence description, tech stack
+> 2. **Build & test commands** — How to build, test, lint, type-check (extract from project config files and scripts)
+> 3. **Directory structure** — Top-level directories with one-line purpose each
+> 4. **Existing docs** — List ALL files in `docs/` directory (if it exists). Also check for `CONTRIBUTING.md`, `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md` in project root. Report full paths.
+> 5. **Coding conventions** — Are there any files that describe coding conventions, guidelines, or architecture? Check: `CONTRIBUTING.md`, `docs/coding-guidelines.md`, `docs/CODING.md`, `.editorconfig`, or similar. Report filenames only.
+> 6. **Testing docs** — Are there files that describe testing patterns, test setup, or test conventions? Report filenames only.
+> 7. **Release docs** — Are there files that describe the release process? Report filenames only.
+> 8. **Monitoring docs** — Are there files that describe monitoring, observability, or log analysis? Report filenames only.
+> 9. **Installed skills** — List all skills in `.opencode/skills/` directory with their descriptions
+> 10. **Beads status** — Is `bd` CLI available? Is `.beads/` directory present?
+>
+> Be thorough but return ONLY the structured summary, no commentary.
+
+Wait for the explore agent to return before proceeding.
+
+### Step 2: Map Existing Docs to Sections
+
+From the explore output, map every discovered doc file to a section:
+
+| Section | Matches these existing files |
+|---------|------------------------------|
+| Coding | `CONTRIBUTING.md`, `docs/coding-guidelines.md`, `docs/CODING.md`, `docs/architecture.md`, `.editorconfig` |
+| Testing | `docs/TESTING.md`, `docs/testing-guide.md`, `docs/test-patterns.md` |
+| Releases | `docs/RELEASING.md`, `docs/release-process.md`, `RELEASING.md` |
+| Monitoring | `docs/MONITORING.md`, `docs/observability.md`, `docs/logging.md` |
+
+Also map installed skills to sections:
+- Skills matching "release", "publish", "ship" → Releases
+- Skills matching "observability", "triage", "monitoring" → Monitoring
+- Skills matching "test" → Testing
+
+A section is **active** if it has at least one matching doc file OR one matching skill. Exception: **Coding** is always active.
+
+### Step 3: Migration Decision
+
+Check if any active section has docs under **non-standard names** (e.g., `docs/coding-guidelines.md` instead of `docs/CODING.md`, or `CONTRIBUTING.md` containing coding conventions in root instead of `docs/`).
+
+If non-standard names are found, ask the user **once**:
+
+> "This plugin uses a standard documentation structure where each topic has a dedicated file in `docs/`:
+>
+> | Topic | Standard File |
+> |-------|--------------|
+> | Coding | `docs/CODING.md` |
+> | Testing | `docs/TESTING.md` |
+> | Releases | `docs/RELEASING.md` |
+> | Monitoring | `docs/MONITORING.md` |
+>
+> I found existing docs that could be migrated into this structure:
+>
+> - `docs/coding-guidelines.md` → `docs/CODING.md`
+> - `CONTRIBUTING.md` (coding conventions) → `docs/CODING.md` (CONTRIBUTING.md would reference it)
+> - *(list all proposed moves)*
+>
+> Would you like to adopt the standard structure?"
+
+**If yes:**
+1. Create the standard files and move/consolidate content
+2. If `CONTRIBUTING.md` had coding conventions mixed with contribution process, split them: coding conventions go to `docs/CODING.md`, `CONTRIBUTING.md` keeps the contribution process and adds a reference to `docs/CODING.md`
+3. Reference the new standard paths in AGENTS.md
+
+**If no:**
+- Reference the existing file paths as-is in AGENTS.md
+
+### Step 4: Create Missing Standard Files
+
+For the **Coding** section (always active): if no conventions files exist anywhere, create `docs/CODING.md` with build commands, directory structure, and basic conventions extracted from the codebase.
+
+For other active sections: only create the standard file if the explore step gathered enough relevant content to populate it meaningfully. If a section is active only because a skill is installed (no doc content found), just reference the skill in AGENTS.md — don't create a hollow doc file.
+
+**Before creating any new file, ask the user to confirm** — show them a summary of what you plan to write and let them approve or adjust.
+
+### Step 5: Generate AGENTS.md
+
+Build the file section by section:
+
+#### Project Overview (always, inline)
 
 ```markdown
 # Project Name
 
-Brief description of what this project does (1-2 sentences).
+One-sentence description.
 
-**Tech Stack**: [language/framework]  
-**Build**: `<build command>` | **Test**: `<test command>`
+**Tech Stack**: [from explore agent]
 ```
 
-**How to populate**:
-- Read README.md for project description
-- Read package.json/pyproject.toml/Cargo.toml for tech stack
-- Extract build/test commands from scripts
+Just what the project is and the tech stack. Nothing else.
 
-#### 2. Project-Specific Context (20-30 lines)
+#### Coding (always)
 
 ```markdown
-## Development
+## Coding
 
-### Build & Test
-<command>   # Build project
-<command>   # Run tests
-<command>   # Type check (if applicable)
-
-### Project Structure
-- `src/` - Source code
-- `tests/` - Test files
-- `docs/` - Documentation
-
-### Conventions
-- [Brief convention 1]
-- [Brief convention 2]
-
-See CONTRIBUTING.md for detailed guidelines.
+Read `docs/CODING.md` for build commands, project structure, and code conventions.
 ```
 
-**How to populate**:
-- Extract from package.json scripts, Makefile, or equivalent
-- Scan directory structure
-- Reference CONTRIBUTING.md if exists (don't duplicate)
-
-### Conditional Sections (Include If Skills Installed)
-
-#### 3. Code Development (5-10 lines)
-
-**Include if**: coding-related skills exist OR project has CONTRIBUTING.md
+If additional files are relevant (e.g., CONTRIBUTING.md was kept separately), list them too:
 
 ```markdown
-## Code Guidelines
+## Coding
 
-Follow CONTRIBUTING.md for architecture and patterns.
+Read `docs/CODING.md` for build commands, project structure, and code conventions.
 
-Key points:
-- [Critical convention from CONTRIBUTING.md]
-- [Another critical convention]
-
-[If coding skill installed]: Load coding skill for detailed guidance.
+Read `CONTRIBUTING.md` for contribution workflow.
 ```
 
-#### 4. Testing (5-10 lines)
-
-**Include if**: test framework detected OR test scripts exist
+#### Testing (conditional)
 
 ```markdown
 ## Testing
 
-<test command>           # Run all tests
-<test command pattern>   # Run specific tests
-
-Coverage: <coverage command if exists>
+Read `docs/TESTING.md` for test patterns and commands.
 ```
 
-#### 5. Releasing (1-2 lines)
+If a testing skill is installed, add: `Load the **skill-name** skill for [description].`
 
-**Include if**: Release skill installed (`ls .opencode/skills/ | grep -i release`)
+#### Releases (conditional)
 
 ```markdown
 ## Releases
 
-Use the **github-releases** skill for version management and releases. See docs/RELEASING.md for details.
+Load the **release-skill-name** skill for release workflow. Read `docs/RELEASING.md` for details.
 ```
 
-**Do NOT include if**: No release skill installed
-
-#### 6. Task Synchronization (1-2 lines)
-
-**Include if**: Task sync skill installed (`ls .opencode/skills/ | grep -iE 'task-sync|github-task'`)
-
-```markdown
-## Task Synchronization
-
-Load the **task-sync** skill for syncing with external systems (GitHub Issues, etc.).
-```
-
-**Do NOT include if**: No task sync skill installed
-
-#### 7. Documentation (1-2 lines)
-
-**Include if**: Documentation skill installed (`ls .opencode/skills/ | grep -iE 'doc|fix-doc'`)
-
-```markdown
-## Documentation
-
-Load the **fix-documentation** skill for documentation fixes and cross-file synchronization.
-```
-
-**Do NOT include if**: No documentation skill installed
-
-#### 8. AI Resource Management (1-2 lines)
-
-**Include if**: AI resource manager skill installed (`ls .opencode/skills/ | grep -iE 'ai-resource|aimgr'`)
-
-```markdown
-## AI Resource Management
-
-Use aimgr CLI for managing AI resources. Load **ai-resource-manager** skill for help.
-```
-
-**Do NOT include if**: No AI resource manager skill installed
-
-#### 9. Monitoring & Bug Analysis (5-10 lines)
-
-**Include if**: Observability/triage skill installed (`ls .opencode/skills/ | grep -iE 'observ|triage|monitor'`)
+#### Monitoring (conditional)
 
 ```markdown
 ## Monitoring
 
-For analyzing logs, metrics, and triaging issues:
-- Load the observability skill
-- See docs/MONITORING.md for data sources
-
-The skill handles fetching data and creating issues automatically.
+Load the **monitoring-skill-name** skill for observability and triage. Read `docs/MONITORING.md` for data sources.
 ```
 
-**Do NOT include if**: No observability skill installed
+#### Landing the Plane (conditional — only if beads installed)
 
-#### 10. Landing the Plane (15-20 lines)
-
-**Include if**: beads installed
+Include this exact content:
 
 ```markdown
 ## Landing the Plane (Session Completion)
@@ -222,234 +187,30 @@ The skill handles fetching data and creating issues automatically.
 **CRITICAL**: Work is NOT complete until `git push` succeeds.
 ```
 
-**Do NOT include if**: beads not installed (no `bd sync` command)
+### Step 6: Verify
+
+After generating, confirm:
+
+- [ ] Project Overview is just name + description + tech stack (no commands)
+- [ ] Every other section is a pointer (file or skill reference), not a summary
+- [ ] All referenced file paths actually exist
+- [ ] Coding section is present (always required)
+- [ ] Conditional sections only appear when relevant docs/skills exist
+- [ ] Landing the Plane only appears if beads is installed
+- [ ] No duplicated content from referenced files
+- [ ] Total size is under 60 lines
 
 ---
 
-## Edge Cases
-
-### Minimal Project (No Skills Installed)
-
-When NO skills are detected:
-
-```markdown
-# Project Name
-
-Brief description.
-
-## Development
-
-### Build & Test
-<build command>
-<test command>
-
-### Project Structure
-- `src/` - Source code
-
-### Conventions
-See CONTRIBUTING.md for guidelines.
-```
-
-**Total**: ~25-30 lines (just Project Overview + Project-Specific Context)
-
-### Project Without Beads
-
-Omit these sections entirely:
-- Landing the Plane (no `bd sync` command)
-
-Keep: Project Overview, Development, Testing (if detected)
-
-### Existing AGENTS.md
-
-**Strategy**: Update in-place, preserving project-specific customizations.
-
-1. Parse existing AGENTS.md to identify sections
-2. Update sections that match template structure
-3. Preserve custom sections not in template
-4. Add missing template sections
-5. Remove outdated skill-specific sections if skill no longer installed
-
-**Detection**: Look for section headers (`## Section Name`)
-
-**Preserve**: Sections with headers not matching template sections
-**Update**: Sections with headers matching template sections
-**Add**: Template sections not present in existing file
-
----
-
-## Section Sizing Guide
-
-| Section | Lines | When to Include |
-|---------|-------|-----------------|
-| Project Overview | 3-5 | Always |
-| Development/Build | 20-30 | Always |
-| Code Guidelines | 5-10 | If CONTRIBUTING.md exists |
-| Testing | 5-10 | If test scripts exist |
-| Releases | 1-2 | If release skill installed |
-| Task Synchronization | 1-2 | If task-sync skill installed |
-| Documentation | 1-2 | If fix-documentation skill installed |
-| AI Resource Management | 1-2 | If ai-resource-manager skill installed |
-| Monitoring | 5-10 | If observability skill installed |
-| Landing the Plane | 15-20 | If beads installed |
-
-**Total Range**: 25-120 lines depending on project configuration
-
----
-
-## Examples
-
-### Example 1: Node.js/TypeScript with Release Skill
-
-**Detected**:
-- package.json with scripts
-- `.opencode/skills/github-releases`
-- beads initialized (`.beads/` exists)
-- CONTRIBUTING.md exists
-
-**Generated AGENTS.md** (~90 lines):
-
-```markdown
-# my-typescript-project
-
-TypeScript library for data validation with runtime type checking.
-
-**Tech Stack**: TypeScript, Node.js  
-**Build**: `npm run build` | **Test**: `npm test`
-
-## Development
-
-### Build & Test
-npm run build      # Compile TypeScript
-npm test           # Run Jest tests
-npm run typecheck  # Check types only
-npm run lint       # Run ESLint
-
-### Project Structure
-- `src/` - TypeScript source
-- `dist/` - Compiled JavaScript
-- `tests/` - Jest test files
-- `docs/` - Documentation
-
-### Conventions
-- Use functional patterns over classes
-- All exports must have JSDoc comments
-- Tests required for public APIs
-
-See CONTRIBUTING.md for detailed architecture.
-
-## Code Guidelines
-
-Follow CONTRIBUTING.md for architecture and patterns.
-
-Key points:
-- Pure functions preferred
-- Error handling via Result types
-- No external dependencies in core
-
-## Testing
-
-npm test                    # All tests
-npm test -- --watch        # Watch mode
-npm test -- path/to/test   # Specific test
-npm run coverage           # Coverage report
-
-## Releases
-
-Use the **github-releases** skill for version management and releases. See docs/RELEASING.md for details.
-
-## Landing the Plane (Session Completion)
-
-**When ending a work session**, complete ALL steps:
-
-1. **File issues for remaining work** - Create issues for follow-up
-2. **Run quality gates** - `npm test && npm run lint && npm run build`
-3. **Update issue status** - Close finished, update in-progress
-4. **PUSH TO REMOTE**:
-   ```bash
-   git pull --rebase
-   bd sync
-   git push
-   git status  # MUST show "up to date with origin"
-   ```
-5. **Verify** - All changes committed AND pushed
-
-**CRITICAL**: Work is NOT complete until `git push` succeeds.
-```
-
-### Example 2: Minimal Python Project (No Skills)
-
-**Detected**:
-- pyproject.toml with scripts
-- No `.opencode/skills/` directory
-- No beads
-- No CONTRIBUTING.md
-
-**Generated AGENTS.md** (~30 lines):
-
-```markdown
-# simple-python-tool
-
-CLI tool for file organization.
-
-**Tech Stack**: Python 3.11  
-**Build**: `pip install -e .` | **Test**: `pytest`
-
-## Development
-
-### Build & Test
-pip install -e .    # Install in editable mode
-pytest              # Run tests
-pytest -v           # Verbose output
-
-### Project Structure
-- `src/` - Python source
-- `tests/` - Pytest tests
-- `pyproject.toml` - Project config
-
-### Conventions
-- Type hints required for public functions
-- Docstrings follow Google style
-```
-
----
-
-## Implementation Notes
-
-### Generic Language Pattern
-
-Use generic references to skills, not hardcoded names:
-
-**Good**:
-```markdown
-For releases, load the release skill...
-Check if observability skills are available...
-```
-
-**Bad**:
-```markdown
-Load the github-releases skill...
-Use skill/observability-triage...
-```
-
-### Skill Reference Pattern
-
-When referencing skills, use this pattern:
-
-```markdown
-[Use Case Description]
-
-Check if there are skills available for [use case]. If found, load and follow their guidance.
-```
-
-This allows AGENTS.md to remain valid even if skill names change.
-
-### Verification Checklist
-
-After generating AGENTS.md:
-
-- [ ] All commands are valid for the project
-- [ ] File paths referenced exist
-- [ ] Skill-specific sections only appear if skill installed
-- [ ] beads sections only appear if beads installed
-- [ ] Total length within target range
-- [ ] No hardcoded skill names
+## Updating an Existing AGENTS.md
+
+When AGENTS.md already exists:
+
+1. Run the same explore + mapping steps
+2. Match existing sections by `##` headers
+3. **Update** sections that match template sections (with fresh data)
+4. **Preserve** custom sections that don't match any template section
+5. **Add** new sections for newly discovered docs/skills
+6. **Remove** sections for content that no longer exists
+7. Keep custom sections in their original position; place new sections before "Landing the Plane"
+8. Offer migration if non-standard file names are detected (same as Step 3)

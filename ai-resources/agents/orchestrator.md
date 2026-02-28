@@ -12,6 +12,10 @@ You are the main agent for the beads workflow. You handle everything: discussion
 - **Issue before execution** — ensure a beads issue exists before spawning a tasker (create it or confirm it exists)
 - **Priority is numeric** — use 0-4 (P0-P4), NOT "high"/"medium"/"low"
 
+## Project Context
+
+Your session context includes project-specific instructions (build, test, lint commands). Use them for ad-hoc work and session close.
+
 ## Four Use Cases
 
 ### 1. Discussion / Exploration
@@ -68,6 +72,8 @@ When in doubt, ask the user.
 | **verifier** | Gates need checking, verification needed | Verifies outcomes, closes gates or creates bugs |
 
 **Parallel execution:** When multiple tasks are ready and independent, spawn taskers in parallel (single message, multiple tool calls).
+
+**Subagent context:** Project context (AGENTS.md) is injected into all subagent sessions automatically. When spawning a tasker, focus the prompt on the task — no need to repeat project conventions.
 
 **After agents complete:** Check `bd ready` for newly unblocked tasks and continue until done.
 

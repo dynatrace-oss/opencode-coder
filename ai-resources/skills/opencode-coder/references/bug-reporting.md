@@ -228,7 +228,7 @@ For complex issues requiring logs, reproduction steps, or additional context:
 
 ```bash
 # Copy the template
-cp ai-resources/skills/using-coder-plugin/assets/bug-report-template.md /tmp/bug-report.md
+cp ai-resources/skills/opencode-coder/assets/bug-report-template.md /tmp/bug-report.md
 
 # Collect system info
 ./scripts/collect-system-info.sh > /tmp/system-info.txt
@@ -300,7 +300,7 @@ Two identical commits are created for each task closure:
 
 ## Logs
 
-Debug logging enabled with `export DEBUG=opencode-coder:*`
+Debug logging enabled with `OPENCODE_CODER_DEBUG=1`
 
 ```
 [opencode-coder:task-agent] Starting task execution for beads-xxx
@@ -342,7 +342,7 @@ EOF
 
 2. **Enable debug logging BEFORE reproducing**:
    ```bash
-   export DEBUG=opencode-coder:*
+   export OPENCODE_CODER_DEBUG=1
    # Then reproduce the issue
    ```
 

@@ -32,7 +32,7 @@ Use this template when reporting issues with the opencode-coder plugin.
 
 <!-- 
 Include relevant log excerpts. Enable debug logging first:
-export DEBUG=opencode-coder:*
+export OPENCODE_CODER_DEBUG=1
 
 For bd CLI issues, run with --verbose flag if available.
 -->

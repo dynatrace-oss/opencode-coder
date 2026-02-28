@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { OpencodeCoder } from "../../src";
-import type { PluginInput, Config } from "@opencode-ai/sdk";
+import type { PluginInput } from "@opencode-ai/sdk";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -41,56 +41,13 @@ describe("OpencodeCoder Plugin Integration", () => {
       const mockInput = createMockPluginInput();
       const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
       expect(hooks).toBeDefined();
-      expect(hooks.config).toBeDefined();
     });
 
-    it("should provide config hook", async () => {
+    it("should provide tool hook with coder tool", async () => {
       const mockInput = createMockPluginInput();
       const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
-      expect(typeof hooks.config).toBe("function");
-    });
-
-    it("should provide event hook", async () => {
-      const mockInput = createMockPluginInput();
-      const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
-      expect(typeof hooks.event).toBe("function");
-    });
-  });
-
-  describe("real knowledge base loading", () => {
-    it("should load plugin-shipped coder commands from knowledge-base", async () => {
-      const mockInput = createMockPluginInput();
-      const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
-
-      const config: Config = {};
-      await hooks.config?.(config);
-
-      // Plugin ships coder/dump-session in knowledge-base/command/coder/
-      // Other coder commands live in ai-resources/ and are loaded by OpenCode itself
-      const coderCommands = Object.keys(config.command ?? {}).filter((k) =>
-        k.startsWith("coder/") || k.startsWith("opencode-coder/")
-      );
-      expect(coderCommands.length).toBe(1);
-      expect(coderCommands).toContain("coder/dump-session");
-    });
-
-    it("should load agents with proper configuration", async () => {
-      const mockInput = createMockPluginInput();
-      const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
-
-      const config: Config = {};
-      await hooks.config?.(config);
-
-      // Check for expected agents from knowledge-base/agent/
-      const agentKeys = Object.keys(config.agent ?? {});
-      expect(agentKeys.length).toBeGreaterThan(0);
-
-      // Verify agents have proper structure (mode, system, files)
-      for (const key of agentKeys) {
-        const agent = config.agent?.[key];
-        expect(agent).toBeDefined();
-        // Note: mode, system, files may be undefined for some agents
-      }
+      expect(hooks.tool).toBeDefined();
+      expect(hooks.tool?.coder).toBeDefined();
     });
   });
 });

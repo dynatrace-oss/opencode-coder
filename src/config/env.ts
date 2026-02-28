@@ -50,24 +50,3 @@ function parseBoolean(value: string | undefined, defaultValue: boolean): boolean
 export function isPluginDisabled(): boolean {
   return parseBoolean(process.env["OPENCODE_CODER_DISABLED"], false);
 }
-
-/**
- * Check if beads commands should be auto-approved without user confirmation.
- *
- * Environment Variable: `BEADS_AUTO_APPROVE`
- *
- * Controls whether `bd` commands require manual approval before execution.
- * - true (default): Commands execute automatically without prompting
- * - false: User must approve each command before execution
- *
- * @example
- * ```bash
- * # Require approval for all bd commands
- * export BEADS_AUTO_APPROVE=false
- * ```
- *
- * @returns true if commands should auto-approve (default: true), false if approval is required
- */
-export function shouldAutoApproveBeads(): boolean {
-  return parseBoolean(process.env["BEADS_AUTO_APPROVE"], true);
-}

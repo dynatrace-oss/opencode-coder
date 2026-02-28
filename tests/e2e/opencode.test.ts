@@ -221,22 +221,11 @@ describe.skipIf(!opencodeCheck.available)("OpencodeCoder E2E Tests", () => {
       expect(agents).toBeDefined();
       expect(Array.isArray(agents)).toBe(true);
 
-      // Our expected agents from knowledge-base/agent/
-      // After refactoring, plugin only registers agents (not commands).
-      // Commands are now provided by skills loaded by OpenCode's skill system.
-      const expectedAgentNames = [
-        "beads-task-agent",
-      ];
-
-      // Check for our plugin agents
-      const pluginAgents = agents?.filter((agent) =>
-        expectedAgentNames.includes(agent.name ?? "")
-      ) ?? [];
-
-      console.log(`Found ${pluginAgents.length} plugin agents out of ${expectedAgentNames.length} expected`);
-      console.log("Found agents:", pluginAgents.map((a) => a.name));
-
-      expect(pluginAgents.length).toBeGreaterThan(0);
+      // Plugin no longer ships agents via knowledge-base.
+      // Agents are now provided by ai-resources/ and loaded by OpenCode's skill system.
+      // Verify the agents list is available (may be empty from plugin's perspective)
+      console.log(`Found ${agents?.length ?? 0} total agents`);
+      console.log("Agent names:", agents?.map((a) => a.name));
     });
   });
 });

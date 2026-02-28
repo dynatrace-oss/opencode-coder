@@ -1,6 +1,6 @@
 import { type Plugin } from "@opencode-ai/plugin";
 import { createLogger, getVersionInfo } from "./core";
-import { KnowledgeBaseService, BeadsService, GitHubService, AimgrService, SessionExportService } from "./service";
+import { BeadsService, AimgrService, SessionExportService } from "./service";
 import { createCoderTool } from "./tool";
 import { isPluginDisabled } from "./config/env";
 
@@ -24,14 +24,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("BeadsService created", { durationMs: Date.now() - beadsStart });
 
-  // 3. Create GitHub service
-  const githubStart = Date.now();
-  const githubService = new GitHubService({
-    logger: log,
-  });
-  log.debug("GitHubService created", { durationMs: Date.now() - githubStart });
-
-  // 4. Create aimgr service
+  // 3. Create aimgr service
   const aimgrStart = Date.now();
   const aimgrService = new AimgrService({
     logger: log,
@@ -39,23 +32,13 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   });
   log.debug("AimgrService created", { durationMs: Date.now() - aimgrStart });
 
-  // 5. Create KB service with feature flags
-  const kbStart = Date.now();
-  const kbService = new KnowledgeBaseService({
-    logger: log,
-    featureFlags: {
-      github: githubService.isGitHubEnabled(),
-    },
-  });
-  log.debug("KnowledgeBaseService created", { durationMs: Date.now() - kbStart });
-
-  // 6. Create session export service and coder tool
+  // 4. Create session export service and coder tool
   const versionInfo = await getVersionInfo();
   const sessionExportService = new SessionExportService({ logger: log, client });
   const coderTool = createCoderTool({ sessionExportService, versionInfo });
   log.debug("Coder tool created");
 
-  // 7. Check beads availability and show toast if needed
+  // 5. Check beads availability and show toast if needed
   // Runs in the background and doesn't block plugin loading
   const beadsCheckStart = Date.now();
   beadsService.checkBeadsAvailability()
@@ -66,7 +49,7 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
       log.error("Failed to check beads availability", { error: String(err) });
     });
 
-  // 8. Auto-initialize aimgr if available
+  // 6. Auto-initialize aimgr if available
   // Runs in the background and doesn't block plugin loading
   const aimgrInitStart = Date.now();
   aimgrService.autoInitialize()
@@ -82,20 +65,6 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   log.info("OpencodeCoder plugin loaded", { durationMs: loadDurationMs, beadsEnabled: beadsService.isBeadsEnabled() });
 
   return {
-    async config(config) {
-      await beadsService.processConfig(config);
-      await kbService.processConfig(config);
-      log.debug("Final config after processing", { config: JSON.stringify(config, null, 2) });
-    },
-
-    async event({ event }) {
-      await beadsService.processEvent(event);
-    },
-
-    async "permission.ask"(input, output) {
-      beadsService.processPermissionAsk(input, output);
-    },
-
     tool: {
       coder: coderTool,
     },

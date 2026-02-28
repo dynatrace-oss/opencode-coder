@@ -1,6 +1,5 @@
-import { describe, expect, it, beforeEach, afterEach, spyOn } from "bun:test";
+import { describe, expect, it, beforeEach, spyOn } from "bun:test";
 import { BeadsService } from "../../src/service/beads-service";
-import type { Config } from "@opencode-ai/sdk/v2";
 import type { PluginInput } from "@opencode-ai/plugin";
 import { createMockLogger, type MockLogger } from "../helpers/mock-logger";
 import { createMockClient } from "../helpers/mock-client";
@@ -19,18 +18,12 @@ interface ToastCall {
 describe("BeadsService", () => {
   let mockLogger: MockLogger;
   let mockClient: OpencodeClient;
-  let mockConfig: Config;
   let toastCalls: ToastCall[];
-  let originalAutoApprove: string | undefined;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
     toastCalls = [];
-    
-    // Save and clear environment variable
-    originalAutoApprove = process.env["BEADS_AUTO_APPROVE"];
-    delete process.env["BEADS_AUTO_APPROVE"];
-    
+
     // Create mock client with tui.showToast
     const baseMockClient = createMockClient();
     mockClient = {
@@ -42,125 +35,14 @@ describe("BeadsService", () => {
         },
       },
     } as unknown as OpencodeClient;
-    
-    mockConfig = {} as Config;
-  });
-
-  afterEach(() => {
-    // Restore environment variable
-    if (originalAutoApprove === undefined) {
-      delete process.env["BEADS_AUTO_APPROVE"];
-    } else {
-      process.env["BEADS_AUTO_APPROVE"] = originalAutoApprove;
-    }
-  });
-
-  describe("processConfig", () => {
-    it("should set default_agent to beads-planner-agent when beads is enabled", async () => {
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      await service.processConfig(mockConfig);
-
-      expect(mockConfig.default_agent).toBe("beads-planner-agent");
-    });
-
-    it("should not modify default_agent when beads is disabled", async () => {
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: false,
-
-      });
-
-      await service.processConfig(mockConfig);
-
-      expect(mockConfig.default_agent).toBeUndefined();
-    });
-
-    it("should inject bd * permission when beads is enabled", async () => {
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      await service.processConfig(mockConfig);
-
-      expect(mockConfig.permission?.bash).toEqual({ "bd *": "allow" });
-    });
-
-    it("should not inject bd * permission when auto_approve_beads is false", async () => {
-      process.env["BEADS_AUTO_APPROVE"] = "false";
-      
-      const service = new BeadsService({
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      await service.processConfig(mockConfig);
-
-      // default_agent should still be set (independent of auto_approve_beads)
-      expect(mockConfig.default_agent).toBe("beads-planner-agent");
-      // But bd * permission should not be added
-      expect(mockConfig.permission?.bash).toBeUndefined();
-    });
-
-    it("should preserve existing bash permissions when adding bd *", async () => {
-      mockConfig.permission = { bash: { "git *": "allow" } };
-
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      await service.processConfig(mockConfig);
-
-      expect(mockConfig.permission?.bash).toEqual({
-        "git *": "allow",
-        "bd *": "allow",
-      });
-    });
-
-    it("should not modify bash permissions when already set to allow", async () => {
-      mockConfig.permission = { bash: "allow" };
-
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      await service.processConfig(mockConfig);
-
-      // Should not modify when user explicitly set bash to allow
-      expect(mockConfig.permission?.bash).toBe("allow");
-    });
   });
 
   describe("isBeadsEnabled", () => {
     it("should return true when beads is enabled", () => {
       const service = new BeadsService({
-
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
-
       });
 
       expect(service.isBeadsEnabled()).toBe(true);
@@ -168,104 +50,12 @@ describe("BeadsService", () => {
 
     it("should return false when beads is disabled", () => {
       const service = new BeadsService({
-
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: false,
-
       });
 
       expect(service.isBeadsEnabled()).toBe(false);
-    });
-  });
-
-
-  describe("processPermissionAsk", () => {
-    it("should auto-approve bd commands when beads is enabled", () => {
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      const input = { type: "bash", title: "bd ready" };
-      const output: { status?: "allow" | "deny" | "ask" } = {};
-
-      service.processPermissionAsk(input, output);
-
-      expect(output.status).toBe("allow");
-      expect(mockLogger.hasLogged("debug", "Auto-approved beads CLI command")).toBe(true);
-    });
-
-    it("should not auto-approve bd commands when beads is disabled", () => {
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: false,
-
-      });
-
-      const input = { type: "bash", title: "bd ready" };
-      const output: { status?: "allow" | "deny" | "ask" } = {};
-
-      service.processPermissionAsk(input, output);
-
-      expect(output.status).toBeUndefined();
-    });
-
-    it("should not auto-approve bd commands when auto_approve_beads is false", () => {
-      process.env["BEADS_AUTO_APPROVE"] = "false";
-      
-      const service = new BeadsService({
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      const input = { type: "bash", title: "bd ready" };
-      const output: { status?: "allow" | "deny" | "ask" } = {};
-
-      service.processPermissionAsk(input, output);
-
-      expect(output.status).toBeUndefined();
-    });
-
-    it("should not auto-approve non-bd bash commands", () => {
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      const input = { type: "bash", title: "git status" };
-      const output: { status?: "allow" | "deny" | "ask" } = {};
-
-      service.processPermissionAsk(input, output);
-
-      expect(output.status).toBeUndefined();
-    });
-
-    it("should not auto-approve non-bash commands", () => {
-      const service = new BeadsService({
-
-        logger: mockLogger,
-        client: mockClient,
-        beadsEnabled: true,
-
-      });
-
-      const input = { type: "read", title: "bd ready" };
-      const output: { status?: "allow" | "deny" | "ask" } = {};
-
-      service.processPermissionAsk(input, output);
-
-      expect(output.status).toBeUndefined();
     });
   });
 
@@ -275,16 +65,14 @@ describe("BeadsService", () => {
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
         throw new Error("command not found");
       });
-      
+
       // Mock fs.accessSync to succeed (.beads exists)
       const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
 
       const service = new BeadsService({
-
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
-
       });
 
       await service.checkBeadsAvailability();
@@ -304,18 +92,16 @@ describe("BeadsService", () => {
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(
         () => Buffer.from("/usr/local/bin/bd") as any
       );
-      
+
       // Mock fs.accessSync to throw (.beads not found)
       const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => {
         throw new Error("ENOENT");
       });
 
       const service = new BeadsService({
-
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
-
       });
 
       await service.checkBeadsAvailability();
@@ -335,16 +121,14 @@ describe("BeadsService", () => {
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(
         () => Buffer.from("/usr/local/bin/bd") as any
       );
-      
+
       // Mock fs.accessSync to succeed (.beads exists)
       const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
 
       const service = new BeadsService({
-
         logger: mockLogger,
         client: mockClient,
         beadsEnabled: true,
-
       });
 
       await service.checkBeadsAvailability();

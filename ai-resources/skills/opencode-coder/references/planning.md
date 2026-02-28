@@ -199,6 +199,8 @@ Gates represent **blocking conditions**, not approval states:
 | 3 (P3) | Low | Nice to have |
 | 4 (P4) | Backlog | Someday |
 
+**Format**: Always use numeric 0-4 or P0-P4. Do NOT use "high", "medium", "low" — bd does not accept string priorities.
+
 ## Workflow Phases
 
 ### Discovery
@@ -230,3 +232,38 @@ Spawn verifier for gates. Verifier closes gates or creates bugs/tasks.
 
 ### Closure
 When all tasks closed AND gate closed → close the epic.
+
+## Agent Tips
+
+**Updating issues:**
+```bash
+bd update <id> --status=in_progress     # Claim work
+bd update <id> --assignee=username      # Assign to someone
+bd update <id> --title="New title"      # Update title
+bd update <id> --description="..."      # Update description
+bd update <id> --notes="..."            # Update notes
+bd update <id> --priority=1             # Change priority
+```
+
+**Filtering issues:**
+```bash
+bd list --status=open                   # All open issues
+bd list --status=in_progress            # Currently active work
+bd list --parent <id>                   # Children of an epic
+bd list --type=bug                      # All bugs
+```
+
+**Close multiple issues at once:**
+```bash
+bd close oc-abc oc-def oc-ghi --reason="All implemented"
+```
+
+**Use `--json` for structured output:**
+```bash
+bd ready --json
+bd show <id> --json
+```
+
+**Use `bd <command> --help`** for full flag reference on any command.
+
+**WARNING**: Do NOT use `bd edit` — it opens $EDITOR (vim/nano) which blocks agents. Use `bd update` instead.

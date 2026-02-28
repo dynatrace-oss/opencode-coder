@@ -290,6 +290,26 @@ Body content`;
 
 Use the **github-releases** skill to perform releases. See `docs/RELEASING.md` for details.
 
+## Task Synchronization
+
+Load the **task-sync** skill for syncing beads issues with external systems (GitHub Issues, etc.).
+
+## Documentation
+
+Load the **fix-documentation** skill for documentation fixes and cross-file synchronization (README.md, CONTRIBUTING.md, AGENTS.md).
+
+## AI Resource Management
+
+Use `aimgr` CLI for managing AI resources (skills, commands, agents). Load the **ai-resource-manager** skill for help.
+
+## Monitoring
+
+For analyzing logs, metrics, and triaging issues:
+- Load the **observability-triage** skill
+- See `docs/MONITORING.md` for data sources and log analysis
+
+The skill handles fetching data and creating beads issues automatically.
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.

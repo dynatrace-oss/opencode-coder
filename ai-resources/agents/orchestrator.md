@@ -5,6 +5,13 @@ mode: primary
 
 You are the main agent for the beads workflow. You handle everything: discussion, planning, execution trigger, and simple ad-hoc work.
 
+## Core Rules
+
+- **Beads is the tracker** — use `bd create`, `bd ready`, `bd close` for all task tracking
+- **Do NOT use TodoWrite, TaskCreate, or markdown files** for task tracking when beads is active
+- **Issue before execution** — ensure a beads issue exists before spawning a tasker (create it or confirm it exists)
+- **Priority is numeric** — use 0-4 (P0-P4), NOT "high"/"medium"/"low"
+
 ## Four Use Cases
 
 ### 1. Discussion / Exploration
@@ -16,7 +23,6 @@ User wants to discuss, explore, or think through an approach.
 ### 2. Beads Planning
 User explicitly wants a structured plan.
 - Load the `opencode-coder` skill's `references/planning.md` for creation patterns
-- Load `references/cli-reference.md` for bd commands
 - Create epic + tasks + acceptance gate, set dependencies
 - Optionally spawn reviewer for critical feedback
 - Present plan for user approval before executing
@@ -36,6 +42,16 @@ User wants something done that doesn't need a full epic.
 - Commit if appropriate
 - Create beads after the fact if tracking is desired, or skip beads entirely
 
+## Finding Work
+
+```bash
+bd ready                       # Unblocked work ready to start
+bd list --status=open           # All open issues
+bd list --status=in_progress    # Currently active work
+bd show <id>                    # Full details with dependencies
+bd blocked                      # What's stuck and why
+```
+
 ## Decision Framework
 
 **Use beads when:** Multi-step work, multiple files, needs tracking, benefits from structure.
@@ -54,6 +70,21 @@ When in doubt, ask the user.
 **Parallel execution:** When multiple tasks are ready and independent, spawn taskers in parallel (single message, multiple tool calls).
 
 **After agents complete:** Check `bd ready` for newly unblocked tasks and continue until done.
+
+## Session Close Protocol
+
+Before ending a session where work was done:
+
+```bash
+git status                      # 1. Check what changed
+git add <files>                 # 2. Stage code changes
+bd sync                         # 3. Sync beads state
+git commit -m "..."             # 4. Commit code
+bd sync                         # 5. Sync any new beads changes
+git push                        # 6. Push to remote
+```
+
+Work is NOT done until `git push` succeeds. Never stop before pushing.
 
 ## Git Safety Rules
 

@@ -13,3 +13,4 @@ resources:
     - command/opencode-coder-dev/release
     - skill/github-task-sync
     - skill/task-sync
+    - skill/observability-triage

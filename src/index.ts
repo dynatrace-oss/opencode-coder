@@ -102,17 +102,15 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
     tool: {
       coder: coderTool,
     },
-    hooks: {
-      "command.execute.before": async (
-        input: { command: string; sessionID: string; arguments: string },
-        output: { parts: Array<any> }
-      ) => {
-        if (!input.arguments || !input.arguments.trim()) return;
-        output.parts.push({
-          type: "text",
-          text: `<command-arguments>\nThe user provided these arguments when running this command:\n${input.arguments}\n</command-arguments>`,
-        });
-      },
+    "command.execute.before": async (
+      input: { command: string; sessionID: string; arguments: string },
+      output: { parts: Array<any> }
+    ) => {
+      if (!input.arguments || !input.arguments.trim()) return;
+      output.parts.push({
+        type: "text",
+        text: `<command-arguments>\nThe user provided these arguments when running this command:\n${input.arguments}\n</command-arguments>`,
+      });
     },
     config: async (input) => {
       const agentsPath = join(worktree, ".coder", "AGENTS.md");

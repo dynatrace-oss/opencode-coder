@@ -206,7 +206,6 @@ if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
 .opencode/
 .coder/
 ai.package.yaml
-AGENTS.md
 STEALTH
 fi
 ```
@@ -243,7 +242,7 @@ When `/init` is re-run and stealth is already active:
    git show HEAD:AGENTS.md 2>/dev/null
    ```
    If it has changed, incorporate the new content into the locally-managed version
-5. Update `AGENTS.md` at the project root if needed
+5. Update `.coder/AGENTS.md` if needed (stealth mode always writes here, not to project root)
 6. Report what was refreshed
 
 ---
@@ -256,34 +255,38 @@ Generate or update AGENTS.md using the template:
 2. Follow the full workflow from the template (explore → map docs → migration decision → generate)
 3. This includes asking the user about migrating to standard file names if non-standard docs are found
 
+> In stealth mode, the generated AGENTS.md is written to `.coder/AGENTS.md` — the plugin's config hook ensures OpenCode loads it as additional instructions.
+
 **Key principle**: AGENTS.md is a routing table — each section points to the right docs and skills. Content lives in standard files, not in AGENTS.md itself.
 
 #### Stealth Mode: Path Awareness
 
-When operating in stealth mode, generated docs live under `.coder/docs/` instead of `docs/`. AGENTS.md must reference these paths:
+When operating in stealth mode, AGENTS.md is written to `.coder/AGENTS.md` (not the project root). The plugin's config hook injects it into OpenCode as additional instructions. Generated docs live under `.coder/docs/` instead of `docs/`. AGENTS.md must reference these paths:
 
 | Standard path | Stealth path |
 |---|---|
+| `AGENTS.md` (project root) | `.coder/AGENTS.md` |
 | `Read docs/CODING.md` | `Read .coder/docs/CODING.md` |
 | `Read docs/TESTING.md` | `Read .coder/docs/TESTING.md` |
 | `Read docs/RELEASING.md` | `Read .coder/docs/RELEASING.md` |
 | `Read docs/MONITORING.md` | `Read .coder/docs/MONITORING.md` |
 
-All other AGENTS.md content and structure remains the same.
+In stealth mode, AGENTS.md is created at `.coder/AGENTS.md`. The plugin's config hook ensures OpenCode loads it as additional instructions alongside any existing root AGENTS.md.
 
 #### Incorporating a Team AGENTS.md
 
-If the repository has a committed `AGENTS.md` from the team (i.e., it exists in git history, not just locally):
+If the repository has a committed `AGENTS.md` from the team (i.e., it exists in git history):
 
 ```bash
 git show HEAD:AGENTS.md 2>/dev/null
 ```
 
-- Read and parse the team's version
-- Incorporate any relevant project-specific content, conventions, or section headings into our generated version
-- Our locally-managed version **replaces** the committed one on disk (it is excluded from git via the stealth block, so the team's version remains in git history untouched)
+- Read and parse the team's version for context (project conventions, tech stack, etc.)
+- Our `.coder/AGENTS.md` does NOT need to duplicate the team's content — focus on adding opencode-coder sections: doc routing (pointing to `.coder/docs/`), skill references, and beads workflow
+- The plugin injects `.coder/AGENTS.md` via the config hook → OpenCode loads both the team's root AGENTS.md and our `.coder/AGENTS.md`
+- The team's AGENTS.md remains completely untouched
 
-> **AGENTS.md must always be at the project root** — OpenCode reads it by filesystem convention.
+> **AGENTS.md is NOT placed at the project root in stealth mode.** The plugin's config hook adds `.coder/AGENTS.md` to OpenCode's instructions, which are combined with any existing root AGENTS.md.
 
 ---
 
@@ -292,19 +295,22 @@ git show HEAD:AGENTS.md 2>/dev/null
 To switch from stealth mode to team mode (sharing opencode-coder artifacts with the team), follow these steps:
 
 ```bash
-# 1. Copy docs to standard locations
+# 1. Move AGENTS.md to project root (or merge with team's existing one)
+cp .coder/AGENTS.md ./AGENTS.md
+
+# 2. Copy docs to standard locations
 cp -r .coder/docs/ ./docs/
 
-# 2. Update AGENTS.md paths from .coder/docs/ to docs/
-#    (manually edit AGENTS.md to replace .coder/docs/ with docs/)
+# 3. Update all .coder/docs/ paths to docs/ in AGENTS.md
+#    (edit AGENTS.md to replace .coder/docs/ with docs/)
 
-# 3. Remove stealth block from .git/info/exclude
-#    (manually delete the block starting with "# opencode-coder stealth mode")
+# 4. Remove stealth block from .git/info/exclude
+#    (delete the block starting with "# opencode-coder stealth mode")
 
-# 4. Clean up stealth workspace
+# 5. Clean up stealth workspace
 rm -rf .coder/
 
-# 5. Commit all artifacts to version control
+# 6. Commit all artifacts to version control
 git add AGENTS.md ai.package.yaml docs/ .beads/
 git commit -m "chore: enable team mode"
 ```

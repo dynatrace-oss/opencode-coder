@@ -21,7 +21,7 @@ Each section maps to a standard file in `docs/`:
 | Monitoring | `docs/MONITORING.md` | Only if relevant docs/skills exist |
 | Landing the Plane | *(inline)* | Only if beads is installed |
 
-> **Stealth mode**: In stealth mode, all `docs/` paths become `.coder/docs/`. See [Mode Detection](#mode-detection).
+> **Stealth mode**: In stealth mode, AGENTS.md is written to `.coder/AGENTS.md` (not project root) and all `docs/` paths become `.coder/docs/`. The plugin injects `.coder/AGENTS.md` into OpenCode via the config hook. See [Mode Detection](#mode-detection).
 
 ---
 
@@ -33,12 +33,12 @@ Before starting the workflow, detect the active mode:
 grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null
 ```
 
-- **Stealth mode** (marker found): All documentation files live under `.coder/docs/` instead of `docs/`. The `.coder/` directory is excluded from git via `.git/info/exclude`.
-- **Team mode** (marker not found): Documentation files live under `docs/` as usual.
+- **Stealth mode** (marker found): AGENTS.md is written to `.coder/AGENTS.md` (not project root). All documentation files live under `.coder/docs/` instead of `docs/`. The `.coder/` directory is excluded from git via `.git/info/exclude`. The plugin's config hook injects `.coder/AGENTS.md` into OpenCode's instructions — if the project has a team AGENTS.md at root, both are loaded.
+- **Team mode** (marker not found): AGENTS.md is written to project root. Documentation files live under `docs/` as usual.
 
-Throughout this template, `{docs}` refers to:
-- `.coder/docs/` in stealth mode
-- `docs/` in team mode
+Throughout this template:
+- `{agents_md}` refers to `.coder/AGENTS.md` in stealth mode, `AGENTS.md` in team mode
+- `{docs}` refers to `.coder/docs/` in stealth mode, `docs/` in team mode
 
 **Always detect mode first and use the correct path throughout all subsequent steps.**
 
@@ -55,7 +55,7 @@ Spawn an **explore agent** with the following prompt:
 > 1. **Project identity** — Name, one-sentence description, tech stack
 > 2. **Build & test commands** — How to build, test, lint, type-check (extract from project config files and scripts)
 > 3. **Directory structure** — Top-level directories with one-line purpose each
-> 4. **Existing docs** — List ALL files in `docs/` directory AND `.coder/docs/` directory (if either exists). Also check for `CONTRIBUTING.md`, `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md` in project root. Report full paths.
+> 4. **Existing docs** — List ALL files in `docs/` directory AND `.coder/docs/` directory (if either exists). Also check for `CONTRIBUTING.md`, `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md` in project root. Check for `.coder/AGENTS.md` (stealth mode AGENTS.md). Report full paths.
 > 5. **Coding conventions** — Are there any files that describe coding conventions, guidelines, or architecture? Check: `CONTRIBUTING.md`, `docs/coding-guidelines.md`, `docs/CODING.md`, `.editorconfig`, or similar. Report filenames only.
 > 6. **Testing docs** — Are there files that describe testing patterns, test setup, or test conventions? Report filenames only.
 > 7. **Release docs** — Are there files that describe the release process? Report filenames only.
@@ -132,7 +132,7 @@ For other active sections: only create the standard file if the explore step gat
 
 Build the file section by section:
 
-> **Path convention**: All examples below show team mode paths (`docs/`). In stealth mode, replace `docs/` with `.coder/docs/` in all file references.
+> **Path convention**: All examples below show team mode paths. In stealth mode: write the file to `.coder/AGENTS.md` (not project root), and replace `docs/` with `.coder/docs/` in all file references.
 
 #### Project Overview (always, inline)
 
@@ -268,6 +268,7 @@ After generating, confirm:
 - [ ] Landing the Plane only appears if beads is installed
 - [ ] No duplicated content from referenced files
 - [ ] Total size is under 60 lines
+- [ ] **Stealth mode only**: AGENTS.md written to `.coder/AGENTS.md`, NOT to project root
 - [ ] **Stealth mode only**: All doc paths reference `.coder/docs/`, not `docs/`
 - [ ] **Stealth mode only**: No files were created under `docs/` directory
 - [ ] **Stealth mode only**: `.coder/docs/` directory exists with generated files
@@ -287,4 +288,20 @@ When AGENTS.md already exists:
 7. Keep custom sections in their original position; place new sections before "Landing the Plane"
 8. Offer migration if non-standard file names are detected (same as Step 3)
 
-When updating in stealth mode, ensure all doc paths continue to reference `.coder/docs/`. If the mode has changed since the last generation, update all paths accordingly.
+When updating in stealth mode, the file being updated is `.coder/AGENTS.md`. Ensure all doc paths continue to reference `.coder/docs/`. If the mode has changed since the last generation, update all paths accordingly and move the file to the correct location (`.coder/AGENTS.md` for stealth, project root for team).
+
+---
+
+## Coexistence with Team AGENTS.md
+
+When a project has an existing AGENTS.md tracked in git (committed by the team) AND we're in stealth mode:
+
+1. The team's root AGENTS.md is loaded by OpenCode automatically (built-in convention)
+2. Our `.coder/AGENTS.md` is injected by the plugin's config hook as additional instructions
+3. OpenCode combines both — the agent sees instructions from both files
+
+**Implications for content generation:**
+- Read the team's AGENTS.md (`git show HEAD:AGENTS.md` or directly from root) for context
+- Our `.coder/AGENTS.md` should NOT duplicate the team's content (project overview, tech stack, etc.)
+- Focus on adding what the team's file doesn't cover: opencode-coder doc routing (`.coder/docs/` paths), skill references, beads workflow, and session completion protocol
+- If the team's file already has sections that overlap (e.g., a Coding section), our file can reference additional docs without repeating their content

@@ -1,10 +1,12 @@
 import { type Plugin } from "@opencode-ai/plugin";
+import { access } from "fs/promises";
+import { join } from "path";
 import { createLogger, getVersionInfo } from "./core";
 import { BeadsService, AimgrService, SessionExportService } from "./service";
 import { createCoderTool } from "./tool";
 import { isPluginDisabled } from "./config/env";
 
-export const OpencodeCoder: Plugin = async ({ client }) => {
+export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
   const log = createLogger(client);
   const startTime = Date.now();
 
@@ -111,6 +113,17 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
           text: `<command-arguments>\nThe user provided these arguments when running this command:\n${input.arguments}\n</command-arguments>`,
         });
       },
+    },
+    config: async (input) => {
+      const agentsPath = join(worktree, ".coder", "AGENTS.md");
+      try {
+        await access(agentsPath);
+        input.instructions = input.instructions ?? [];
+        input.instructions.push(".coder/AGENTS.md");
+        log.info("Injected .coder/AGENTS.md into instructions");
+      } catch {
+        // File doesn't exist — no-op
+      }
     },
   };
 };

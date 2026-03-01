@@ -109,7 +109,6 @@ if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
 .opencode/
 .coder/
 ai.package.yaml
-AGENTS.md
 STEALTH
 fi
 
@@ -186,7 +185,6 @@ if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
 .opencode/
 .coder/
 ai.package.yaml
-AGENTS.md
 STEALTH
 fi
 
@@ -230,13 +228,13 @@ No commit needed - all files are excluded from git.
 .opencode/           # OpenCode config, skills, commands (excluded in stealth)
 
 .coder/              # Stealth workspace (excluded in stealth)
+  AGENTS.md          # AI routing table (injected by plugin config hook)
   docs/
     CODING.md        # Generated coding conventions
     TESTING.md       # Generated testing guide
     RELEASING.md     # Generated release guide
     MONITORING.md    # Generated monitoring guide
 
-AGENTS.md            # AI routing table (at root, excluded in stealth)
 ai.package.yaml      # aimgr manifest (at root, excluded in stealth)
 ```
 
@@ -261,16 +259,17 @@ ai.package.yaml      # Committed at root
 
 ### Note on AGENTS.md
 
-The `bd init` command creates or updates `AGENTS.md` at the **project root** with AI routing instructions. Behavior differs by mode:
+The `bd init` command creates or updates `AGENTS.md` with AI routing instructions. Behavior differs by mode:
 
 **In stealth mode:**
-- `AGENTS.md` is created at the project root but excluded from git via `.git/info/exclude`
+- `AGENTS.md` is created at `.coder/AGENTS.md` and excluded from git via the `.coder/` entry in `.git/info/exclude`
+- The plugin's config hook injects `.coder/AGENTS.md` into OpenCode's instructions automatically, so it is loaded alongside any team-committed `AGENTS.md` at the project root
 - References `.coder/docs/` paths for generated documentation (e.g., `.coder/docs/CODING.md`)
-- If the repo already has a committed `AGENTS.md`, the stealth version replaces it locally without affecting the committed version
+- If the repo already has a committed `AGENTS.md` at the root, the stealth version at `.coder/AGENTS.md` supplements it without affecting the committed version
 - Other team members will not see these changes
 
 **In team mode:**
-- `AGENTS.md` is committed and shared with the team
+- `AGENTS.md` is created at the project root, committed and shared with the team
 - References `docs/` paths for generated documentation
 - Serves as the authoritative AI routing table for the whole team
 
@@ -305,16 +304,19 @@ When your team is ready to adopt the plugin together, transition from stealth to
 # 1. Copy stealth docs to standard committed locations
 cp -r .coder/docs/ ./docs/
 
-# 2. Update AGENTS.md paths from .coder/docs/ to docs/
+# 2. Move .coder/AGENTS.md to the project root
+cp .coder/AGENTS.md ./AGENTS.md
+
+# 3. Update AGENTS.md paths from .coder/docs/ to docs/
 #    (Edit AGENTS.md to replace .coder/docs/ references with docs/)
 
-# 3. Remove the stealth exclusion block from .git/info/exclude
-#    (Delete the "# opencode-coder stealth mode" block and the 5 lines following it)
+# 4. Remove the stealth exclusion block from .git/info/exclude
+#    (Delete the "# opencode-coder stealth mode" block and the 4 lines following it)
 
-# 4. Clean up the stealth workspace
+# 5. Clean up the stealth workspace
 rm -rf .coder/
 
-# 5. Commit everything
+# 6. Commit everything
 git add AGENTS.md ai.package.yaml docs/ .beads/
 git commit -m "chore: enable team mode"
 ```
@@ -327,7 +329,7 @@ Re-running `/init` in stealth mode refreshes generated documentation under `.cod
 
 - **No re-prompting** for mode selection — stealth is detected automatically via the marker comment in `.git/info/exclude`
 - Generated files (`CODING.md`, `TESTING.md`, etc.) are overwritten with fresh content
-- `AGENTS.md` is updated at the root if the plugin detects it needs changes
+- `AGENTS.md` is updated at `.coder/AGENTS.md` if the plugin detects it needs changes
 - The exclusion block is left unchanged (idempotent check prevents duplicates)
 
 This is useful after major project changes (new tech stack, new workflows) where the generated docs may be stale.

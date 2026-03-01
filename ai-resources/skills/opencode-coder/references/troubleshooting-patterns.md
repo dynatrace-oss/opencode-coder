@@ -155,16 +155,19 @@ cat .git/hooks/pre-commit
 # 1. Copy stealth docs to standard locations
 cp -r .coder/docs/ ./docs/
 
-# 2. Update AGENTS.md to reference docs/ instead of .coder/docs/
+# 2. Move .coder/AGENTS.md to the project root
+cp .coder/AGENTS.md ./AGENTS.md
+
+# 3. Update AGENTS.md to reference docs/ instead of .coder/docs/
 # (manually update paths in AGENTS.md)
 
-# 3. Remove stealth block from .git/info/exclude
-# (remove the "# opencode-coder stealth mode" block)
+# 4. Remove stealth block from .git/info/exclude
+# (remove the "# opencode-coder stealth mode" block and the 4 lines following it)
 
-# 4. Clean up stealth workspace
+# 5. Clean up stealth workspace
 rm -rf .coder/
 
-# 5. Stage and commit
+# 6. Stage and commit
 git add .beads/ AGENTS.md ai.package.yaml docs/
 git commit -m "chore: switch to team mode"
 ```
@@ -194,7 +197,6 @@ if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
 .opencode/
 .coder/
 ai.package.yaml
-AGENTS.md
 STEALTH
 fi
 ```
@@ -207,7 +209,7 @@ fi
 
 ### Stealth files deleted by git clean
 
-**Symptoms**: `.coder/`, `.beads/`, AGENTS.md, or ai.package.yaml disappeared after running `git clean`.
+**Symptoms**: `.coder/`, `.beads/`, or ai.package.yaml disappeared after running `git clean`.
 
 **Solution**:
 
@@ -408,7 +410,7 @@ cat .beads/interactions.jsonl | tail -20
 
 ### Beads files showing up in git status (stealth mode)
 
-**Symptoms**: `.beads/`, `.coder/`, `AGENTS.md`, or `ai.package.yaml` appear in `git status` in stealth mode.
+**Symptoms**: `.beads/`, `.coder/`, or `ai.package.yaml` appear in `git status` in stealth mode.
 
 **Solution**:
 
@@ -422,7 +424,6 @@ if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
 .opencode/
 .coder/
 ai.package.yaml
-AGENTS.md
 STEALTH
 fi
 
@@ -430,7 +431,7 @@ fi
 cat .git/info/exclude
 ```
 
-**Root Cause**: Files not properly excluded from git in stealth mode. The full stealth exclusion block may be missing or incomplete.
+**Root Cause**: Files not properly excluded from git in stealth mode. The full stealth exclusion block may be missing or incomplete. Note: `.coder/AGENTS.md` is covered by the `.coder/` exclusion — no separate `AGENTS.md` entry is needed.
 
 **Note**: Use `.git/info/exclude` instead of `.gitignore` to keep exclusions local and invisible to other developers.
 

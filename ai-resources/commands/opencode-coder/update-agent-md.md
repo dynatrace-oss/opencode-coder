@@ -20,9 +20,10 @@ grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null && echo "S
 
 - If output is `STEALTH_ACTIVE` → **stealth mode is active**. Keep in mind throughout all subsequent steps:
   - Docs directory is `.coder/docs/` — **not** `docs/`
+  - AGENTS.md lives at `.coder/AGENTS.md` — **not** at the project root
   - AGENTS.md path references must point to `.coder/docs/CODING.md`, `.coder/docs/TESTING.md`, etc.
   - Do **not** create any files under `docs/`
-- If no output → **team mode**. Docs live under `docs/` as usual.
+- If no output → **team mode**. Docs live under `docs/` and AGENTS.md lives at the project root as usual.
 
 Carry this context forward into the template workflow.
 
@@ -45,3 +46,4 @@ Carry this context forward into the template workflow.
 - If AGENTS.md already exists, follow the "Updating an Existing AGENTS.md" section from the template
 - Preserve any custom sections the user added manually
 - In stealth mode, all generated doc files go under `.coder/docs/`, never under `docs/`
+- In stealth mode, write AGENTS.md to `.coder/AGENTS.md`, never to the project root

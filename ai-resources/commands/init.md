@@ -107,12 +107,19 @@ aimgr verify --format json
   - DO NOT proceed until user responds
 
   If user says **YES**:
-  - Try `aimgr repair`
-  - If the command is not available, suggest a manual fix:
-    > aimgr repair is not yet available. Try:
-    > ```bash
-    > aimgr uninstall package/opencode-coder && aimgr install package/opencode-coder
-    > ```
+  - Run repair and parse the result:
+    ```bash
+    aimgr repair --format json
+    ```
+  - Report the outcome:
+    - If `summary.fixed > 0`: report what was fixed (list items from the `fixed` array — each has `resource`, `tool`, `issue_type`, `description`)
+    - If `summary.failed > 0`: report which resources failed to repair (from the `failed` array) and suggest manual steps:
+      > Could not auto-repair some resources. Try:
+      > ```bash
+      > aimgr uninstall package/opencode-coder && aimgr install package/opencode-coder
+      > ```
+    - If `hints` array is non-empty: show the hints to the user (each has `resource`, `description`)
+  - After repair, re-run `aimgr verify --format json` to confirm the state is clean. Report whether issues are resolved.
   
   If user says **NO**:
   - Continue to **Step 1** with a warning that some resources may not work correctly.

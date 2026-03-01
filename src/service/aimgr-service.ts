@@ -137,6 +137,34 @@ export class AimgrService {
   }
 
   /**
+   * Run aimgr repair and return the parsed JSON result.
+   *
+   * Returns the raw parsed JSON object (typed as any so types can be tightened
+   * later once the aimgr repair output format is stabilised), or null if aimgr
+   * is not available or the command fails.
+   *
+   * Note: aimgr repair outputs human-readable text to stderr and JSON to stdout.
+   * We capture stdout only via execSync.
+   */
+  repairResources(): any {
+    if (!this.isAimgrAvailable()) {
+      this.logger.debug("aimgr not available, skipping repairResources");
+      return null;
+    }
+
+    try {
+      this.logger.debug("Running aimgr repair --format json");
+      const stdout = execSync("aimgr repair --format json", { encoding: "utf-8" });
+      const result = JSON.parse(stdout);
+      this.logger.debug("aimgr repair completed", { result });
+      return result;
+    } catch (error) {
+      this.logger.error("Failed to run aimgr repair", { error: String(error) });
+      return null;
+    }
+  }
+
+  /**
    * Show a toast notification via the OpenCode TUI
    */
   private async showToast(options: {

@@ -43,6 +43,9 @@ Parse and display the results to the user, then act on them:
 - **If issues are found** (non-empty `issues` or `errors` arrays, or a non-ok `status` field):
   1. Display the issues clearly to the user.
   2. Ask the user via `question()`: **"Resource issues detected. Want me to attempt repair?"**
-     - **YES**: Inform the user that `aimgr repair` is not yet available. Suggest the manual fix: reinstall each affected resource with `aimgr install <resource>` (replace `<resource>` with the affected package/skill/command name reported in the verify output).
+     - **YES**: Run `aimgr repair --format json` and parse the result:
+       - Report `summary.fixed` resources repaired (list items from the `fixed` array — each has `resource`, `tool`, `issue_type`, `description`)
+       - If `summary.failed > 0`: show the failed items and suggest `aimgr uninstall <resource>` for resources that could not be repaired automatically
+       - If `hints` array is non-empty: show the hints to the user (each has `resource`, `description`)
      - **NO**: Acknowledge and continue with the remaining doctor checks.
 

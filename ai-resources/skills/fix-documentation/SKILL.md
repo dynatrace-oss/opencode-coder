@@ -7,6 +7,22 @@ description: "Fix documentation files - either single files (typos, grammar, cla
 
 Fix documentation files through targeted improvements or comprehensive project documentation synchronization.
 
+## Step 0: Detect Mode
+
+Before doing anything else, check for stealth mode:
+
+```bash
+grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null && echo "STEALTH_ACTIVE"
+```
+
+- If output is `STEALTH_ACTIVE` → **stealth mode is active**:
+  - AGENTS.md lives at `.coder/AGENTS.md` — **not** at the project root
+  - Docs directory is `.coder/docs/` — **not** `docs/`
+  - All path operations and instructions must use `.coder/AGENTS.md`
+- If no output → **team mode**: AGENTS.md lives at the project root as usual
+
+Carry this context forward into all subsequent steps and loaded reference files.
+
 ## Decision Tree
 
 When this skill loads, determine the user's intent:
@@ -92,11 +108,12 @@ question({
 **Full guide**: See [references/fix-agents-md.md](references/fix-agents-md.md)
 
 **Quick steps**:
-1. Test all commands in AGENTS.md
-2. Verify all file paths exist
-3. Check for redundancy with README/CONTRIBUTING
-4. Ensure it's brief and scannable
-5. Verify cross-references work
+1. Detect mode (stealth: `.coder/AGENTS.md`, team: `AGENTS.md`)
+2. Test all commands in the file
+3. Verify all file paths exist
+4. Check for redundancy with README/CONTRIBUTING
+5. Ensure it's brief and scannable
+6. Verify cross-references work
 
 ## Reference Files
 

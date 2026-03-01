@@ -2,6 +2,23 @@
 
 This guide covers maintaining and synchronizing the AGENTS.md file specifically.
 
+## Step 0: Detect Mode
+
+Before doing anything else, check for stealth mode:
+
+```bash
+grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null && echo "STEALTH_ACTIVE"
+```
+
+- If output is `STEALTH_ACTIVE` → **stealth mode is active**:
+  - AGENTS.md lives at `.coder/AGENTS.md` — **not** at the project root
+  - Docs directory is `.coder/docs/` — **not** `docs/`
+  - All file operations in this guide targeting "AGENTS.md" must use `.coder/AGENTS.md`
+- If no output → **team mode**: AGENTS.md lives at the project root as usual
+
+Throughout this guide:
+- `{agents_md}` refers to `.coder/AGENTS.md` in stealth mode, `AGENTS.md` in team mode
+
 ## Purpose
 
 AGENTS.md serves as a quick reference for AI coding assistants during development. It must be accurate, concise, and synchronized with other project documentation.
@@ -26,8 +43,8 @@ Quick reference for AI coding assistants during development
 ## Common Issues to Fix
 
 ### 1. Outdated Commands
-**Problem**: Build/test commands changed but AGENTS.md not updated
-**Fix**: Test all commands, update AGENTS.md to match current scripts
+**Problem**: Build/test commands changed but `{agents_md}` not updated
+**Fix**: Test all commands, update `{agents_md}` to match current scripts
 
 ### 2. Incorrect File Paths
 **Problem**: File paths listed don't exist or moved
@@ -47,9 +64,9 @@ Quick reference for AI coding assistants during development
 
 ## Verification Steps
 
-1. **Test all commands**: Run each command listed in AGENTS.md
+1. **Test all commands**: Run each command listed in `{agents_md}`
    ```bash
-   # For each command in AGENTS.md, verify it works:
+   # For each command in {agents_md}, verify it works:
    <command-from-agents-md>
    ```
 
@@ -64,7 +81,7 @@ Quick reference for AI coding assistants during development
 
 4. **Compare with package.json scripts**: Ensure documented scripts match
    ```bash
-   # Compare AGENTS.md commands with:
+   # Compare {agents_md} commands with:
    cat package.json | grep -A 20 '"scripts"'
    ```
 
@@ -73,7 +90,7 @@ Quick reference for AI coding assistants during development
 
 ## Update Checklist
 
-When fixing AGENTS.md:
+When fixing `{agents_md}`:
 
 - [ ] All commands tested and working
 - [ ] All file paths verified to exist
@@ -85,7 +102,7 @@ When fixing AGENTS.md:
 
 ## Synchronization with Other Files
 
-AGENTS.md must be consistent with:
+`{agents_md}` must be consistent with:
 
 ### With README.md
 - Installation commands should match
@@ -127,7 +144,7 @@ goes to the dist/ directory where the compiled JavaScript files are stored...
 
 ## Testing Before Submitting
 
-Before marking AGENTS.md as fixed:
+Before marking `{agents_md}` as fixed:
 
 1. Run every command listed
 2. Open every file path mentioned

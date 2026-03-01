@@ -2,6 +2,23 @@
 
 This guide covers auditing and synchronizing the three core documentation files that must stay in sync with each other and the codebase.
 
+## Step 0: Detect Mode
+
+Before doing anything else, check for stealth mode:
+
+```bash
+grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null && echo "STEALTH_ACTIVE"
+```
+
+- If output is `STEALTH_ACTIVE` → **stealth mode is active**:
+  - AGENTS.md lives at `.coder/AGENTS.md` — **not** at the project root
+  - Docs directory is `.coder/docs/` — **not** `docs/`
+  - All file operations in this guide targeting "AGENTS.md" must use `.coder/AGENTS.md`
+- If no output → **team mode**: AGENTS.md lives at the project root as usual
+
+Throughout this guide:
+- `{agents_md}` refers to `.coder/AGENTS.md` in stealth mode, `AGENTS.md` in team mode
+
 ## Purpose
 
 Maintain project documentation in a synchronized, accurate state by **identifying and fixing issues** across three documentation files that must stay in sync with each other and with the actual codebase implementation.
@@ -58,6 +75,8 @@ Maintain project documentation in a synchronized, accurate state by **identifyin
 ### AGENTS.md (AI Agent Instructions)
 **Purpose**: Quick reference for AI coding assistants during development
 
+**Location**: `{agents_md}` (`.coder/AGENTS.md` in stealth mode, `AGENTS.md` at project root in team mode)
+
 **Focus**: Quick reference for AI coding assistants
 
 **Content**:
@@ -93,7 +112,7 @@ Use the same term names across all files
 Links and references between files must work
 
 **Requirements**:
-- AGENTS.md points to CONTRIBUTING.md for detailed info
+- `{agents_md}` points to CONTRIBUTING.md for detailed info
 - README.md points to CONTRIBUTING.md for dev guidelines
 - All file paths must be correct
 
@@ -103,7 +122,7 @@ Avoid duplicating complex examples
 **Pattern**:
 - Complex examples live in CONTRIBUTING.md
 - README.md can reference them ("See CONTRIBUTING.md for examples")
-- AGENTS.md keeps examples minimal or references CONTRIBUTING.md
+- `{agents_md}` keeps examples minimal or references CONTRIBUTING.md
 
 ## Verification Process
 
@@ -113,7 +132,7 @@ Avoid duplicating complex examples
 **Test**: For each command documented, verify it actually works
 
 **Process**:
-1. Identify all commands in README.md, CONTRIBUTING.md, and AGENTS.md
+1. Identify all commands in README.md, CONTRIBUTING.md, and `{agents_md}`
 2. Run each command and note the output
 3. Compare documented behavior with actual behavior
 4. Update documentation if behavior differs
@@ -172,7 +191,7 @@ Avoid duplicating complex examples
 ### Scenario 1: After Adding a New Feature
 1. Document it in README.md with usage and options
 2. Document full implementation details in CONTRIBUTING.md
-3. Add command to AGENTS.md if it's frequently used
+3. Add command to `{agents_md}` if it's frequently used
 4. Verify all three files reference the command correctly
 5. Test that the documented command works
 
@@ -180,12 +199,12 @@ Avoid duplicating complex examples
 1. Update example configs in project
 2. Update all references in README.md
 3. Update all references in CONTRIBUTING.md (Config section)
-4. Update defaults in AGENTS.md if listed
+4. Update defaults in `{agents_md}` if listed
 5. Verify consistency across all files
 
 ### Scenario 3: After Refactoring Project Structure
 1. Update CONTRIBUTING.md Project Structure section
-2. Update AGENTS.md Architecture Quick Reference
+2. Update `{agents_md}` Architecture Quick Reference
 3. Update any file paths in code examples across all files
 4. Update README.md if user-facing paths changed
 5. Verify all references point to correct locations

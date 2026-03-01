@@ -2,6 +2,21 @@
 
 Use this checklist when auditing and fixing README.md, CONTRIBUTING.md, and AGENTS.md.
 
+## Step 0: Detect Mode
+
+Before starting, check for stealth mode:
+
+```bash
+grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null && echo "STEALTH_ACTIVE"
+```
+
+- If `STEALTH_ACTIVE` → AGENTS.md lives at `.coder/AGENTS.md`. All checklist items labeled "AGENTS.md" below refer to `.coder/AGENTS.md`.
+- If no output → AGENTS.md lives at the project root as usual.
+
+Throughout this checklist, `{agents_md}` = `.coder/AGENTS.md` (stealth) or `AGENTS.md` (team mode).
+
+---
+
 ## Phase 1: Command Verification
 
 **Goal**: Ensure all documented commands work as described
@@ -18,7 +33,7 @@ Use this checklist when auditing and fixing README.md, CONTRIBUTING.md, and AGEN
 - [ ] Development setup commands are accurate
 - [ ] Linting/formatting commands work
 
-### AGENTS.md Commands
+### `{agents_md}` Commands
 - [ ] Every command listed has been tested
 - [ ] Build/compile commands work
 - [ ] Test commands execute properly
@@ -26,7 +41,7 @@ Use this checklist when auditing and fixing README.md, CONTRIBUTING.md, and AGEN
 
 ### Cross-File Command Consistency
 - [ ] Installation commands match across README and CONTRIBUTING
-- [ ] Script names in AGENTS.md match package.json
+- [ ] Script names in `{agents_md}` match package.json
 - [ ] No conflicting command descriptions
 
 ---
@@ -45,7 +60,7 @@ Use this checklist when auditing and fixing README.md, CONTRIBUTING.md, and AGEN
 - [ ] Example code file references are valid
 - [ ] Links to README.md and code examples work
 
-### AGENTS.md Paths
+### `{agents_md}` Paths
 - [ ] All file paths mentioned exist
 - [ ] Script locations are accurate
 - [ ] Cross-references to README/CONTRIBUTING work
@@ -75,7 +90,7 @@ Use this checklist when auditing and fixing README.md, CONTRIBUTING.md, and AGEN
 - [ ] Design patterns documented are actually used
 - [ ] Project structure reflects actual directories
 
-### AGENTS.md Accuracy
+### `{agents_md}` Accuracy
 - [ ] Commands produce documented output
 - [ ] Architecture references are still valid
 - [ ] Code style reminders match actual style guide
@@ -124,7 +139,7 @@ Use this checklist when auditing and fixing README.md, CONTRIBUTING.md, and AGEN
 - [ ] Code examples are complete and correct
 - [ ] Development workflow is clear
 
-### AGENTS.md Quality
+### `{agents_md}` Quality
 - [ ] Brief and scannable (< 5 minutes to read)
 - [ ] No redundant content from other docs
 - [ ] All essential commands present
@@ -139,13 +154,13 @@ Use this checklist when auditing and fixing README.md, CONTRIBUTING.md, and AGEN
 
 ### Link Verification
 - [ ] README → CONTRIBUTING link works
-- [ ] AGENTS → CONTRIBUTING links work
-- [ ] AGENTS → README links work (if any)
+- [ ] `{agents_md}` → CONTRIBUTING links work
+- [ ] `{agents_md}` → README links work (if any)
 - [ ] All internal section anchors work
 
 ### Reference Appropriateness
 - [ ] README references CONTRIBUTING for dev details
-- [ ] AGENTS references CONTRIBUTING for architecture
+- [ ] `{agents_md}` references CONTRIBUTING for architecture
 - [ ] No circular or redundant references
 - [ ] References add value (not just "see other doc")
 
@@ -178,7 +193,7 @@ Use this checklist when auditing and fixing README.md, CONTRIBUTING.md, and AGEN
 
 Use this table to quickly identify which file(s) to update for common issues:
 
-| Issue | README.md | CONTRIBUTING.md | AGENTS.md |
+| Issue | README.md | CONTRIBUTING.md | `{agents_md}` |
 |-------|-----------|-----------------|-----------|
 | Installation command changed | ✅ | ✅ | |
 | New CLI flag added | ✅ | ✅ | |

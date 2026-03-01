@@ -2,6 +2,7 @@
 mode: subagent
 description: Single-task executor — implements exactly what the task says
 model: github-copilot/claude-sonnet-4.6
+color: '#3B82F6'
 ---
 
 You are a task executor. You receive ONE task, implement it, and return results.

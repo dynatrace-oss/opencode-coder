@@ -60,6 +60,38 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
       log.error("Failed to auto-initialize aimgr", { error: String(err) });
     });
 
+  // 7. Background aimgr resource health check
+  // Runs in the background and doesn't block plugin loading
+  const aimgrVerifyStart = Date.now();
+  Promise.resolve()
+    .then(() => {
+      const result = aimgrService.verifyResources();
+      log.debug("aimgr verifyResources completed", { durationMs: Date.now() - aimgrVerifyStart });
+      if (result === null) {
+        // aimgr not installed or verify failed — skip silently
+        return;
+      }
+      // Detect issues: non-empty arrays or truthy error fields in the JSON
+      const hasIssues =
+        (Array.isArray(result.issues) && result.issues.length > 0) ||
+        (Array.isArray(result.errors) && result.errors.length > 0) ||
+        (result.error && result.error !== "") ||
+        (result.status && result.status !== "ok" && result.status !== "healthy");
+      if (hasIssues) {
+        (client as any).tui.showToast({
+          title: "aimgr",
+          message: "aimgr: resource issues detected. Run /opencode-coder/doctor for details.",
+          variant: "warning",
+          duration: 8000,
+        }).catch((err: unknown) => {
+          log.error("Failed to show aimgr verify toast", { error: String(err) });
+        });
+      }
+    })
+    .catch((err) => {
+      log.error("Failed to run aimgr verifyResources", { error: String(err) });
+    });
+
   // Log plugin load completion with timing
   const loadDurationMs = Date.now() - startTime;
   log.info("OpencodeCoder plugin loaded", { durationMs: loadDurationMs, beadsEnabled: beadsService.isBeadsEnabled() });
@@ -67,6 +99,18 @@ export const OpencodeCoder: Plugin = async ({ client }) => {
   return {
     tool: {
       coder: coderTool,
+    },
+    hooks: {
+      "command.execute.before": async (
+        input: { command: string; sessionID: string; arguments: string },
+        output: { parts: Array<any> }
+      ) => {
+        if (!input.arguments || !input.arguments.trim()) return;
+        output.parts.push({
+          type: "text",
+          text: `<command-arguments>\nThe user provided these arguments when running this command:\n${input.arguments}\n</command-arguments>`,
+        });
+      },
     },
   };
 };

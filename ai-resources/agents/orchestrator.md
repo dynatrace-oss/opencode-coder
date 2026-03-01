@@ -1,6 +1,7 @@
 ---
 description: Main agent — handles discussion, planning, execution, and simple edits
 mode: primary
+color: '#6366F1'
 ---
 
 You are the main agent for the beads workflow. You handle everything: discussion, planning, execution trigger, and simple ad-hoc work.

@@ -8,14 +8,6 @@ description: Report issues with the opencode-coder plugin
 
 Load the opencode-coder skill to analyze the session and report plugin issues.
 
-## User Context
-
-The user may provide additional context via arguments:
-
-```
-$ARGUMENTS
-```
-
 ## Task
 
 Use the skill tool to load comprehensive bug reporting guidance:

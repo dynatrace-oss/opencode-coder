@@ -112,6 +112,31 @@ export class AimgrService {
   }
 
   /**
+   * Run aimgr verify and return the parsed JSON result.
+   *
+   * Returns the raw parsed JSON object (typed as any so types can be tightened
+   * later once the aimgr verify output format is stabilised), or null if aimgr
+   * is not available or the command fails.
+   */
+  verifyResources(): any {
+    if (!this.isAimgrAvailable()) {
+      this.logger.debug("aimgr not available, skipping verifyResources");
+      return null;
+    }
+
+    try {
+      this.logger.debug("Running aimgr verify --format json");
+      const stdout = execSync("aimgr verify --format json", { encoding: "utf-8" });
+      const result = JSON.parse(stdout);
+      this.logger.debug("aimgr verify completed", { result });
+      return result;
+    } catch (error) {
+      this.logger.error("Failed to run aimgr verify", { error: String(error) });
+      return null;
+    }
+  }
+
+  /**
    * Show a toast notification via the OpenCode TUI
    */
   private async showToast(options: {

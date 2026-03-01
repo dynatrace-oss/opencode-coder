@@ -19,10 +19,30 @@ Then follow the **Status & Health Checks** and **Troubleshooting & Diagnostics**
 2. Check beads status and run `bd doctor`
 3. Verify git hooks installation
 4. Check git sync status
-5. Report component status and any issues found
+5. Run aimgr resource health check (see section below)
+6. Report component status and any issues found
 
 The skill provides:
 - Complete health check procedures
 - bd doctor output filtering guidance
 - Issue resolution commands
 - Component status meanings
+
+## aimgr Resource Health
+
+Run the following diagnostic step to check the health of aimgr-managed AI resources:
+
+```bash
+aimgr verify --format json
+```
+
+Parse and display the results to the user, then act on them:
+
+- **If the command is not found** (aimgr not installed): report "aimgr not installed — skipping resource health check" and continue.
+- **If no issues are found** (empty issues/errors arrays, or `status` is `"ok"` / `"healthy"`): report "aimgr resources: all healthy".
+- **If issues are found** (non-empty `issues` or `errors` arrays, or a non-ok `status` field):
+  1. Display the issues clearly to the user.
+  2. Ask the user via `question()`: **"Resource issues detected. Want me to attempt repair?"**
+     - **YES**: Inform the user that `aimgr repair` is not yet available. Suggest the manual fix: reinstall each affected resource with `aimgr install <resource>` (replace `<resource>` with the affected package/skill/command name reported in the verify output).
+     - **NO**: Acknowledge and continue with the remaining doctor checks.
+

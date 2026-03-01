@@ -146,19 +146,105 @@ See skill for keyword search patterns by use case.
 
 ### Step 2: Beads Initialization
 
-Initialize beads for issue tracking:
-1. Verify prerequisites (git, bd CLI)
-2. Check if beads is already initialized (`bd status`)
+Initialize beads for issue tracking.
+
+#### Smart Detection (run before anything else)
+
+**Detection Step 1 — Check for active stealth mode:**
+
+```bash
+grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null && echo "STEALTH_ACTIVE"
+```
+
+- If output is `STEALTH_ACTIVE` → **stealth is already configured**. Skip the mode question entirely. Proceed directly to the **Re-run / Update** flow below.
+
+**Detection Step 2 — Check for full team configuration:**
+
+Check whether `.beads/` exists, `AGENTS.md` exists at the project root, and `ai.package.yaml` exists at the project root.
+
+- If **all three exist** and stealth marker was NOT found → already fully configured in team mode. Report status to the user and skip to **Step 3** for a refresh if needed.
+
+**Detection Step 3 — Fresh setup:**
+
+- If neither condition above matched → this is a fresh setup. Continue with the mode question below.
+
+---
+
+#### Fresh Setup: Choose Mode
 
 **MANDATORY USER INTERACTION POINT - STOP HERE (if not initialized)**
 
-3. If beads is NOT initialized, MUST use the `question()` tool to ask:
-   - "Which beads mode would you like to use?"
-   - Options: "stealth" (local-only, gitignored) and "team" (shared with team)
-   - DO NOT proceed until user selects a mode
+MUST use the `question()` tool to ask:
+- "Which beads mode would you like to use?"
+- Options: "stealth" (local-only, excluded from git) and "team" (shared with team)
+- DO NOT proceed until user selects a mode
 
-4. Run beads initialization with hooks using the selected mode
-5. Handle git exclusions based on mode
+---
+
+#### Stealth Mode Path
+
+Run beads init with stealth flag and install hooks:
+
+```bash
+bd init --stealth && bd hooks install
+```
+
+Create the stealth workspace for generated docs:
+
+```bash
+mkdir -p .coder/docs
+```
+
+Write the exclusion block to `.git/info/exclude` (idempotent — safe to run multiple times):
+
+```bash
+if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
+  cat >> .git/info/exclude << 'STEALTH'
+
+# opencode-coder stealth mode
+.beads/
+.opencode/
+.coder/
+ai.package.yaml
+AGENTS.md
+STEALTH
+fi
+```
+
+> **Note**: This uses `.git/info/exclude` (never `--skip-worktree`). The marker line `# opencode-coder stealth mode` is used for detection on re-runs.
+
+Proceed to **Step 3**.
+
+---
+
+#### Team Mode Path
+
+Run beads init and install hooks:
+
+```bash
+bd init && bd hooks install
+```
+
+Handle git tracking as appropriate for team mode (e.g., add `.beads/` to version control).
+
+Proceed to **Step 3**.
+
+---
+
+#### Re-run / Update Flow (stealth mode detected)
+
+When `/init` is re-run and stealth is already active:
+
+1. **Do NOT re-ask stealth vs team** — the marker in `.git/info/exclude` is the source of truth
+2. Re-scan the codebase for changes (new docs, updated structure, new skills installed)
+3. Refresh generated docs under `.coder/docs/` — regenerate `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md` as applicable
+4. Check if the repo's committed `AGENTS.md` has changed since last run:
+   ```bash
+   git show HEAD:AGENTS.md 2>/dev/null
+   ```
+   If it has changed, incorporate the new content into the locally-managed version
+5. Update `AGENTS.md` at the project root if needed
+6. Report what was refreshed
 
 ---
 
@@ -170,7 +256,60 @@ Generate or update AGENTS.md using the template:
 2. Follow the full workflow from the template (explore → map docs → migration decision → generate)
 3. This includes asking the user about migrating to standard file names if non-standard docs are found
 
-**Key principle**: AGENTS.md is a routing table — each section points to the right docs and skills. Content lives in standard files (`docs/CODING.md`, `docs/TESTING.md`, etc.), not in AGENTS.md itself.
+**Key principle**: AGENTS.md is a routing table — each section points to the right docs and skills. Content lives in standard files, not in AGENTS.md itself.
+
+#### Stealth Mode: Path Awareness
+
+When operating in stealth mode, generated docs live under `.coder/docs/` instead of `docs/`. AGENTS.md must reference these paths:
+
+| Standard path | Stealth path |
+|---|---|
+| `Read docs/CODING.md` | `Read .coder/docs/CODING.md` |
+| `Read docs/TESTING.md` | `Read .coder/docs/TESTING.md` |
+| `Read docs/RELEASING.md` | `Read .coder/docs/RELEASING.md` |
+| `Read docs/MONITORING.md` | `Read .coder/docs/MONITORING.md` |
+
+All other AGENTS.md content and structure remains the same.
+
+#### Incorporating a Team AGENTS.md
+
+If the repository has a committed `AGENTS.md` from the team (i.e., it exists in git history, not just locally):
+
+```bash
+git show HEAD:AGENTS.md 2>/dev/null
+```
+
+- Read and parse the team's version
+- Incorporate any relevant project-specific content, conventions, or section headings into our generated version
+- Our locally-managed version **replaces** the committed one on disk (it is excluded from git via the stealth block, so the team's version remains in git history untouched)
+
+> **AGENTS.md must always be at the project root** — OpenCode reads it by filesystem convention.
+
+---
+
+## Stealth-to-Team Transition
+
+To switch from stealth mode to team mode (sharing opencode-coder artifacts with the team), follow these steps:
+
+```bash
+# 1. Copy docs to standard locations
+cp -r .coder/docs/ ./docs/
+
+# 2. Update AGENTS.md paths from .coder/docs/ to docs/
+#    (manually edit AGENTS.md to replace .coder/docs/ with docs/)
+
+# 3. Remove stealth block from .git/info/exclude
+#    (manually delete the block starting with "# opencode-coder stealth mode")
+
+# 4. Clean up stealth workspace
+rm -rf .coder/
+
+# 5. Commit all artifacts to version control
+git add AGENTS.md ai.package.yaml docs/ .beads/
+git commit -m "chore: enable team mode"
+```
+
+> After this transition, the `.beads/`, `AGENTS.md`, `ai.package.yaml`, and `docs/` files will be tracked by git and visible to all contributors.
 
 ---
 
@@ -289,6 +428,7 @@ Summarize the full initialization:
 - **Don't overwhelm**: Present 3-5 most relevant resources as options
 - **Handle missing tools gracefully**: Continue if aimgr not installed (user declined)
 - **Re-running is safe**: /init can be re-run to update AGENTS.md after changes
+- **Stealth detection takes priority**: Always check for the stealth marker before asking mode questions
 - **Restart messaging**:
   - After installing **skills only**: "The new skills are available immediately — just ask me to load them."
   - After installing **commands or agents**: "New commands and agents will be available in your next OpenCode session. To use them now, restart OpenCode."

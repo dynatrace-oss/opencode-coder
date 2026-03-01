@@ -100,7 +100,23 @@ ls -la .beads
 # 2. If not initialized, run stealth mode setup
 bd init --stealth && bd hooks install
 
-# 3. Verify beads is working
+# 3. Add all opencode-coder artifacts to git exclusions
+if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
+  cat >> .git/info/exclude << 'STEALTH'
+
+# opencode-coder stealth mode
+.beads/
+.opencode/
+.coder/
+ai.package.yaml
+AGENTS.md
+STEALTH
+fi
+
+# 4. Create stealth workspace
+mkdir -p .coder/docs
+
+# 5. Verify beads is working
 bd ready
 
 # Done! The plugin is now active.
@@ -108,6 +124,7 @@ bd ready
 
 **Verification:**
 - ✓ `.beads/` directory exists with config files
+- ✓ `.coder/docs/` directory exists
 - ✓ `bd ready` runs without errors
 - ✓ Files stay local (not in git status)
 
@@ -158,12 +175,26 @@ bd hooks install
 #### Step 4: Handle Git Exclusions
 
 **For Stealth Mode:**
-The `.beads/` and `.opencode/` directories should be added to `.git/info/exclude`:
+All opencode-coder artifacts should be excluded via `.git/info/exclude`. Use the unified idempotent block:
 
 ```bash
-echo ".beads/" >> .git/info/exclude
-echo ".opencode/" >> .git/info/exclude
+if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
+  cat >> .git/info/exclude << 'STEALTH'
+
+# opencode-coder stealth mode
+.beads/
+.opencode/
+.coder/
+ai.package.yaml
+AGENTS.md
+STEALTH
+fi
+
+# Create stealth workspace for generated docs
+mkdir -p .coder/docs
 ```
+
+This block is idempotent — running it multiple times will not add duplicate entries.
 
 **For Team Mode:**
 Add the beads database to `.gitignore`:
@@ -185,23 +216,63 @@ No commit needed - all files are excluded from git.
 
 ### File Structure After Initialization
 
+> ⚠️ **Data Loss Warning**: Running `git clean -fdx` (with `-x` flag) will delete excluded files,
+> including `.coder/` and `.beads/`. Plain `git clean -fd` is safe — it does not remove excluded files.
+> Re-run `/init` to restore configuration. Issue data in `.beads/issues.jsonl` is permanently lost if not backed up.
+
+**Stealth Mode:**
+```
+.beads/              # Beads issue tracking (excluded in stealth)
+  config.yaml
+  issues.jsonl
+  beads.db           # Local cache (always gitignored)
+
+.opencode/           # OpenCode config, skills, commands (excluded in stealth)
+
+.coder/              # Stealth workspace (excluded in stealth)
+  docs/
+    CODING.md        # Generated coding conventions
+    TESTING.md       # Generated testing guide
+    RELEASING.md     # Generated release guide
+    MONITORING.md    # Generated monitoring guide
+
+AGENTS.md            # AI routing table (at root, excluded in stealth)
+ai.package.yaml      # aimgr manifest (at root, excluded in stealth)
+```
+
+**Team Mode:**
 ```
 .beads/
-  config.yaml       # Beads configuration
-  issues.jsonl      # Git-versioned issue data
-  interactions.jsonl # Session interactions
-  metadata.json     # Repository metadata
-  beads.db          # Local SQLite cache (gitignored)
+  config.yaml
+  issues.jsonl
+  beads.db           # gitignored (not committed)
 
-AGENTS.md           # Beads quick reference (optional)
+.opencode/           # Committed with the repo
+
+docs/                # Generated docs committed with the repo
+  CODING.md
+  TESTING.md
+  RELEASING.md
+  MONITORING.md
+
+AGENTS.md            # Committed at root
+ai.package.yaml      # Committed at root
 ```
 
 ### Note on AGENTS.md
 
-The `bd init` command may create or update `AGENTS.md` with a minimal beads quick reference (~12 lines). This is harmless:
-- Serves as human-readable documentation that the project uses beads
-- Plugin hooks automatically inject full beads context, so AGENTS.md is not read by AI
-- Can be safely committed or ignored based on project preference
+The `bd init` command creates or updates `AGENTS.md` at the **project root** with AI routing instructions. Behavior differs by mode:
+
+**In stealth mode:**
+- `AGENTS.md` is created at the project root but excluded from git via `.git/info/exclude`
+- References `.coder/docs/` paths for generated documentation (e.g., `.coder/docs/CODING.md`)
+- If the repo already has a committed `AGENTS.md`, the stealth version replaces it locally without affecting the committed version
+- Other team members will not see these changes
+
+**In team mode:**
+- `AGENTS.md` is committed and shared with the team
+- References `docs/` paths for generated documentation
+- Serves as the authoritative AI routing table for the whole team
 
 ### Idempotent Behavior
 
@@ -225,6 +296,41 @@ bd create "Setup project" --type task
 # Find available work
 bd ready
 ```
+
+### Stealth → Team Transition
+
+When your team is ready to adopt the plugin together, transition from stealth to team mode:
+
+```bash
+# 1. Copy stealth docs to standard committed locations
+cp -r .coder/docs/ ./docs/
+
+# 2. Update AGENTS.md paths from .coder/docs/ to docs/
+#    (Edit AGENTS.md to replace .coder/docs/ references with docs/)
+
+# 3. Remove the stealth exclusion block from .git/info/exclude
+#    (Delete the "# opencode-coder stealth mode" block and the 5 lines following it)
+
+# 4. Clean up the stealth workspace
+rm -rf .coder/
+
+# 5. Commit everything
+git add AGENTS.md ai.package.yaml docs/ .beads/
+git commit -m "chore: enable team mode"
+```
+
+After the transition, all team members run `bd init` (without `--stealth`) to set up their local environment.
+
+### Updating Stealth Docs
+
+Re-running `/init` in stealth mode refreshes generated documentation under `.coder/docs/`:
+
+- **No re-prompting** for mode selection — stealth is detected automatically via the marker comment in `.git/info/exclude`
+- Generated files (`CODING.md`, `TESTING.md`, etc.) are overwritten with fresh content
+- `AGENTS.md` is updated at the root if the plugin detects it needs changes
+- The exclusion block is left unchanged (idempotent check prevents duplicates)
+
+This is useful after major project changes (new tech stack, new workflows) where the generated docs may be stale.
 
 ---
 

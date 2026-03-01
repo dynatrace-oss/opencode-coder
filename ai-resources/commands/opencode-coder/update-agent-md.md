@@ -10,8 +10,26 @@ This is a lightweight alternative to `/init` — it only touches AGENTS.md, skip
 
 ## Instructions
 
+### Step 0: Detect Mode
+
+Before doing anything else, check for stealth mode:
+
+```bash
+grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null && echo "STEALTH_ACTIVE"
+```
+
+- If output is `STEALTH_ACTIVE` → **stealth mode is active**. Keep in mind throughout all subsequent steps:
+  - Docs directory is `.coder/docs/` — **not** `docs/`
+  - AGENTS.md path references must point to `.coder/docs/CODING.md`, `.coder/docs/TESTING.md`, etc.
+  - Do **not** create any files under `docs/`
+- If no output → **team mode**. Docs live under `docs/` as usual.
+
+Carry this context forward into the template workflow.
+
+### Step 1: Run the Template Workflow
+
 1. **Load the template** — Load the `opencode-coder` skill and read `references/agents-md-template.md`
-2. **Follow the workflow** — Execute all steps from the template:
+2. **Follow the workflow** — Execute all steps from the template (it will re-confirm the mode via its own detection, which is consistent with what you detected above):
    - Step 1: Gather Context (spawn explore agent)
    - Step 2: Map existing docs to sections
    - Step 3: Migration decision (ask user if non-standard names found)
@@ -26,3 +44,4 @@ This is a lightweight alternative to `/init` — it only touches AGENTS.md, skip
 - **MUST ask the user** before creating new files (like `docs/CODING.md`) — confirm the content is correct
 - If AGENTS.md already exists, follow the "Updating an Existing AGENTS.md" section from the template
 - Preserve any custom sections the user added manually
+- In stealth mode, all generated doc files go under `.coder/docs/`, never under `docs/`

@@ -21,6 +21,27 @@ Each section maps to a standard file in `docs/`:
 | Monitoring | `docs/MONITORING.md` | Only if relevant docs/skills exist |
 | Landing the Plane | *(inline)* | Only if beads is installed |
 
+> **Stealth mode**: In stealth mode, all `docs/` paths become `.coder/docs/`. See [Mode Detection](#mode-detection).
+
+---
+
+## Mode Detection
+
+Before starting the workflow, detect the active mode:
+
+```bash
+grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null
+```
+
+- **Stealth mode** (marker found): All documentation files live under `.coder/docs/` instead of `docs/`. The `.coder/` directory is excluded from git via `.git/info/exclude`.
+- **Team mode** (marker not found): Documentation files live under `docs/` as usual.
+
+Throughout this template, `{docs}` refers to:
+- `.coder/docs/` in stealth mode
+- `docs/` in team mode
+
+**Always detect mode first and use the correct path throughout all subsequent steps.**
+
 ---
 
 ## Workflow
@@ -34,7 +55,7 @@ Spawn an **explore agent** with the following prompt:
 > 1. **Project identity** — Name, one-sentence description, tech stack
 > 2. **Build & test commands** — How to build, test, lint, type-check (extract from project config files and scripts)
 > 3. **Directory structure** — Top-level directories with one-line purpose each
-> 4. **Existing docs** — List ALL files in `docs/` directory (if it exists). Also check for `CONTRIBUTING.md`, `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md` in project root. Report full paths.
+> 4. **Existing docs** — List ALL files in `docs/` directory AND `.coder/docs/` directory (if either exists). Also check for `CONTRIBUTING.md`, `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md` in project root. Report full paths.
 > 5. **Coding conventions** — Are there any files that describe coding conventions, guidelines, or architecture? Check: `CONTRIBUTING.md`, `docs/coding-guidelines.md`, `docs/CODING.md`, `.editorconfig`, or similar. Report filenames only.
 > 6. **Testing docs** — Are there files that describe testing patterns, test setup, or test conventions? Report filenames only.
 > 7. **Release docs** — Are there files that describe the release process? Report filenames only.
@@ -52,10 +73,10 @@ From the explore output, map every discovered doc file to a section:
 
 | Section | Matches these existing files |
 |---------|------------------------------|
-| Coding | `CONTRIBUTING.md`, `docs/coding-guidelines.md`, `docs/CODING.md`, `docs/architecture.md`, `.editorconfig` |
-| Testing | `docs/TESTING.md`, `docs/testing-guide.md`, `docs/test-patterns.md` |
-| Releases | `docs/RELEASING.md`, `docs/release-process.md`, `RELEASING.md` |
-| Monitoring | `docs/MONITORING.md`, `docs/observability.md`, `docs/logging.md` |
+| Coding | `CONTRIBUTING.md`, `docs/coding-guidelines.md`, `docs/CODING.md`, `.coder/docs/CODING.md`, `docs/architecture.md`, `.editorconfig` |
+| Testing | `docs/TESTING.md`, `.coder/docs/TESTING.md`, `docs/testing-guide.md`, `docs/test-patterns.md` |
+| Releases | `docs/RELEASING.md`, `.coder/docs/RELEASING.md`, `docs/release-process.md`, `RELEASING.md` |
+| Monitoring | `docs/MONITORING.md`, `.coder/docs/MONITORING.md`, `docs/observability.md`, `docs/logging.md` |
 
 Also map installed skills to sections:
 - Skills matching "release", "publish", "ship" → Releases
@@ -87,8 +108,10 @@ If non-standard names are found, ask the user **once**:
 >
 > Would you like to adopt the standard structure?"
 
+> **In stealth mode**: Migration targets are `.coder/docs/CODING.md`, `.coder/docs/TESTING.md`, etc. instead of `docs/`. Show the user the stealth paths in the migration proposal.
+
 **If yes:**
-1. Create the standard files and move/consolidate content
+1. Create the standard files in the docs directory (`docs/` in team mode, `.coder/docs/` in stealth mode) and move/consolidate content
 2. If `CONTRIBUTING.md` had coding conventions mixed with contribution process, split them: coding conventions go to `docs/CODING.md`, `CONTRIBUTING.md` keeps the contribution process and adds a reference to `docs/CODING.md`
 3. Reference the new standard paths in AGENTS.md
 
@@ -97,7 +120,9 @@ If non-standard names are found, ask the user **once**:
 
 ### Step 4: Create Missing Standard Files
 
-For the **Coding** section (always active): if no conventions files exist anywhere, create `docs/CODING.md` with build commands, directory structure, and basic conventions extracted from the codebase.
+For the **Coding** section (always active): if no conventions files exist anywhere, create the standard file in the docs directory (`docs/CODING.md` in team mode, `.coder/docs/CODING.md` in stealth mode) with build commands, directory structure, and basic conventions extracted from the codebase.
+
+**Important**: In stealth mode, never create files under `docs/` — use `.coder/docs/` exclusively. Files under `docs/` are NOT in the stealth exclusion block and will be visible to git.
 
 For other active sections: only create the standard file if the explore step gathered enough relevant content to populate it meaningfully. If a section is active only because a skill is installed (no doc content found), just reference the skill in AGENTS.md — don't create a hollow doc file.
 
@@ -106,6 +131,8 @@ For other active sections: only create the standard file if the explore step gat
 ### Step 5: Generate AGENTS.md
 
 Build the file section by section:
+
+> **Path convention**: All examples below show team mode paths (`docs/`). In stealth mode, replace `docs/` with `.coder/docs/` in all file references.
 
 #### Project Overview (always, inline)
 
@@ -121,14 +148,23 @@ Just what the project is and the tech stack. Nothing else.
 
 #### Coding (always)
 
+**Team mode:**
 ```markdown
 ## Coding
 
 Read `docs/CODING.md` for build commands, project structure, and code conventions.
 ```
 
+**Stealth mode:**
+```markdown
+## Coding
+
+Read `.coder/docs/CODING.md` for build commands, project structure, and code conventions.
+```
+
 If additional files are relevant (e.g., CONTRIBUTING.md was kept separately), list them too:
 
+**Team mode:**
 ```markdown
 ## Coding
 
@@ -137,30 +173,63 @@ Read `docs/CODING.md` for build commands, project structure, and code convention
 Read `CONTRIBUTING.md` for contribution workflow.
 ```
 
+**Stealth mode:**
+```markdown
+## Coding
+
+Read `.coder/docs/CODING.md` for build commands, project structure, and code conventions.
+
+Read `CONTRIBUTING.md` for contribution workflow.
+```
+
 #### Testing (conditional)
 
+**Team mode:**
 ```markdown
 ## Testing
 
 Read `docs/TESTING.md` for test patterns and commands.
 ```
 
+**Stealth mode:**
+```markdown
+## Testing
+
+Read `.coder/docs/TESTING.md` for test patterns and commands.
+```
+
 If a testing skill is installed, add: `Load the **skill-name** skill for [description].`
 
 #### Releases (conditional)
 
+**Team mode:**
 ```markdown
 ## Releases
 
 Load the **release-skill-name** skill for release workflow. Read `docs/RELEASING.md` for details.
 ```
 
+**Stealth mode:**
+```markdown
+## Releases
+
+Load the **release-skill-name** skill for release workflow. Read `.coder/docs/RELEASING.md` for details.
+```
+
 #### Monitoring (conditional)
 
+**Team mode:**
 ```markdown
 ## Monitoring
 
 Load the **monitoring-skill-name** skill for observability and triage. Read `docs/MONITORING.md` for data sources.
+```
+
+**Stealth mode:**
+```markdown
+## Monitoring
+
+Load the **monitoring-skill-name** skill for observability and triage. Read `.coder/docs/MONITORING.md` for data sources.
 ```
 
 #### Landing the Plane (conditional — only if beads installed)
@@ -199,6 +268,9 @@ After generating, confirm:
 - [ ] Landing the Plane only appears if beads is installed
 - [ ] No duplicated content from referenced files
 - [ ] Total size is under 60 lines
+- [ ] **Stealth mode only**: All doc paths reference `.coder/docs/`, not `docs/`
+- [ ] **Stealth mode only**: No files were created under `docs/` directory
+- [ ] **Stealth mode only**: `.coder/docs/` directory exists with generated files
 
 ---
 
@@ -214,3 +286,5 @@ When AGENTS.md already exists:
 6. **Remove** sections for content that no longer exists
 7. Keep custom sections in their original position; place new sections before "Landing the Plane"
 8. Offer migration if non-standard file names are detected (same as Step 3)
+
+When updating in stealth mode, ensure all doc paths continue to reference `.coder/docs/`. If the mode has changed since the last generation, update all paths accordingly.

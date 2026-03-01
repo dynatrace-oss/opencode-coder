@@ -12,6 +12,8 @@ This reference contains detailed solutions for common issues when using the open
    - [bd init fails with "not a git repository"](#bd-init-fails-with-not-a-git-repository)
    - [Hooks not working after initialization](#hooks-not-working-after-initialization)
    - [Already initialized but want to switch modes (stealth ↔ team)](#already-initialized-but-want-to-switch-modes-stealth--team)
+   - [Stealth files deleted by git clean](#stealth-files-deleted-by-git-clean)
+   - [Stealth mode not detected on re-run](#stealth-mode-not-detected-on-re-run)
 4. [Runtime Issues](#runtime-issues)
    - [bd commands failing with database errors](#bd-commands-failing-with-database-errors)
    - [Git hooks not triggering](#git-hooks-not-triggering)
@@ -150,24 +152,91 @@ cat .git/hooks/pre-commit
 **Solution for stealth to team**:
 
 ```bash
-# 1. Remove exclusions from .git/info/exclude
-# 2. Add .beads/ to git
-git add .beads/
-git commit -m "Switch to team mode"
+# 1. Copy stealth docs to standard locations
+cp -r .coder/docs/ ./docs/
+
+# 2. Update AGENTS.md to reference docs/ instead of .coder/docs/
+# (manually update paths in AGENTS.md)
+
+# 3. Remove stealth block from .git/info/exclude
+# (remove the "# opencode-coder stealth mode" block)
+
+# 4. Clean up stealth workspace
+rm -rf .coder/
+
+# 5. Stage and commit
+git add .beads/ AGENTS.md ai.package.yaml docs/
+git commit -m "chore: switch to team mode"
 ```
 
 **Solution for team to stealth**:
 
 ```bash
-# 1. Remove .beads/ from git
-git rm -r --cached .beads/
-# 2. Add to .git/info/exclude
-echo ".beads/" >> .git/info/exclude
+# 1. Create stealth workspace
+mkdir -p .coder/docs
+
+# 2. Copy docs to stealth workspace
+cp docs/CODING.md docs/TESTING.md docs/RELEASING.md docs/MONITORING.md .coder/docs/ 2>/dev/null
+
+# 3. Update AGENTS.md to reference .coder/docs/ paths
+
+# 4. Remove tracked files from git index
+git rm -r --cached .beads/ AGENTS.md ai.package.yaml
+git rm --cached docs/CODING.md docs/TESTING.md docs/RELEASING.md docs/MONITORING.md 2>/dev/null
+git commit -m "chore: switch to stealth mode"
+
+# 5. Add stealth exclusion block
+if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
+  cat >> .git/info/exclude << 'STEALTH'
+
+# opencode-coder stealth mode
+.beads/
+.opencode/
+.coder/
+ai.package.yaml
+AGENTS.md
+STEALTH
+fi
 ```
 
-**Root Cause**: Mode is determined by whether beads files are tracked in git.
+**Root Cause**: Mode is determined by whether files are tracked in git AND whether the stealth marker exists in `.git/info/exclude`.
 
-**Warning**: This operation affects repository history. Coordinate with team members in team mode.
+**Warning**: Team-to-stealth creates a visible commit that removes AI-related files. This commit is visible in git history and may reveal that AI tooling was previously used. Coordinate with team members before switching modes.
+
+---
+
+### Stealth files deleted by git clean
+
+**Symptoms**: `.coder/`, `.beads/`, AGENTS.md, or ai.package.yaml disappeared after running `git clean`.
+
+**Solution**:
+
+```bash
+# Re-run /init to restore stealth setup
+# Issue data in .beads/issues.jsonl is lost if .beads/ was deleted
+```
+
+**Root Cause**: `git clean -fdx` removes files matched by exclude patterns, including stealth-excluded files. Note: `git clean -fd` does NOT remove excluded files — only `-x` or `-X` flags cause that.
+
+**Prevention**: Avoid `git clean -fdx` in stealth mode. Use `git clean -fd` instead (safe for stealth files). If you must use `-x`, exclude stealth directories: `git clean -fdx -e .beads/ -e .coder/ -e .opencode/`.
+
+---
+
+### Stealth mode not detected on re-run
+
+**Symptoms**: `/init` asks stealth vs team even though stealth was previously configured.
+
+**Solution**: Check `.git/info/exclude` for the stealth marker:
+
+```bash
+grep "# opencode-coder stealth mode" .git/info/exclude
+```
+
+If marker is missing but `.coder/` exists, re-add the exclusion block manually or re-run `/init` and choose stealth.
+
+**Root Cause**: Detection relies on the marker comment in `.git/info/exclude`. If someone manually edited the exclude file and removed the marker, detection fails.
+
+**Robust detection**: Multi-signal — marker present OR (`.beads/` exists AND `.coder/` exists AND neither is tracked).
 
 ---
 
@@ -339,22 +408,31 @@ cat .beads/interactions.jsonl | tail -20
 
 ### Beads files showing up in git status (stealth mode)
 
-**Symptoms**: `.beads/` directory appears in `git status` in stealth mode.
+**Symptoms**: `.beads/`, `.coder/`, `AGENTS.md`, or `ai.package.yaml` appear in `git status` in stealth mode.
 
 **Solution**:
 
 ```bash
-# Ensure exclusions are set
-echo ".beads/" >> .git/info/exclude
-echo ".opencode/" >> .git/info/exclude
+# Add the full stealth exclusion block if missing
+if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
+  cat >> .git/info/exclude << 'STEALTH'
+
+# opencode-coder stealth mode
+.beads/
+.opencode/
+.coder/
+ai.package.yaml
+AGENTS.md
+STEALTH
+fi
 
 # Verify exclusions
 cat .git/info/exclude
 ```
 
-**Root Cause**: Files not properly excluded from git in stealth mode.
+**Root Cause**: Files not properly excluded from git in stealth mode. The full stealth exclusion block may be missing or incomplete.
 
-**Note**: Use `.git/info/exclude` instead of `.gitignore` to keep exclusions local.
+**Note**: Use `.git/info/exclude` instead of `.gitignore` to keep exclusions local and invisible to other developers.
 
 ---
 
@@ -450,3 +528,6 @@ For quick reference, common error patterns:
 - **Hook problems** → [Git hooks not triggering](#git-hooks-not-triggering)
 - **Slow performance** → [Performance Issues](#performance-issues)
 - **File visibility** → [Sync and Git Issues](#sync-and-git-issues)
+- **Stealth files missing after git clean** → [Stealth files deleted by git clean](#stealth-files-deleted-by-git-clean)
+- **Stealth mode not detected** → [Stealth mode not detected on re-run](#stealth-mode-not-detected-on-re-run)
+- **Switch stealth ↔ team** → [Already initialized but want to switch modes](#already-initialized-but-want-to-switch-modes-stealth--team)

@@ -13,6 +13,7 @@
     "command/opencode-coder/install",
     "command/opencode-coder/report-bug",
     "command/opencode-coder/status",
-    "skill/opencode-coder"
+    "skill/opencode-coder",
+    "skill/ai-resource-manager"
   ]
 }

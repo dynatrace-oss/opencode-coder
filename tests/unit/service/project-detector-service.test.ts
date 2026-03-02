@@ -318,6 +318,40 @@ describe("ProjectDetectorService", () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Ecosystem readiness
+  // ---------------------------------------------------------------------------
+
+  describe("deriveEcosystemReady", () => {
+    it("should return true when all components are operational", () => {
+      expect(service.deriveEcosystemReady(true, true, true, true, true)).toBe(true);
+    });
+
+    it("should return false when git is not initialized", () => {
+      expect(service.deriveEcosystemReady(false, true, true, true, true)).toBe(false);
+    });
+
+    it("should return false when beads is not initialized", () => {
+      expect(service.deriveEcosystemReady(true, false, true, true, true)).toBe(false);
+    });
+
+    it("should return false when aimgr is not installed", () => {
+      expect(service.deriveEcosystemReady(true, true, false, true, true)).toBe(false);
+    });
+
+    it("should return false when ai.package.yaml is missing", () => {
+      expect(service.deriveEcosystemReady(true, true, true, false, true)).toBe(false);
+    });
+
+    it("should return false when resources are not healthy", () => {
+      expect(service.deriveEcosystemReady(true, true, true, true, false)).toBe(false);
+    });
+
+    it("should return false when nothing is installed", () => {
+      expect(service.deriveEcosystemReady(false, false, false, false, false)).toBe(false);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // writeProjectContext
   // ---------------------------------------------------------------------------
 
@@ -328,6 +362,7 @@ describe("ProjectDetectorService", () => {
 
       const context: ProjectContext = {
         mode: "team",
+        ecosystemReady: false,
         git: { initialized: true, platform: "github", remote: "https://github.com/user/repo.git" },
         beads: { initialized: true, stealthMode: false },
         aimgr: { installed: false, packageYaml: false, resourcesHealthy: false },
@@ -356,6 +391,7 @@ describe("ProjectDetectorService", () => {
 
       const context: ProjectContext = {
         mode: "stealth",
+        ecosystemReady: true,
         git: { initialized: true, platform: "gitlab", remote: "https://gitlab.com/u/r.git" },
         beads: { initialized: false, stealthMode: true },
         aimgr: { installed: true, packageYaml: true, resourcesHealthy: true },
@@ -366,6 +402,7 @@ describe("ProjectDetectorService", () => {
       service.writeProjectContext(context);
 
       expect(writtenContent).toContain("mode: stealth");
+      expect(writtenContent).toContain("ecosystemReady: true");
       expect(writtenContent).toContain("platform: gitlab");
       expect(writtenContent).toContain("stealthMode: true");
       expect(writtenContent).toContain("installed: true");
@@ -412,9 +449,12 @@ describe("ProjectDetectorService", () => {
         (_p: any, data: any) => { writtenContent = data; }
       );
 
-      await service.detectAndWrite(versionInfo as any);
+      const result = await service.detectAndWrite(versionInfo as any);
 
+      expect(result.mode).toBe("team");
+      expect(result.ecosystemReady).toBe(false);
       expect(writtenContent).toContain("mode: team");
+      expect(writtenContent).toContain("ecosystemReady: false");
       expect(writtenContent).toContain("initialized: true");
       expect(writtenContent).toContain("platform: github");
       expect(writtenContent).toContain("pluginVersion: 1.2.3");
@@ -448,8 +488,10 @@ describe("ProjectDetectorService", () => {
         (_p: any, data: any) => { writtenContent = data; }
       );
 
-      await service.detectAndWrite(versionInfo as any);
+      const result = await service.detectAndWrite(versionInfo as any);
 
+      expect(result.mode).toBe("stealth");
+      expect(result.ecosystemReady).toBe(false);
       expect(writtenContent).toContain("mode: stealth");
       expect(writtenContent).toContain("stealthMode: true");
 
@@ -486,9 +528,50 @@ describe("ProjectDetectorService", () => {
         (_p: any, data: any) => { writtenContent = data; }
       );
 
-      await service.detectAndWrite(versionInfo as any);
+      const result = await service.detectAndWrite(versionInfo as any);
 
+      expect(result.mode).toBe("uninitialized");
+      expect(result.ecosystemReady).toBe(false);
       expect(writtenContent).toContain("mode: uninitialized");
+
+      accessSyncSpy.mockRestore();
+      readFileSyncSpy.mockRestore();
+      existsSyncSpy.mockRestore();
+      execSyncSpy.mockRestore();
+      mkdirSyncSpy.mockRestore();
+      writeFileSyncSpy.mockRestore();
+    });
+
+    it("should set ecosystemReady true when all components operational", async () => {
+      // .git and .beads both exist
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
+
+      // No stealth marker
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
+        "# default excludes\n" as any
+      );
+
+      // ai.package.yaml exists
+      const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
+
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
+        if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
+        if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
+        if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
+        return "" as any;
+      });
+
+      const mkdirSyncSpy = spyOn(fs, "mkdirSync").mockImplementation(() => undefined as any);
+      let writtenContent = "";
+      const writeFileSyncSpy = spyOn(fs, "writeFileSync").mockImplementation(
+        (_p: any, data: any) => { writtenContent = data; }
+      );
+
+      const result = await service.detectAndWrite(versionInfo as any);
+
+      expect(result.ecosystemReady).toBe(true);
+      expect(result.mode).toBe("team");
+      expect(writtenContent).toContain("ecosystemReady: true");
 
       accessSyncSpy.mockRestore();
       readFileSyncSpy.mockRestore();

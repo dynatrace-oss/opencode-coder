@@ -22,6 +22,15 @@ export interface ProjectContext {
   /** Overall operational mode */
   mode: "stealth" | "team" | "uninitialized";
 
+  /**
+   * True when all ecosystem components are installed and operational:
+   * git initialized, beads initialized, aimgr installed with package yaml,
+   * and all declared resources healthy.
+   *
+   * Used by the plugin config hook to set the default agent to orchestrator.
+   */
+  ecosystemReady: boolean;
+
   /** Git repository information */
   git: {
     /** Whether a .git directory exists */
@@ -235,6 +244,26 @@ export class ProjectDetectorService {
     return "uninitialized";
   }
 
+  /**
+   * Derive whether the full ecosystem is installed and operational.
+   *
+   * True when all of:
+   * - git is initialized
+   * - beads is initialized
+   * - aimgr CLI is installed
+   * - ai.package.yaml exists
+   * - all declared resources are healthy (agents, commands, skills in sync)
+   */
+  deriveEcosystemReady(
+    gitInitialized: boolean,
+    beadsInitialized: boolean,
+    aimgrInstalled: boolean,
+    packageYaml: boolean,
+    resourcesHealthy: boolean,
+  ): boolean {
+    return gitInitialized && beadsInitialized && aimgrInstalled && packageYaml && resourcesHealthy;
+  }
+
   // ---------------------------------------------------------------------------
   // YAML writing
   // ---------------------------------------------------------------------------
@@ -260,10 +289,13 @@ export class ProjectDetectorService {
    * Detect all project facts, build a `ProjectContext` object, and write it
    * to `.coder/project.yaml`.
    *
-   * This method is designed to be called in the background from plugin startup
-   * and never throws — all errors are caught and logged.
+   * This method is designed to be called from plugin startup. All errors
+   * during individual detections are caught internally; the method itself
+   * never throws.
+   *
+   * @returns The detected project context.
    */
-  async detectAndWrite(versionInfo: VersionInfo): Promise<void> {
+  async detectAndWrite(versionInfo: VersionInfo): Promise<ProjectContext> {
     const start = Date.now();
     this.logger.debug("Starting project detection", { workdir: this.workdir });
 
@@ -282,11 +314,19 @@ export class ProjectDetectorService {
     // Only check health when aimgr is installed (avoids double detection call)
     const resourcesHealthy = aimgrInstalled ? this.detectResourcesHealthy() : false;
 
-    // Mode
+    // Derived
     const mode = this.deriveMode(beadsInitialized, stealthMode);
+    const ecosystemReady = this.deriveEcosystemReady(
+      gitInitialized,
+      beadsInitialized,
+      aimgrInstalled,
+      packageYaml,
+      resourcesHealthy,
+    );
 
     const context: ProjectContext = {
       mode,
+      ecosystemReady,
       git: {
         initialized: gitInitialized,
         platform,
@@ -307,6 +347,12 @@ export class ProjectDetectorService {
 
     this.writeProjectContext(context);
 
-    this.logger.debug("Project detection completed", { durationMs: Date.now() - start, mode });
+    this.logger.debug("Project detection completed", {
+      durationMs: Date.now() - start,
+      mode,
+      ecosystemReady,
+    });
+
+    return context;
   }
 }

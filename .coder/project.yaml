@@ -10,5 +10,5 @@ aimgr:
   installed: true
   packageYaml: true
   resourcesHealthy: true
-detectedAt: 2026-03-02T11:42:59.221Z
-pluginVersion: 0.29.0
+detectedAt: 2026-03-02T14:02:49.623Z
+pluginVersion: 0.30.0

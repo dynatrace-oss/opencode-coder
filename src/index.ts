@@ -3,6 +3,7 @@ import { access } from "fs/promises";
 import { join } from "path";
 import { createLogger, getVersionInfo } from "./core";
 import { BeadsService, AimgrService, SessionExportService, ProjectDetectorService } from "./service";
+import type { ProjectContext } from "./service/project-detector-service";
 import { createCoderTool } from "./tool";
 import { isPluginDisabled } from "./config/env";
 
@@ -40,11 +41,17 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
   const coderTool = createCoderTool({ sessionExportService, versionInfo });
   log.debug("Coder tool created");
 
-  // 5. Run project detection in background — independent of other services
+  // 5. Run project detection — result is awaited by the config hook to set default agent
   const projectDetector = new ProjectDetectorService({ logger: log, workdir: worktree });
-  projectDetector.detectAndWrite(versionInfo)
-    .then(() => log.debug("Project context written to .coder/project.yaml"))
-    .catch(err => log.error("Project detection failed", { error: String(err) }));
+  const projectContextPromise: Promise<ProjectContext | null> = projectDetector.detectAndWrite(versionInfo)
+    .then((ctx) => {
+      log.debug("Project context written to .coder/project.yaml", { ecosystemReady: ctx.ecosystemReady });
+      return ctx;
+    })
+    .catch((err) => {
+      log.error("Project detection failed", { error: String(err) });
+      return null;
+    });
 
   // 6. Check beads availability and show toast if needed
   // Runs in the background and doesn't block plugin loading
@@ -119,6 +126,7 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
       });
     },
     config: async (input) => {
+      // Inject .coder/AGENTS.md into instructions (stealth mode support)
       const agentsPath = join(worktree, ".coder", "AGENTS.md");
       try {
         await access(agentsPath);
@@ -127,6 +135,19 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
         log.info("Injected .coder/AGENTS.md into instructions");
       } catch {
         // File doesn't exist — no-op
+      }
+
+      // Set orchestrator as default agent when ecosystem is fully ready
+      // and user hasn't explicitly configured a different default agent.
+      // Note: default_agent is supported at runtime (OpenCode ≥1.2.15) but the
+      // plugin SDK's v1 Config type definition hasn't been updated yet.
+      const cfg = input as Record<string, unknown>;
+      if (!cfg["default_agent"]) {
+        const projectContext = await projectContextPromise;
+        if (projectContext?.ecosystemReady) {
+          cfg["default_agent"] = "orchestrator";
+          log.info("Set default_agent to orchestrator (ecosystem ready)");
+        }
       }
     },
   };

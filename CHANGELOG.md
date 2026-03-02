@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-03-02
+
+### Added
+
+- **ProjectDetectorService**: Detects git platform, beads status, stealth mode, and aimgr status; writes `.coder/project.yaml` on startup
+- **Smart skill discovery**: `/init` delegates to ai-resource-manager for context-aware skill filtering
+- **Unified stealth mode**: Hide all opencode-coder artifacts from git in one operation
+- **Aimgr repair integration**: Integrated aimgr repair into `/init` and `/doctor` commands
+- **Agent improvements**: Agent colors, command argument forwarding, init bootstrapping, aimgr verify
+
+### Fixed
+
+- **Stealth AGENTS.md**: Moved to `.coder/` and injected via plugin config hook
+- **Hooks structure**: Flattened to match SDK Hooks interface
+- **Stealth mode awareness**: Added to fix-documentation skill
+
+### Changed
+
+- **Agent definitions**: Improved orchestrator, reviewer, tasker, and verifier agents
+- **Planning references**: Updated with `needs:discussion` and `open-questions` patterns
+- **Package manifest**: ai-resource-manager added
+
 ## [0.29.0] - 2026-02-28
 
 ### Added

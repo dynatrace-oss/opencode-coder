@@ -1,0 +1,14 @@
+mode: team
+git:
+  initialized: true
+  platform: github
+  remote: git@github.com-hk9890:hk9890/opencode-coder.git
+beads:
+  initialized: true
+  stealthMode: false
+aimgr:
+  installed: true
+  packageYaml: true
+  resourcesHealthy: true
+detectedAt: 2026-03-02T10:30:18.284Z
+pluginVersion: 0.29.0

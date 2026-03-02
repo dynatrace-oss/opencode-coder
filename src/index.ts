@@ -2,7 +2,7 @@ import { type Plugin } from "@opencode-ai/plugin";
 import { access } from "fs/promises";
 import { join } from "path";
 import { createLogger, getVersionInfo } from "./core";
-import { BeadsService, AimgrService, SessionExportService } from "./service";
+import { BeadsService, AimgrService, SessionExportService, ProjectDetectorService } from "./service";
 import { createCoderTool } from "./tool";
 import { isPluginDisabled } from "./config/env";
 
@@ -40,7 +40,13 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
   const coderTool = createCoderTool({ sessionExportService, versionInfo });
   log.debug("Coder tool created");
 
-  // 5. Check beads availability and show toast if needed
+  // 5. Run project detection in background — independent of other services
+  const projectDetector = new ProjectDetectorService({ logger: log, workdir: worktree });
+  projectDetector.detectAndWrite(versionInfo)
+    .then(() => log.debug("Project context written to .coder/project.yaml"))
+    .catch(err => log.error("Project detection failed", { error: String(err) }));
+
+  // 6. Check beads availability and show toast if needed
   // Runs in the background and doesn't block plugin loading
   const beadsCheckStart = Date.now();
   beadsService.checkBeadsAvailability()
@@ -51,7 +57,7 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
       log.error("Failed to check beads availability", { error: String(err) });
     });
 
-  // 6. Auto-initialize aimgr if available
+  // 7. Auto-initialize aimgr if available
   // Runs in the background and doesn't block plugin loading
   const aimgrInitStart = Date.now();
   aimgrService.autoInitialize()
@@ -62,7 +68,7 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
       log.error("Failed to auto-initialize aimgr", { error: String(err) });
     });
 
-  // 7. Background aimgr resource health check
+  // 8. Background aimgr resource health check
   // Runs in the background and doesn't block plugin loading
   const aimgrVerifyStart = Date.now();
   Promise.resolve()

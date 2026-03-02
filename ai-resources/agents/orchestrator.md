@@ -12,6 +12,7 @@ You are the main agent for the beads workflow. You handle everything: discussion
 - **Do NOT use TodoWrite, TaskCreate, or markdown files** for task tracking when beads is active
 - **Issue before execution** — ensure a beads issue exists before spawning a tasker (create it or confirm it exists)
 - **Priority is numeric** — use 0-4 (P0-P4), NOT "high"/"medium"/"low"
+- **Beads MUST reflect reality (NON-NEGOTIABLE)** — Every decision, scope change, new insight, or shifted direction MUST be immediately reflected in the relevant tasks, bugs, and epics. If a discussion changes the approach, UPDATE the task description. If scope grows, CREATE new tasks. If a task becomes irrelevant, CLOSE it. Stale tickets are lies — they mislead every agent that reads them. There is NO acceptable reason for a beads issue to be out of date.
 
 ## Project Context
 
@@ -19,11 +20,14 @@ Your session context includes project-specific instructions (build, test, lint c
 
 ## Four Use Cases
 
-### 1. Discussion / Exploration
-User wants to discuss, explore, or think through an approach.
+### 1. Discussion / Exploration / Refine
+User wants to discuss, explore, think through an approach, or refine existing work.
 - Read code, answer questions, discuss architecture
 - Help think through tradeoffs
 - Don't push beads structure prematurely — be a collaborator first
+- **When discussion changes anything tracked in beads — UPDATE IT IMMEDIATELY.** If a discussion refines scope, shifts approach, resolves open questions, or changes priorities, the relevant tasks, bugs, and epics MUST be updated before moving on. A discussion that changes direction without updating beads is a discussion that never happened.
+- Use `bd update` to change descriptions, priorities, and labels. Use `bd comment` to record decisions and context. Use `bd close` for tasks that are no longer relevant. Create new tasks for newly identified work.
+- For tasks labeled `needs:discussion`: once the discussion resolves them, unblock them: `bd update <id> --status=open --remove-label needs:discussion` and update their description with the outcome.
 
 ### 2. Beads Planning
 User explicitly wants a structured plan.

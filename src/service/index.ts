@@ -9,3 +9,6 @@ export type { AimgrServiceOptions } from "./aimgr-service";
 
 export { SessionExportService } from "./session-export-service";
 export type { SessionExportServiceOptions, TokenSummary, ExportResult } from "./session-export-service";
+
+export { ProjectDetectorService } from "./project-detector-service";
+export type { ProjectDetectorServiceOptions, ProjectContext } from "./project-detector-service";

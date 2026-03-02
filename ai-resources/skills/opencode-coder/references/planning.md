@@ -125,12 +125,15 @@ For simple issues, use `--description` directly:
 bd create --title="Fix login bug" --type=bug --priority=1 --description="Users cannot login when email contains + character."
 ```
 
-### Open Questions
+### Needs Discussion (Not Ready for Execution)
 
-When requirements are unclear, document them explicitly:
+Some tasks need user input, scoping, or discussion before a tasker should touch them. The planner MUST distinguish between "ready to execute" and "needs discussion" tasks at creation time.
+
+**Pattern:** Create with `needs:discussion` label, then immediately set `status=blocked`.
 
 ```bash
-cat << 'EOF' | bd create --title="Design auth token strategy" --type=task --priority=1 --labels=has:open-questions --body-file -
+# Create the task with the label
+cat << 'EOF' | bd create --title="Design auth token strategy" --type=task --priority=1 --labels=needs:discussion --body-file -
 ## Description
 Implement token refresh strategy.
 
@@ -138,12 +141,53 @@ Implement token refresh strategy.
 - [ ] Should tokens auto-refresh or require explicit refresh call?
 - [ ] What's the token expiry time? (suggested: 1 hour)
 
+## Why This Needs Discussion
+User needs to decide on token strategy before implementation can begin.
+
 ## Instructions
-(blocked until questions resolved)
+(blocked until discussion resolves open questions)
 EOF
+
+# Immediately block it so it won't appear in bd ready
+bd update <id> --status=blocked
 ```
 
-Issues with `has:open-questions` label cannot proceed until questions are resolved.
+**Why `status=blocked` + label?**
+- `status=blocked` keeps the task out of `bd ready` — taskers will never pick it up
+- `needs:discussion` label explains *why* it's blocked (not a dependency — needs human input)
+- When discussion completes, the orchestrator unblocks it: `bd update <id> --status=open --remove-label needs:discussion`
+
+**When to use this pattern:**
+- Imported issues that lack implementation detail
+- Tasks where the user explicitly said "let's discuss this first"
+- Tasks with unresolved architectural or design questions
+- Any task where a tasker would have to guess or improvise
+
+**Planner rule:** If you are unsure whether a task is ready for execution, mark it `needs:discussion`. It is better to block a task for discussion than to let a tasker guess.
+
+### Open Questions on Otherwise Ready Tasks
+
+For tasks that are mostly ready but have minor open questions that don't block core implementation, use the `has:open-questions` label and set `status=blocked`:
+
+```bash
+cat << 'EOF' | bd create --title="Add JWT middleware" --type=task --priority=1 --labels=has:open-questions --body-file -
+## Description
+Implement JWT verification middleware.
+
+## Open Questions
+- [ ] What's the token expiry time? (suggested: 1 hour)
+
+## Instructions
+1. Create src/middleware/auth.ts
+2. Implement verifyToken middleware
+...
+EOF
+
+# Block until questions are resolved
+bd update <id> --status=blocked
+```
+
+Issues with `has:open-questions` stay blocked until questions are resolved. Once resolved, unblock: `bd update <id> --status=open --remove-label has:open-questions`. If the open questions are fundamental enough that the task can't be scoped at all, use the `needs:discussion` pattern above instead.
 
 ### External Bug Handling
 
@@ -178,6 +222,7 @@ Post-mortems are ONLY for external bugs (`source:external`). Internal discovery 
 
 ### Labels
 - `need:review` — Signals reviewer agent must review the plan
+- `needs:discussion` — Task needs user discussion/scoping before execution (use with `status=blocked`)
 - `has:open-questions` — Issue has unresolved questions
 - `source:external` — Bug reported by user/customer
 - `risk:high` — High-risk change (optional)

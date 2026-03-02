@@ -128,26 +128,18 @@ aimgr verify --format json
 
 ### Step 1: Skill Discovery
 
-Analyze the project and suggest relevant skills.
+Load the `ai-resource-manager` skill and use its "Recommend Resources" workflow (Use Case 5).
 
-> **Note**: Since Step 0 already confirmed aimgr is available and the plugin is installed, skip the aimgr availability check here and proceed directly to discovery.
-
-1. Detect project type (package.json, file structure)
-2. Search for relevant skills based on project type
-
-**MANDATORY USER INTERACTION POINT - STOP HERE**
-
-3. MUST use the `question()` tool to present skill options to the user:
-   - Present 3-5 most relevant skill suggestions as options
-   - Include descriptions for each skill
-   - Allow multiple selections
-   - DO NOT proceed until user responds
-
-4. Install ONLY user-selected skills - DO NOT auto-install
-
-See skill for keyword search patterns by use case.
+The ai-resource-manager will:
+1. Read `.coder/project.yaml` for project context (written by plugin on startup)
+2. List available resources from aimgr repository
+3. Filter out irrelevant resources based on project context
+4. Present recommendations for user selection
+5. Install only user-selected resources
 
 > **If aimgr was not installed and user declined installation (from Step 0)**: Skip this step entirely and proceed to Step 2.
+
+> **If `.coder/project.yaml` doesn't exist yet**: The ai-resource-manager has a fallback detection flow. Proceed normally.
 
 ---
 
@@ -326,94 +318,17 @@ git commit -m "chore: enable team mode"
 
 ---
 
-## Optional: Additional Resource Discovery
-
-**MANDATORY USER INTERACTION POINT - STOP HERE**
-
-Before proceeding with additional discovery, MUST use the `question()` tool to ask:
-- "Would you like to discover additional AI resources for your project?"
-- Options: "Yes, discover more resources" and "No, initialization is complete"
-- DO NOT proceed with discovery unless user explicitly selects yes
-
-> **Note**: This section requires aimgr to be installed. If aimgr is not available (user declined in Step 0), skip this section entirely.
-
-### Step 1: Discover relevant resources
-
-Based on the project type (detected from package.json, file structure, or user input), run aimgr discovery with relevant keywords.
-
-**Common discovery patterns:**
-
-| Project Type | Search Keywords | Example Command |
-|-------------|-----------------|-----------------|
-| React/Frontend | react, frontend, ui, component | `aimgr repo list *react* *frontend* *ui*` |
-| Node.js/Backend | node, api, backend, express | `aimgr repo list *node* *api* *backend*` |
-| TypeScript | typescript, ts, type | `aimgr repo list *typescript* *ts*` |
-| Python | python, py | `aimgr repo list *python* *py*` |
-| Testing | test, testing, qa | `aimgr repo list *test* *qa*` |
-| DevOps | docker, ci, deploy | `aimgr repo list *docker* *ci* *deploy*` |
-| Documentation | docs, readme, markdown | `aimgr repo list *docs* *readme* *md*` |
-| Data Science | data, ml, analytics | `aimgr repo list *data* *ml* *analytics*` |
-
-**How to detect project type:**
-
-1. Check for `package.json` and look for dependencies:
-   - React: `react`, `next`, `gatsby`
-   - Node.js: `express`, `fastify`, `koa`
-   - TypeScript: `typescript` in devDependencies
-2. Check for language-specific files:
-   - Python: `requirements.txt`, `pyproject.toml`, `*.py`
-   - Go: `go.mod`, `*.go`
-   - Rust: `Cargo.toml`, `*.rs`
-3. Ask the user if unclear
-
-**Example workflow:**
-
-```bash
-# For a React project
-aimgr repo list *react* *component* *ui* *frontend*
-```
-
-### Step 2: Present discovered resources
-
-**MANDATORY USER INTERACTION POINT - STOP HERE**
-
-MUST use the `question()` tool to present discovered resources:
-- List each discovered resource as a selectable option with description
-- Allow multiple selections
-- Include a "Skip - don't install any" option
-- DO NOT proceed until user responds
-
-Example format for question options:
-- `skill/react-component-builder` - "Build React components with best practices"
-- `skill/frontend-testing` - "Testing toolkit for React apps"
-- `command/create-component` - "Scaffold new React components"
-
-### Step 3: Install selected resources
-
-Install ONLY user-selected resources using aimgr:
-
-```bash
-aimgr install skill/react-component-builder command/create-component
-```
-
-**Installation tips:**
-- Multiple resources can be installed in one command
-- Resources are installed to the current project directory
-- Use `aimgr list` to see installed resources
-- Use `aimgr uninstall <resource>` to remove unwanted resources
-
-### Step 4: Report completion
+## Step 4: Report Completion
 
 Summarize the full initialization:
 
 > **Initialization Complete!**
 > 
 > ✓ aimgr bootstrapped (opencode-coder plugin verified)
-> ✓ Skills discovered and installed: 2 (release, task-sync)
+> ✓ Skills discovered and installed via ai-resource-manager
 > ✓ Beads initialized in stealth mode
 > ✓ Git hooks installed
 > ✓ AGENTS.md created with 5 sections (adapted to installed skills)
-> ✓ Additional AI resources installed: 1 (react-component-builder)
 > 
 > **Next steps:**
 > - Run `bd ready` to find available work
@@ -437,7 +352,7 @@ Summarize the full initialization:
 - **Follow the bootstrapping + 3-step workflow**: aimgr bootstrap → Skill discovery → Beads init → AGENTS.md creation
 - **AGENTS.md is skill-aware**: Sections adapt to what's installed
 - **Use generic language**: Don't hardcode skill names in AGENTS.md
-- **Additional discovery is OPT-IN**: MUST ask before proceeding
+- **Skill discovery delegates to ai-resource-manager**: Load the skill and use its "Recommend Resources" workflow
 - **Don't overwhelm**: Present 3-5 most relevant resources as options
 - **Handle missing tools gracefully**: Continue if aimgr not installed (user declined)
 - **Re-running is safe**: /init can be re-run to update AGENTS.md after changes

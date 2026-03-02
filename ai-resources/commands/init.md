@@ -4,7 +4,7 @@ description: Initialize project for opencode-coder plugin
 
 # Initialize Coder Project
 
-Complete project setup: aimgr bootstrapping, skill discovery, beads initialization, and AGENTS.md creation.
+Complete project setup: skill discovery, beads initialization, and AGENTS.md creation.
 
 ## Task
 
@@ -14,115 +14,7 @@ Load the opencode-coder skill for detailed guidance:
 skill({ name: "opencode-coder" })
 ```
 
-Follow the **Installation & Setup** section which has four main steps (plus bootstrapping):
-
----
-
-### Step 0: aimgr Bootstrapping
-
-Before anything else, check whether aimgr is installed and the opencode-coder plugin is set up.
-
-#### Check: Is aimgr installed?
-
-Run:
-
-```bash
-aimgr --version
-```
-
-**If aimgr is NOT installed:**
-
-Inform the user:
-
-> aimgr is the AI resource manager that enables skill discovery, agent management, and plugin packaging. Without it, we'll do a basic setup (beads + AGENTS.md) but skip skill discovery.
-
-**MANDATORY USER INTERACTION POINT - STOP HERE**
-
-MUST use the `question()` tool to ask:
-- "Would you like to install aimgr now?"
-- Options: "Yes, install aimgr" and "No, continue without aimgr"
-- DO NOT proceed until user responds
-
-If user says **YES**:
-1. Direct the user to the install instructions: https://github.com/hk9890/ai-config-manager
-2. Wait for the user to confirm they have installed aimgr
-3. Verify installation: `aimgr --version`
-4. Install the opencode-coder plugin:
-   ```bash
-   aimgr init && aimgr install package/opencode-coder
-   ```
-5. Tell the user:
-   > New commands and agents will be available in your next OpenCode session. Skills are available immediately — just ask me to load them.
-6. Continue to **Step 1** (skill discovery is now available)
-
-If user says **NO**:
-- Skip to **Step 2** (beads init) — skill discovery is not available without aimgr
-
----
-
-**If aimgr IS installed:**
-
-#### Check: Is opencode-coder plugin installed?
-
-Run:
-
-```bash
-aimgr list --format json
-```
-
-Check the output for `opencode-coder`.
-
-**If opencode-coder is NOT installed:**
-
-Auto-install silently:
-
-```bash
-aimgr install package/opencode-coder
-```
-
-Report to the user:
-
-> Installed opencode-coder plugin. New commands and agents will be available in your next OpenCode session. Skills are available immediately — just ask me to load them.
-
-Continue to **Step 1**.
-
-**If opencode-coder IS installed:**
-
-Check health:
-
-```bash
-aimgr verify --format json
-```
-
-- **HEALTHY** (no errors or warnings): Proceed to **Step 1**.
-- **ERRORS detected**:
-
-  Report the issues to the user.
-
-  **MANDATORY USER INTERACTION POINT - STOP HERE**
-
-  MUST use the `question()` tool to ask:
-  - "Resource issues detected. Want me to attempt repair?"
-  - Options: "Yes, attempt repair" and "No, continue anyway"
-  - DO NOT proceed until user responds
-
-  If user says **YES**:
-  - Run repair and parse the result:
-    ```bash
-    aimgr repair --format json
-    ```
-  - Report the outcome:
-    - If `summary.fixed > 0`: report what was fixed (list items from the `fixed` array — each has `resource`, `tool`, `issue_type`, `description`)
-    - If `summary.failed > 0`: report which resources failed to repair (from the `failed` array) and suggest manual steps:
-      > Could not auto-repair some resources. Try:
-      > ```bash
-      > aimgr uninstall package/opencode-coder && aimgr install package/opencode-coder
-      > ```
-    - If `hints` array is non-empty: show the hints to the user (each has `resource`, `description`)
-  - After repair, re-run `aimgr verify --format json` to confirm the state is clean. Report whether issues are resolved.
-  
-  If user says **NO**:
-  - Continue to **Step 1** with a warning that some resources may not work correctly.
+Follow the **Installation & Setup** section which has three main steps:
 
 ---
 
@@ -136,8 +28,6 @@ The ai-resource-manager will:
 3. Filter out irrelevant resources based on project context
 4. Present recommendations for user selection
 5. Install only user-selected resources
-
-> **If aimgr was not installed and user declined installation (from Step 0)**: Skip this step entirely and proceed to Step 2.
 
 > **If `.coder/project.yaml` doesn't exist yet**: The ai-resource-manager has a fallback detection flow. Proceed normally.
 
@@ -324,7 +214,6 @@ Summarize the full initialization:
 
 > **Initialization Complete!**
 > 
-> ✓ aimgr bootstrapped (opencode-coder plugin verified)
 > ✓ Skills discovered and installed via ai-resource-manager
 > ✓ Beads initialized in stealth mode
 > ✓ Git hooks installed
@@ -349,12 +238,11 @@ Summarize the full initialization:
 
 ### Workflow Rules
 
-- **Follow the bootstrapping + 3-step workflow**: aimgr bootstrap → Skill discovery → Beads init → AGENTS.md creation
+- **Follow the 3-step workflow**: Skill discovery → Beads init → AGENTS.md creation
 - **AGENTS.md is skill-aware**: Sections adapt to what's installed
 - **Use generic language**: Don't hardcode skill names in AGENTS.md
 - **Skill discovery delegates to ai-resource-manager**: Load the skill and use its "Recommend Resources" workflow
 - **Don't overwhelm**: Present 3-5 most relevant resources as options
-- **Handle missing tools gracefully**: Continue if aimgr not installed (user declined)
 - **Re-running is safe**: /init can be re-run to update AGENTS.md after changes
 - **Stealth detection takes priority**: Always check for the stealth marker before asking mode questions
 - **Restart messaging**:

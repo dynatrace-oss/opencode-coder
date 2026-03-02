@@ -1,4 +1,6 @@
 mode: team
+installReady: false
+ecosystemReady: true
 git:
   initialized: true
   platform: github
@@ -6,9 +8,11 @@ git:
 beads:
   initialized: true
   stealthMode: false
+  bdCliInstalled: true
 aimgr:
   installed: true
   packageYaml: true
   resourcesHealthy: true
-detectedAt: 2026-03-02T14:02:49.623Z
+  coderPackageInstalled: false
+detectedAt: 2026-03-02T20:19:29.111Z
 pluginVersion: 0.30.0

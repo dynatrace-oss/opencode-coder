@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { stringify } from "yaml";
+import { stringify, parse } from "yaml";
 import type { Logger } from "../core/logger";
 import type { VersionInfo } from "../core/version";
 
@@ -21,6 +21,15 @@ export interface ProjectDetectorServiceOptions {
 export interface ProjectContext {
   /** Overall operational mode */
   mode: "stealth" | "team" | "uninitialized";
+
+  /**
+   * True when all prerequisites for running /init are in place:
+   * git initialized, bd CLI installed, aimgr installed, and
+   * package/opencode-coder is listed in ai.package.yaml.
+   *
+   * Used by the plugin /init command to gate the installation flow.
+   */
+  installReady: boolean;
 
   /**
    * True when all ecosystem components are installed and operational:
@@ -47,6 +56,8 @@ export interface ProjectContext {
     initialized: boolean;
     /** Whether the stealth-mode marker is present in .git/info/exclude */
     stealthMode: boolean;
+    /** Whether the bd CLI is available on PATH */
+    bdCliInstalled: boolean;
   };
 
   /** aimgr AI-resource-manager status */
@@ -57,6 +68,8 @@ export interface ProjectContext {
     packageYaml: boolean;
     /** Whether aimgr verify reports no issues (false when aimgr is not installed) */
     resourcesHealthy: boolean;
+    /** Whether package/opencode-coder is listed in ai.package.yaml */
+    coderPackageInstalled: boolean;
   };
 
   /** Detection metadata */
@@ -173,6 +186,20 @@ export class ProjectDetectorService {
     }
   }
 
+  /**
+   * Check whether the bd CLI is available on PATH.
+   */
+  detectBdCliInstalled(): boolean {
+    try {
+      execSync("command -v bd", { stdio: "ignore" });
+      this.logger.debug("bd CLI is available");
+      return true;
+    } catch {
+      this.logger.debug("bd CLI not found on PATH");
+      return false;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // aimgr detection
   // ---------------------------------------------------------------------------
@@ -199,6 +226,33 @@ export class ProjectDetectorService {
     const exists = fs.existsSync(packagePath);
     this.logger.debug("Checking for ai.package.yaml", { path: packagePath, exists });
     return exists;
+  }
+
+  /**
+   * Check whether `package/opencode-coder` is listed in ai.package.yaml.
+   *
+   * Returns false if:
+   * - ai.package.yaml does not exist
+   * - the file cannot be read or parsed
+   * - the `packages` field is missing or not an array
+   * - `package/opencode-coder` is not in the list
+   */
+  detectCoderPackageInstalled(): boolean {
+    const packagePath = path.join(this.workdir, "ai.package.yaml");
+    try {
+      const content = fs.readFileSync(packagePath, "utf-8");
+      const parsed = parse(content);
+      if (!parsed || !Array.isArray(parsed.packages)) {
+        this.logger.debug("ai.package.yaml has no packages list");
+        return false;
+      }
+      const found = parsed.packages.includes("package/opencode-coder");
+      this.logger.debug("Checking for package/opencode-coder in ai.package.yaml", { found });
+      return found;
+    } catch {
+      this.logger.debug("Could not read or parse ai.package.yaml");
+      return false;
+    }
   }
 
   /**
@@ -264,6 +318,24 @@ export class ProjectDetectorService {
     return gitInitialized && beadsInitialized && aimgrInstalled && packageYaml && resourcesHealthy;
   }
 
+  /**
+   * Derive whether all prerequisites for running /init are in place.
+   *
+   * True when all of:
+   * - git is initialized
+   * - bd CLI is installed
+   * - aimgr CLI is installed
+   * - package/opencode-coder is listed in ai.package.yaml
+   */
+  deriveInstallReady(
+    gitInitialized: boolean,
+    bdCliInstalled: boolean,
+    aimgrInstalled: boolean,
+    coderPackageInstalled: boolean,
+  ): boolean {
+    return gitInitialized && bdCliInstalled && aimgrInstalled && coderPackageInstalled;
+  }
+
   // ---------------------------------------------------------------------------
   // YAML writing
   // ---------------------------------------------------------------------------
@@ -308,14 +380,25 @@ export class ProjectDetectorService {
     const beadsInitialized = this.detectBeadsInitialized();
     const stealthMode = this.detectStealthMode();
 
+    // Beads CLI
+    const bdCliInstalled = this.detectBdCliInstalled();
+
     // aimgr
     const aimgrInstalled = this.detectAimgrInstalled();
     const packageYaml = this.detectPackageYaml();
     // Only check health when aimgr is installed (avoids double detection call)
     const resourcesHealthy = aimgrInstalled ? this.detectResourcesHealthy() : false;
+    // Only check coder package when ai.package.yaml exists
+    const coderPackageInstalled = packageYaml ? this.detectCoderPackageInstalled() : false;
 
     // Derived
     const mode = this.deriveMode(beadsInitialized, stealthMode);
+    const installReady = this.deriveInstallReady(
+      gitInitialized,
+      bdCliInstalled,
+      aimgrInstalled,
+      coderPackageInstalled,
+    );
     const ecosystemReady = this.deriveEcosystemReady(
       gitInitialized,
       beadsInitialized,
@@ -326,6 +409,7 @@ export class ProjectDetectorService {
 
     const context: ProjectContext = {
       mode,
+      installReady,
       ecosystemReady,
       git: {
         initialized: gitInitialized,
@@ -335,11 +419,13 @@ export class ProjectDetectorService {
       beads: {
         initialized: beadsInitialized,
         stealthMode,
+        bdCliInstalled,
       },
       aimgr: {
         installed: aimgrInstalled,
         packageYaml,
         resourcesHealthy,
+        coderPackageInstalled,
       },
       detectedAt: new Date().toISOString(),
       pluginVersion: versionInfo.version,
@@ -350,6 +436,7 @@ export class ProjectDetectorService {
     this.logger.debug("Project detection completed", {
       durationMs: Date.now() - start,
       mode,
+      installReady,
       ecosystemReady,
     });
 

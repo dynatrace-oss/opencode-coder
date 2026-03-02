@@ -6,6 +6,7 @@ import { BeadsService, AimgrService, SessionExportService, ProjectDetectorServic
 import type { ProjectContext } from "./service/project-detector-service";
 import { createCoderTool } from "./tool";
 import { isPluginDisabled } from "./config/env";
+import { getInstallGuideTemplate } from "./templates";
 
 export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
   const log = createLogger(client);
@@ -137,13 +138,25 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
         // File doesn't exist — no-op
       }
 
+      // Await project context once for both /init gating and default_agent
+      const projectContext = await projectContextPromise;
+
+      // Gate /init command based on installation readiness
+      if (!projectContext || !projectContext.installReady) {
+        input.command = input.command ?? {};
+        input.command["init"] = {
+          template: getInstallGuideTemplate(),
+          description: "Set up prerequisites for the opencode-coder plugin",
+        };
+        log.info("Registered /init with installation guidance (installReady=false)");
+      }
+
       // Set orchestrator as default agent when ecosystem is fully ready
       // and user hasn't explicitly configured a different default agent.
       // Note: default_agent is supported at runtime (OpenCode ≥1.2.15) but the
       // plugin SDK's v1 Config type definition hasn't been updated yet.
       const cfg = input as Record<string, unknown>;
       if (!cfg["default_agent"]) {
-        const projectContext = await projectContextPromise;
         if (projectContext?.ecosystemReady) {
           cfg["default_agent"] = "orchestrator";
           log.info("Set default_agent to orchestrator (ecosystem ready)");

@@ -12,55 +12,30 @@ Complete guide for installing and initializing the opencode-coder plugin.
 
 ## Installation
 
-Install the global dependencies required by the opencode-coder plugin. This is a one-time setup that should be performed before initializing any project.
+The opencode-coder plugin requires a few global tools. **Run `/init` to get started** — the plugin automatically detects missing prerequisites and guides you through setup.
 
-### Installing the bd CLI
+### Prerequisites
 
-The coder plugin requires the `bd` CLI (beads) for issue tracking:
+| Tool | Purpose | Install |
+|------|---------|---------|
+| `bd` (beads) | Issue tracking CLI | `npm install -g beads` |
+| `aimgr` (optional) | AI resource discovery | See: https://github.com/hk9890/ai-config-manager |
+
+> **Note**: You do not need to install these manually before running `/init`. The `/init` command detects what is missing and prompts you to install only what is needed.
+
+### Manual Installation (if needed)
+
+If you need to install or upgrade dependencies outside of `/init`:
 
 ```bash
+# Install beads
 npm install -g beads
-```
 
-### Verify Installation
-
-After installation, verify that beads is available:
-
-```bash
-bd --version
-```
-
-You should see output showing the beads version number.
-
-### Installing aimgr (Optional)
-
-The coder plugin can optionally use `aimgr` to discover AI resources (commands, skills) relevant to your project type.
-
-For installation instructions, see: https://github.com/hk9890/ai-config-manager
-
-**What aimgr does:**
-- Discovers AI resources based on project type (React, Python, TypeScript, etc.)
-- Suggests relevant packages from the aimgr repository
-- Installs commands and skills tailored to your workflow
-
-**Basic usage:**
-```bash
-# Discover resources for your project
-aimgr repo search react
-
-# Install a specific package
-aimgr install skill/package-name
-```
-
-aimgr integrates with the `bd init` workflow to automatically suggest relevant resources during project initialization. See [Initialization](#initialization) for details.
-
-
-### Upgrading Dependencies
-
-To upgrade beads to the latest version:
-
-```bash
+# Upgrade beads
 npm update -g beads
+
+# Verify installation
+bd --version
 ```
 
 **Important**: Always use npm for installation and upgrades. Do NOT use curl/bash install scripts that might be suggested by `bd doctor`.
@@ -75,7 +50,7 @@ npm update -g beads
 
 ### Next Steps
 
-After installation, initialize a project with the coder plugin (see [Initialization](#initialization) section).
+Run `/init` — the plugin will automatically detect missing prerequisites and guide you through setup. See the [Initialization](#initialization) section for details.
 
 ---
 

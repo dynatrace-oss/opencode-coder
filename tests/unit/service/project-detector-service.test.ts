@@ -198,6 +198,28 @@ describe("ProjectDetectorService", () => {
     });
   });
 
+  describe("detectBdCliInstalled", () => {
+    it("should return true when bd is on PATH", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => undefined as any);
+
+      const result = service.detectBdCliInstalled();
+
+      expect(result).toBe(true);
+      execSyncSpy.mockRestore();
+    });
+
+    it("should return false when bd is not on PATH", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
+        throw new Error("command not found");
+      });
+
+      const result = service.detectBdCliInstalled();
+
+      expect(result).toBe(false);
+      execSyncSpy.mockRestore();
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // aimgr detection
   // ---------------------------------------------------------------------------
@@ -242,6 +264,84 @@ describe("ProjectDetectorService", () => {
 
       expect(result).toBe(false);
       existsSyncSpy.mockRestore();
+    });
+  });
+
+  describe("detectCoderPackageInstalled", () => {
+    it("should return true when package/opencode-coder is in packages list", () => {
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
+        "packages:\n  - package/opencode-coder\n  - package/other\n" as any
+      );
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(true);
+      expect(readFileSyncSpy).toHaveBeenCalledWith("/test/project/ai.package.yaml", "utf-8");
+      readFileSyncSpy.mockRestore();
+    });
+
+    it("should return false when package/opencode-coder is not in packages list", () => {
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
+        "packages:\n  - package/other\n  - package/something-else\n" as any
+      );
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(false);
+      readFileSyncSpy.mockRestore();
+    });
+
+    it("should return false when ai.package.yaml does not exist", () => {
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockImplementation(() => {
+        throw new Error("ENOENT: no such file or directory");
+      });
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(false);
+      readFileSyncSpy.mockRestore();
+    });
+
+    it("should return false when packages field is missing", () => {
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
+        "name: my-project\nversion: 1.0.0\n" as any
+      );
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(false);
+      readFileSyncSpy.mockRestore();
+    });
+
+    it("should return false when packages field is not an array", () => {
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
+        "packages: not-an-array\n" as any
+      );
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(false);
+      readFileSyncSpy.mockRestore();
+    });
+
+    it("should return false when file content is empty/null", () => {
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue("" as any);
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(false);
+      readFileSyncSpy.mockRestore();
+    });
+
+    it("should return false when YAML is malformed", () => {
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
+        "packages: [unclosed bracket" as any
+      );
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(false);
+      readFileSyncSpy.mockRestore();
     });
   });
 
@@ -318,6 +418,36 @@ describe("ProjectDetectorService", () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Install readiness
+  // ---------------------------------------------------------------------------
+
+  describe("deriveInstallReady", () => {
+    it("should return true when all prerequisites are met", () => {
+      expect(service.deriveInstallReady(true, true, true, true)).toBe(true);
+    });
+
+    it("should return false when git is not initialized", () => {
+      expect(service.deriveInstallReady(false, true, true, true)).toBe(false);
+    });
+
+    it("should return false when bd CLI is not installed", () => {
+      expect(service.deriveInstallReady(true, false, true, true)).toBe(false);
+    });
+
+    it("should return false when aimgr is not installed", () => {
+      expect(service.deriveInstallReady(true, true, false, true)).toBe(false);
+    });
+
+    it("should return false when coderPackageInstalled is false", () => {
+      expect(service.deriveInstallReady(true, true, true, false)).toBe(false);
+    });
+
+    it("should return false when nothing is installed", () => {
+      expect(service.deriveInstallReady(false, false, false, false)).toBe(false);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Ecosystem readiness
   // ---------------------------------------------------------------------------
 
@@ -362,10 +492,11 @@ describe("ProjectDetectorService", () => {
 
       const context: ProjectContext = {
         mode: "team",
+        installReady: false,
         ecosystemReady: false,
         git: { initialized: true, platform: "github", remote: "https://github.com/user/repo.git" },
-        beads: { initialized: true, stealthMode: false },
-        aimgr: { installed: false, packageYaml: false, resourcesHealthy: false },
+        beads: { initialized: true, stealthMode: false, bdCliInstalled: false },
+        aimgr: { installed: false, packageYaml: false, resourcesHealthy: false, coderPackageInstalled: false },
         detectedAt: "2026-03-02T00:00:00.000Z",
         pluginVersion: "1.0.0",
       };
@@ -391,10 +522,11 @@ describe("ProjectDetectorService", () => {
 
       const context: ProjectContext = {
         mode: "stealth",
+        installReady: false,
         ecosystemReady: true,
         git: { initialized: true, platform: "gitlab", remote: "https://gitlab.com/u/r.git" },
-        beads: { initialized: false, stealthMode: true },
-        aimgr: { installed: true, packageYaml: true, resourcesHealthy: true },
+        beads: { initialized: false, stealthMode: true, bdCliInstalled: true },
+        aimgr: { installed: true, packageYaml: true, resourcesHealthy: true, coderPackageInstalled: true },
         detectedAt: "2026-03-02T00:00:00.000Z",
         pluginVersion: "2.3.4",
       };
@@ -408,6 +540,9 @@ describe("ProjectDetectorService", () => {
       expect(writtenContent).toContain("installed: true");
       expect(writtenContent).toContain("resourcesHealthy: true");
       expect(writtenContent).toContain("pluginVersion: 2.3.4");
+      expect(writtenContent).toContain("bdCliInstalled: true");
+      expect(writtenContent).toContain("coderPackageInstalled: true");
+      expect(writtenContent).toContain("installReady: false");
 
       mkdirSyncSpy.mockRestore();
       writeFileSyncSpy.mockRestore();
@@ -572,6 +707,116 @@ describe("ProjectDetectorService", () => {
       expect(result.ecosystemReady).toBe(true);
       expect(result.mode).toBe("team");
       expect(writtenContent).toContain("ecosystemReady: true");
+
+      accessSyncSpy.mockRestore();
+      readFileSyncSpy.mockRestore();
+      existsSyncSpy.mockRestore();
+      execSyncSpy.mockRestore();
+      mkdirSyncSpy.mockRestore();
+      writeFileSyncSpy.mockRestore();
+    });
+
+    it("should set installReady true when all install prerequisites are met", async () => {
+      // .git exists, .beads exists
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
+
+      // No stealth marker
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
+        "packages:\n  - package/opencode-coder\n" as any
+      );
+
+      // ai.package.yaml exists
+      const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
+
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
+        if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
+        if (cmd === "command -v bd") return "/usr/local/bin/bd" as any;
+        if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
+        if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
+        return "" as any;
+      });
+
+      const mkdirSyncSpy = spyOn(fs, "mkdirSync").mockImplementation(() => undefined as any);
+      let writtenContent = "";
+      const writeFileSyncSpy = spyOn(fs, "writeFileSync").mockImplementation(
+        (_p: any, data: any) => { writtenContent = data; }
+      );
+
+      const result = await service.detectAndWrite(versionInfo as any);
+
+      expect(result.installReady).toBe(true);
+      expect(result.beads.bdCliInstalled).toBe(true);
+      expect(result.aimgr.coderPackageInstalled).toBe(true);
+      expect(writtenContent).toContain("installReady: true");
+      expect(writtenContent).toContain("bdCliInstalled: true");
+      expect(writtenContent).toContain("coderPackageInstalled: true");
+
+      accessSyncSpy.mockRestore();
+      readFileSyncSpy.mockRestore();
+      existsSyncSpy.mockRestore();
+      execSyncSpy.mockRestore();
+      mkdirSyncSpy.mockRestore();
+      writeFileSyncSpy.mockRestore();
+    });
+
+    it("should set installReady false when bd CLI is missing", async () => {
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation((p: any) => {
+        if (String(p).endsWith(".git")) return undefined;
+        throw new Error("ENOENT");
+      });
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
+        "packages:\n  - package/opencode-coder\n" as any
+      );
+      const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
+        if (cmd === "command -v bd") throw new Error("not found");
+        if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
+        if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
+        if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
+        return "" as any;
+      });
+
+      const mkdirSyncSpy = spyOn(fs, "mkdirSync").mockImplementation(() => undefined as any);
+      const writeFileSyncSpy = spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+      const result = await service.detectAndWrite(versionInfo as any);
+
+      expect(result.installReady).toBe(false);
+      expect(result.beads.bdCliInstalled).toBe(false);
+
+      accessSyncSpy.mockRestore();
+      readFileSyncSpy.mockRestore();
+      existsSyncSpy.mockRestore();
+      execSyncSpy.mockRestore();
+      mkdirSyncSpy.mockRestore();
+      writeFileSyncSpy.mockRestore();
+    });
+
+    it("should not call detectCoderPackageInstalled when packageYaml is false", async () => {
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation((p: any) => {
+        if (String(p).endsWith(".git")) return undefined;
+        throw new Error("ENOENT");
+      });
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue("# default\n" as any);
+      // ai.package.yaml does NOT exist
+      const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(false);
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
+        if (cmd === "git remote get-url origin") throw new Error("no origin");
+        if (cmd === "command -v bd") return "/usr/local/bin/bd" as any;
+        if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
+        if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
+        return "" as any;
+      });
+
+      const mkdirSyncSpy = spyOn(fs, "mkdirSync").mockImplementation(() => undefined as any);
+      const writeFileSyncSpy = spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+      const result = await service.detectAndWrite(versionInfo as any);
+
+      // coderPackageInstalled should be false since packageYaml is false
+      expect(result.aimgr.coderPackageInstalled).toBe(false);
+      // installReady should be false since coderPackageInstalled is false
+      expect(result.installReady).toBe(false);
 
       accessSyncSpy.mockRestore();
       readFileSyncSpy.mockRestore();

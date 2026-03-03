@@ -268,80 +268,66 @@ describe("ProjectDetectorService", () => {
   });
 
   describe("detectCoderPackageInstalled", () => {
-    it("should return true when package/opencode-coder is in resources list", () => {
-      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "resources:\n  - package/opencode-coder\n  - package/other\n" as any
+    it("should return true when aimgr list returns the package", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockReturnValue(
+        JSON.stringify([{
+          type: "package",
+          name: "opencode-coder",
+          description: "opencode-coder plugin toolkit",
+          targets: [],
+          sync_status: "in-sync",
+          health: "ok",
+        }]) as any
       );
 
       const result = service.detectCoderPackageInstalled();
 
       expect(result).toBe(true);
-      expect(readFileSyncSpy).toHaveBeenCalledWith("/test/project/ai.package.yaml", "utf-8");
-      readFileSyncSpy.mockRestore();
+      expect(execSyncSpy).toHaveBeenCalledWith(
+        'aimgr list "package/opencode-coder" --format json',
+        { cwd: "/test/project", encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+      );
+      execSyncSpy.mockRestore();
     });
 
-    it("should return false when package/opencode-coder is not in resources list", () => {
-      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "resources:\n  - package/other\n  - package/something-else\n" as any
+    it("should return false when aimgr list returns empty array", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockReturnValue("[]" as any);
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(false);
+      execSyncSpy.mockRestore();
+    });
+
+    it("should return false when aimgr list returns non-JSON (not found message)", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockReturnValue(
+        "No installed resources match pattern 'package/opencode-coder'.\n\nInstall resources with: aimgr install <resource>\n" as any
       );
 
       const result = service.detectCoderPackageInstalled();
 
       expect(result).toBe(false);
-      readFileSyncSpy.mockRestore();
+      execSyncSpy.mockRestore();
     });
 
-    it("should return false when ai.package.yaml does not exist", () => {
-      const readFileSyncSpy = spyOn(fs, "readFileSync").mockImplementation(() => {
-        throw new Error("ENOENT: no such file or directory");
+    it("should return false when aimgr is not installed", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
+        throw new Error("command not found");
       });
 
       const result = service.detectCoderPackageInstalled();
 
       expect(result).toBe(false);
-      readFileSyncSpy.mockRestore();
+      execSyncSpy.mockRestore();
     });
 
-    it("should return false when resources field is missing", () => {
-      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "name: my-project\nversion: 1.0.0\n" as any
-      );
+    it("should return false when aimgr list returns malformed JSON", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockReturnValue("{broken" as any);
 
       const result = service.detectCoderPackageInstalled();
 
       expect(result).toBe(false);
-      readFileSyncSpy.mockRestore();
-    });
-
-    it("should return false when resources field is not an array", () => {
-      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "resources: not-an-array\n" as any
-      );
-
-      const result = service.detectCoderPackageInstalled();
-
-      expect(result).toBe(false);
-      readFileSyncSpy.mockRestore();
-    });
-
-    it("should return false when file content is empty/null", () => {
-      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue("" as any);
-
-      const result = service.detectCoderPackageInstalled();
-
-      expect(result).toBe(false);
-      readFileSyncSpy.mockRestore();
-    });
-
-    it("should return false when YAML is malformed", () => {
-      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "resources: [unclosed bracket" as any
-      );
-
-      const result = service.detectCoderPackageInstalled();
-
-      expect(result).toBe(false);
-      readFileSyncSpy.mockRestore();
+      execSyncSpy.mockRestore();
     });
   });
 
@@ -722,17 +708,22 @@ describe("ProjectDetectorService", () => {
 
       // No stealth marker
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "resources:\n  - package/opencode-coder\n" as any
+        "# no stealth marker\n" as any
       );
 
       // ai.package.yaml exists
       const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
 
+      const aimgrListResult = JSON.stringify([{
+        type: "package", name: "opencode-coder", description: "toolkit",
+        targets: [], sync_status: "in-sync", health: "ok",
+      }]);
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
         if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
         if (cmd === "command -v bd") return "/usr/local/bin/bd" as any;
         if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
         if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
+        if (cmd === 'aimgr list "package/opencode-coder" --format json') return aimgrListResult as any;
         return "" as any;
       });
 
@@ -765,13 +756,18 @@ describe("ProjectDetectorService", () => {
         throw new Error("ENOENT");
       });
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "resources:\n  - package/opencode-coder\n" as any
+        "# no stealth marker\n" as any
       );
       const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
+      const aimgrListResult = JSON.stringify([{
+        type: "package", name: "opencode-coder", description: "toolkit",
+        targets: [], sync_status: "in-sync", health: "ok",
+      }]);
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
         if (cmd === "command -v bd") throw new Error("not found");
         if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
         if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
+        if (cmd === 'aimgr list "package/opencode-coder" --format json') return aimgrListResult as any;
         if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
         return "" as any;
       });
@@ -792,7 +788,7 @@ describe("ProjectDetectorService", () => {
       writeFileSyncSpy.mockRestore();
     });
 
-    it("should not call detectCoderPackageInstalled when packageYaml is false", async () => {
+    it("should not call detectCoderPackageInstalled when aimgr is not installed", async () => {
       const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation((p: any) => {
         if (String(p).endsWith(".git")) return undefined;
         throw new Error("ENOENT");
@@ -803,8 +799,8 @@ describe("ProjectDetectorService", () => {
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
         if (cmd === "git remote get-url origin") throw new Error("no origin");
         if (cmd === "command -v bd") return "/usr/local/bin/bd" as any;
-        if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
-        if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
+        // aimgr is NOT installed
+        if (cmd === "command -v aimgr") throw new Error("not found");
         return "" as any;
       });
 
@@ -813,7 +809,7 @@ describe("ProjectDetectorService", () => {
 
       const result = await service.detectAndWrite(versionInfo as any);
 
-      // coderPackageInstalled should be false since packageYaml is false
+      // coderPackageInstalled should be false since aimgr is not installed
       expect(result.aimgr.coderPackageInstalled).toBe(false);
       // installReady should be false since coderPackageInstalled is false
       expect(result.installReady).toBe(false);

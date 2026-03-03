@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import { stringify, parse } from "yaml";
+import { stringify } from "yaml";
 import type { Logger } from "../core/logger";
 import type { VersionInfo } from "../core/version";
 
@@ -229,28 +229,30 @@ export class ProjectDetectorService {
   }
 
   /**
-   * Check whether `package/opencode-coder` is listed in ai.package.yaml.
+   * Check whether `package/opencode-coder` is installed via aimgr.
+   *
+   * Uses `aimgr list "package/opencode-coder" --format json` which returns
+   * a JSON array of matching resources when found, or a human-readable
+   * message (not JSON) when no match exists.
    *
    * Returns false if:
-   * - ai.package.yaml does not exist
-   * - the file cannot be read or parsed
-   * - the `resources` field is missing or not an array
-   * - `package/opencode-coder` is not in the list
+   * - aimgr is not installed
+   * - the command fails or returns non-JSON output
+   * - the result is an empty array
    */
   detectCoderPackageInstalled(): boolean {
-    const packagePath = path.join(this.workdir, "ai.package.yaml");
     try {
-      const content = fs.readFileSync(packagePath, "utf-8");
-      const parsed = parse(content);
-      if (!parsed || !Array.isArray(parsed.resources)) {
-        this.logger.debug("ai.package.yaml has no resources list");
-        return false;
-      }
-      const found = parsed.resources.includes("package/opencode-coder");
-      this.logger.debug("Checking for package/opencode-coder in ai.package.yaml", { found });
+      const stdout = execSync('aimgr list "package/opencode-coder" --format json', {
+        cwd: this.workdir,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+      const parsed = JSON.parse(stdout);
+      const found = Array.isArray(parsed) && parsed.length > 0;
+      this.logger.debug("aimgr list package/opencode-coder", { found, count: parsed.length });
       return found;
     } catch {
-      this.logger.debug("Could not read or parse ai.package.yaml");
+      this.logger.debug("Could not detect opencode-coder package via aimgr list");
       return false;
     }
   }
@@ -388,8 +390,8 @@ export class ProjectDetectorService {
     const packageYaml = this.detectPackageYaml();
     // Only check health when aimgr is installed (avoids double detection call)
     const resourcesHealthy = aimgrInstalled ? this.detectResourcesHealthy() : false;
-    // Only check coder package when ai.package.yaml exists
-    const coderPackageInstalled = packageYaml ? this.detectCoderPackageInstalled() : false;
+    // Only check coder package when aimgr is installed (uses aimgr list CLI)
+    const coderPackageInstalled = aimgrInstalled ? this.detectCoderPackageInstalled() : false;
 
     // Derived
     const mode = this.deriveMode(beadsInitialized, stealthMode);

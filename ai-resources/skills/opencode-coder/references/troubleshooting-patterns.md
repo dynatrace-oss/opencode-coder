@@ -179,13 +179,13 @@ git commit -m "chore: switch to team mode"
 mkdir -p .coder/docs
 
 # 2. Copy docs to stealth workspace
-cp docs/CODING.md docs/TESTING.md docs/RELEASING.md docs/MONITORING.md .coder/docs/ 2>/dev/null
+cp docs/CODING.md docs/TESTING.md docs/RELEASING.md docs/MONITORING.md docs/PULL-REQUESTS.md .coder/docs/ 2>/dev/null
 
 # 3. Update AGENTS.md to reference .coder/docs/ paths
 
 # 4. Remove tracked files from git index
 git rm -r --cached .beads/ AGENTS.md ai.package.yaml
-git rm --cached docs/CODING.md docs/TESTING.md docs/RELEASING.md docs/MONITORING.md 2>/dev/null
+git rm --cached docs/CODING.md docs/TESTING.md docs/RELEASING.md docs/MONITORING.md docs/PULL-REQUESTS.md 2>/dev/null
 git commit -m "chore: switch to stealth mode"
 
 # 5. Add stealth exclusion block

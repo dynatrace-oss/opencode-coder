@@ -209,6 +209,7 @@ No commit needed - all files are excluded from git.
     TESTING.md       # Generated testing guide
     RELEASING.md     # Generated release guide
     MONITORING.md    # Generated monitoring guide
+    PULL-REQUESTS.md # Generated PR & branching guide
 
 ai.package.yaml      # aimgr manifest (at root, excluded in stealth)
 ```
@@ -227,6 +228,7 @@ docs/                # Generated docs committed with the repo
   TESTING.md
   RELEASING.md
   MONITORING.md
+  PULL-REQUESTS.md
 
 AGENTS.md            # Committed at root
 ai.package.yaml      # Committed at root
@@ -303,7 +305,7 @@ After the transition, all team members run `bd init` (without `--stealth`) to se
 Re-running `/init` in stealth mode refreshes generated documentation under `.coder/docs/`:
 
 - **No re-prompting** for mode selection — stealth is detected automatically via the marker comment in `.git/info/exclude`
-- Generated files (`CODING.md`, `TESTING.md`, etc.) are overwritten with fresh content
+- Generated files (`CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md`, `PULL-REQUESTS.md`) are overwritten with fresh content
 - `AGENTS.md` is updated at `.coder/AGENTS.md` if the plugin detects it needs changes
 - The exclusion block is left unchanged (idempotent check prevents duplicates)
 

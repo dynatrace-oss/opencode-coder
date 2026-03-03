@@ -22,6 +22,10 @@ Load the **github-releases** skill for release workflow. Read `docs/RELEASING.md
 
 Load the **observability-triage** skill for analyzing logs, metrics, and triaging issues. Read `docs/MONITORING.md` for data sources.
 
+## Pull Requests
+
+Read `docs/PULL-REQUESTS.md` for branching strategy, PR conventions, and code review guidelines. Load the **bitbucket-pr** skill for Bitbucket Server PR management.
+
 ## OpenCode Documentation
 
 - [Commands](https://opencode.ai/docs/commands/) - Custom commands with arguments

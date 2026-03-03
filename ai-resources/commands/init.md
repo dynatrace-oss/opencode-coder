@@ -125,7 +125,7 @@ When `/init` is re-run and stealth is already active:
 
 1. **Do NOT re-ask stealth vs team** — the marker in `.git/info/exclude` is the source of truth
 2. Re-scan the codebase for changes (new docs, updated structure, new skills installed)
-3. Refresh generated docs under `.coder/docs/` — regenerate `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md` as applicable
+3. Refresh generated docs under `.coder/docs/` — regenerate `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md`, `PULL-REQUESTS.md` as applicable
 4. Check if the repo's committed `AGENTS.md` has changed since last run:
    ```bash
    git show HEAD:AGENTS.md 2>/dev/null
@@ -159,6 +159,7 @@ When operating in stealth mode, AGENTS.md is written to `.coder/AGENTS.md` (not 
 | `Read docs/TESTING.md` | `Read .coder/docs/TESTING.md` |
 | `Read docs/RELEASING.md` | `Read .coder/docs/RELEASING.md` |
 | `Read docs/MONITORING.md` | `Read .coder/docs/MONITORING.md` |
+| `Read docs/PULL-REQUESTS.md` | `Read .coder/docs/PULL-REQUESTS.md` |
 
 In stealth mode, AGENTS.md is created at `.coder/AGENTS.md`. The plugin's config hook ensures OpenCode loads it as additional instructions alongside any existing root AGENTS.md.
 

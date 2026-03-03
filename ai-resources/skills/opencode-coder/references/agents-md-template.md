@@ -19,6 +19,7 @@ Each section maps to a standard file in `docs/`:
 | Testing | `docs/TESTING.md` | Only if relevant docs/skills exist |
 | Releases | `docs/RELEASING.md` | Only if relevant docs/skills exist |
 | Monitoring | `docs/MONITORING.md` | Only if relevant docs/skills exist |
+| Pull Requests | `docs/PULL-REQUESTS.md` | Only if relevant docs/skills exist |
 | Landing the Plane | *(inline)* | Only if beads is installed |
 
 > **Stealth mode**: In stealth mode, AGENTS.md is written to `.coder/AGENTS.md` (not project root) and all `docs/` paths become `.coder/docs/`. The plugin injects `.coder/AGENTS.md` into OpenCode via the config hook. See [Mode Detection](#mode-detection).
@@ -55,13 +56,14 @@ Spawn an **explore agent** with the following prompt:
 > 1. **Project identity** — Name, one-sentence description, tech stack
 > 2. **Build & test commands** — How to build, test, lint, type-check (extract from project config files and scripts)
 > 3. **Directory structure** — Top-level directories with one-line purpose each
-> 4. **Existing docs** — List ALL files in `docs/` directory AND `.coder/docs/` directory (if either exists). Also check for `CONTRIBUTING.md`, `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md` in project root. Check for `.coder/AGENTS.md` (stealth mode AGENTS.md). Report full paths.
+> 4. **Existing docs** — List ALL files in `docs/` directory AND `.coder/docs/` directory (if either exists). Also check for `CONTRIBUTING.md`, `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md`, `PULL-REQUESTS.md` in project root. Check for `.coder/AGENTS.md` (stealth mode AGENTS.md). Report full paths.
 > 5. **Coding conventions** — Are there any files that describe coding conventions, guidelines, or architecture? Check: `CONTRIBUTING.md`, `docs/coding-guidelines.md`, `docs/CODING.md`, `.editorconfig`, or similar. Report filenames only.
 > 6. **Testing docs** — Are there files that describe testing patterns, test setup, or test conventions? Report filenames only.
 > 7. **Release docs** — Are there files that describe the release process? Report filenames only.
 > 8. **Monitoring docs** — Are there files that describe monitoring, observability, or log analysis? Report filenames only.
-> 9. **Installed skills** — List all skills in `.opencode/skills/` directory with their descriptions
-> 10. **Beads status** — Is `bd` CLI available? Is `.beads/` directory present?
+> 9. **PR & branching docs** — Are there files that describe pull request conventions, branching strategy, or code review guidelines? Report filenames only.
+> 10. **Installed skills** — List all skills in `.opencode/skills/` directory with their descriptions
+> 11. **Beads status** — Is `bd` CLI available? Is `.beads/` directory present?
 >
 > Be thorough but return ONLY the structured summary, no commentary.
 
@@ -77,11 +79,13 @@ From the explore output, map every discovered doc file to a section:
 | Testing | `docs/TESTING.md`, `.coder/docs/TESTING.md`, `docs/testing-guide.md`, `docs/test-patterns.md` |
 | Releases | `docs/RELEASING.md`, `.coder/docs/RELEASING.md`, `docs/release-process.md`, `RELEASING.md` |
 | Monitoring | `docs/MONITORING.md`, `.coder/docs/MONITORING.md`, `docs/observability.md`, `docs/logging.md` |
+| Pull Requests | `docs/PULL-REQUESTS.md`, `.coder/docs/PULL-REQUESTS.md`, `docs/branching.md`, `docs/code-review.md`, `docs/pr-conventions.md` |
 
 Also map installed skills to sections:
 - Skills matching "release", "publish", "ship" → Releases
 - Skills matching "observability", "triage", "monitoring" → Monitoring
 - Skills matching "test" → Testing
+- Skills matching "pull request", "PR", "code review", "bitbucket", "github-pr" → Pull Requests
 
 A section is **active** if it has at least one matching doc file OR one matching skill. Exception: **Coding** is always active.
 
@@ -99,6 +103,7 @@ If non-standard names are found, ask the user **once**:
 > | Testing | `docs/TESTING.md` |
 > | Releases | `docs/RELEASING.md` |
 > | Monitoring | `docs/MONITORING.md` |
+> | Pull Requests | `docs/PULL-REQUESTS.md` |
 >
 > I found existing docs that could be migrated into this structure:
 >
@@ -108,7 +113,7 @@ If non-standard names are found, ask the user **once**:
 >
 > Would you like to adopt the standard structure?"
 
-> **In stealth mode**: Migration targets are `.coder/docs/CODING.md`, `.coder/docs/TESTING.md`, etc. instead of `docs/`. Show the user the stealth paths in the migration proposal.
+> **In stealth mode**: Migration targets are `.coder/docs/CODING.md`, `.coder/docs/TESTING.md`, `.coder/docs/PULL-REQUESTS.md`, etc. instead of `docs/`. Show the user the stealth paths in the migration proposal.
 
 **If yes:**
 1. Create the standard files in the docs directory (`docs/` in team mode, `.coder/docs/` in stealth mode) and move/consolidate content
@@ -231,6 +236,24 @@ Load the **monitoring-skill-name** skill for observability and triage. Read `doc
 
 Load the **monitoring-skill-name** skill for observability and triage. Read `.coder/docs/MONITORING.md` for data sources.
 ```
+
+#### Pull Requests (conditional)
+
+**Team mode:**
+```markdown
+## Pull Requests
+
+Read `docs/PULL-REQUESTS.md` for branching strategy, PR conventions, and code review guidelines.
+```
+
+**Stealth mode:**
+```markdown
+## Pull Requests
+
+Read `.coder/docs/PULL-REQUESTS.md` for branching strategy, PR conventions, and code review guidelines.
+```
+
+If a PR skill is installed, add: `Load the **skill-name** skill for [description].`
 
 #### Landing the Plane (conditional — only if beads installed)
 

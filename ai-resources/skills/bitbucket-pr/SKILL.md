@@ -15,6 +15,15 @@ description: "Manage Bitbucket Server/Data Center pull requests: create/update P
 
 Run `bash scripts/check-prerequisites.sh` to verify.
 
+## Project Conventions
+
+Before creating, reviewing, or updating a PR, check for project-specific conventions:
+
+- **Team mode**: Read `docs/PULL-REQUESTS.md` if it exists
+- **Stealth mode**: Read `.coder/docs/PULL-REQUESTS.md` if it exists
+
+These conventions define branch naming, PR description format, and code review guidelines for the project. Apply them when generating titles, descriptions, and review feedback.
+
 ## Use Case 1: Create or Update PR
 
 Use when creating a new PR from the current branch or updating an existing PR's title, description, or reviewers.

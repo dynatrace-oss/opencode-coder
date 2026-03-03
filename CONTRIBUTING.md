@@ -133,6 +133,10 @@ bun test tests/e2e          # E2E tests (or: bun run test:e2e)
 
 ## Pull Request Process
 
+For detailed branching strategy, PR conventions, and code review guidelines, see [`docs/PULL-REQUESTS.md`](docs/PULL-REQUESTS.md).
+
+Quick checklist:
+
 1. **Fork** the repository and create a feature branch
 2. **Make your changes** following the coding guidelines
 3. **Run tests** before submitting: `bun test`

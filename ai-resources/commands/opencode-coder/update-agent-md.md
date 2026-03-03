@@ -21,7 +21,7 @@ grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null && echo "S
 - If output is `STEALTH_ACTIVE` → **stealth mode is active**. Keep in mind throughout all subsequent steps:
   - Docs directory is `.coder/docs/` — **not** `docs/`
   - AGENTS.md lives at `.coder/AGENTS.md` — **not** at the project root
-  - AGENTS.md path references must point to `.coder/docs/CODING.md`, `.coder/docs/TESTING.md`, etc.
+  - AGENTS.md path references must point to `.coder/docs/CODING.md`, `.coder/docs/TESTING.md`, `.coder/docs/PULL-REQUESTS.md`, etc.
   - Do **not** create any files under `docs/`
 - If no output → **team mode**. Docs live under `docs/` and AGENTS.md lives at the project root as usual.
 

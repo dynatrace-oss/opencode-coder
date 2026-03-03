@@ -55,12 +55,10 @@ If \`aimgr.installed\` is \`false\`:
 ### opencode-coder Package
 
 If \`aimgr.coderPackageInstalled\` is \`false\`:
-- Inform the user:
-  > "The opencode-coder package is not installed via aimgr. Run:"
-  > \`\`\`
-  > aimgr init && aimgr install package/opencode-coder
-  > \`\`\`
-- Do not run this automatically — provide the commands and let the user decide.
+- Use \`question()\` to ask the user:
+  > "The opencode-coder package is not installed via aimgr. Should I run \`aimgr init && aimgr install package/opencode-coder\` for you?"
+- If the user confirms, run \`aimgr init && aimgr install package/opencode-coder\` in the project root.
+- If they decline, provide the commands for them to run manually.
 
 ---
 

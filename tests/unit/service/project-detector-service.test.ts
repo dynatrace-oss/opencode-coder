@@ -268,9 +268,9 @@ describe("ProjectDetectorService", () => {
   });
 
   describe("detectCoderPackageInstalled", () => {
-    it("should return true when package/opencode-coder is in packages list", () => {
+    it("should return true when package/opencode-coder is in resources list", () => {
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "packages:\n  - package/opencode-coder\n  - package/other\n" as any
+        "resources:\n  - package/opencode-coder\n  - package/other\n" as any
       );
 
       const result = service.detectCoderPackageInstalled();
@@ -280,9 +280,9 @@ describe("ProjectDetectorService", () => {
       readFileSyncSpy.mockRestore();
     });
 
-    it("should return false when package/opencode-coder is not in packages list", () => {
+    it("should return false when package/opencode-coder is not in resources list", () => {
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "packages:\n  - package/other\n  - package/something-else\n" as any
+        "resources:\n  - package/other\n  - package/something-else\n" as any
       );
 
       const result = service.detectCoderPackageInstalled();
@@ -302,7 +302,7 @@ describe("ProjectDetectorService", () => {
       readFileSyncSpy.mockRestore();
     });
 
-    it("should return false when packages field is missing", () => {
+    it("should return false when resources field is missing", () => {
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
         "name: my-project\nversion: 1.0.0\n" as any
       );
@@ -313,9 +313,9 @@ describe("ProjectDetectorService", () => {
       readFileSyncSpy.mockRestore();
     });
 
-    it("should return false when packages field is not an array", () => {
+    it("should return false when resources field is not an array", () => {
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "packages: not-an-array\n" as any
+        "resources: not-an-array\n" as any
       );
 
       const result = service.detectCoderPackageInstalled();
@@ -335,7 +335,7 @@ describe("ProjectDetectorService", () => {
 
     it("should return false when YAML is malformed", () => {
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "packages: [unclosed bracket" as any
+        "resources: [unclosed bracket" as any
       );
 
       const result = service.detectCoderPackageInstalled();
@@ -722,7 +722,7 @@ describe("ProjectDetectorService", () => {
 
       // No stealth marker
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "packages:\n  - package/opencode-coder\n" as any
+        "resources:\n  - package/opencode-coder\n" as any
       );
 
       // ai.package.yaml exists
@@ -765,7 +765,7 @@ describe("ProjectDetectorService", () => {
         throw new Error("ENOENT");
       });
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue(
-        "packages:\n  - package/opencode-coder\n" as any
+        "resources:\n  - package/opencode-coder\n" as any
       );
       const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {

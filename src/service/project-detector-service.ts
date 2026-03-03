@@ -234,7 +234,7 @@ export class ProjectDetectorService {
    * Returns false if:
    * - ai.package.yaml does not exist
    * - the file cannot be read or parsed
-   * - the `packages` field is missing or not an array
+   * - the `resources` field is missing or not an array
    * - `package/opencode-coder` is not in the list
    */
   detectCoderPackageInstalled(): boolean {
@@ -242,11 +242,11 @@ export class ProjectDetectorService {
     try {
       const content = fs.readFileSync(packagePath, "utf-8");
       const parsed = parse(content);
-      if (!parsed || !Array.isArray(parsed.packages)) {
-        this.logger.debug("ai.package.yaml has no packages list");
+      if (!parsed || !Array.isArray(parsed.resources)) {
+        this.logger.debug("ai.package.yaml has no resources list");
         return false;
       }
-      const found = parsed.packages.includes("package/opencode-coder");
+      const found = parsed.resources.includes("package/opencode-coder");
       this.logger.debug("Checking for package/opencode-coder in ai.package.yaml", { found });
       return found;
     } catch {

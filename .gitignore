@@ -31,6 +31,9 @@ credentials.json
 # perles (beads TUI) local config
 .perles/
 
+# Plugin runtime state (regenerated on every startup)
+.coder/project.yaml
+
 # Local mise config (machine-specific)
 mise.local.toml
 .beads/.jsonl.lock

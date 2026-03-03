@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-03-03
+
+### Fixed
+
+- **Package detection broken**: `detectCoderPackageInstalled()` checked for `packages` key in `ai.package.yaml` but aimgr uses `resources`, causing detection to always return false and `/init` to loop on the install guide
+- **Init install UX**: Agent now offers to run `aimgr init && aimgr install package/opencode-coder` via `question()` instead of just printing commands
+
 ## [0.31.0] - 2026-03-03
 
 ### Added

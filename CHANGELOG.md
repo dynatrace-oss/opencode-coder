@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-03-03
+
+### Added
+
+- **Init readiness gating**: `/init` command now checks installation readiness before running, preventing use when prerequisites are missing
+
+### Fixed
+
+- **Default agent selection**: Orchestrator is now correctly set as the default agent only when the full ecosystem (beads, aimgr, stealth mode) is ready (closes #11)
+
 ## [0.30.0] - 2026-03-02
 
 ### Added

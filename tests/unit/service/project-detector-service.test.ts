@@ -474,6 +474,7 @@ describe("ProjectDetectorService", () => {
   describe("writeProjectContext", () => {
     it("should create .coder/ directory and write project.yaml", () => {
       const mkdirSyncSpy = spyOn(fs, "mkdirSync").mockImplementation(() => undefined as any);
+      const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(false);
       const writeFileSyncSpy = spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
 
       const context: ProjectContext = {
@@ -496,6 +497,71 @@ describe("ProjectDetectorService", () => {
         "utf-8"
       );
       mkdirSyncSpy.mockRestore();
+      existsSyncSpy.mockRestore();
+      writeFileSyncSpy.mockRestore();
+    });
+
+    it("should create .coder/.gitignore with '*' when it does not exist", () => {
+      const mkdirSyncSpy = spyOn(fs, "mkdirSync").mockImplementation(() => undefined as any);
+      // .gitignore does NOT exist
+      const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(false);
+      const calls: Array<[string, string]> = [];
+      const writeFileSyncSpy = spyOn(fs, "writeFileSync").mockImplementation(
+        (p: any, data: any) => { calls.push([String(p), String(data)]); }
+      );
+
+      const context: ProjectContext = {
+        mode: "team",
+        installReady: false,
+        ecosystemReady: false,
+        git: { initialized: true, platform: null, remote: null },
+        beads: { initialized: true, stealthMode: false, bdCliInstalled: false },
+        aimgr: { installed: false, packageYaml: false, resourcesHealthy: false, coderPackageInstalled: false },
+        detectedAt: "2026-03-02T00:00:00.000Z",
+        pluginVersion: "1.0.0",
+      };
+
+      service.writeProjectContext(context);
+
+      const gitignoreCall = calls.find(([p]) => p === "/test/project/.coder/.gitignore");
+      expect(gitignoreCall).toBeDefined();
+      expect(gitignoreCall![1]).toBe("*\n");
+
+      expect(existsSyncSpy).toHaveBeenCalledWith("/test/project/.coder/.gitignore");
+
+      mkdirSyncSpy.mockRestore();
+      existsSyncSpy.mockRestore();
+      writeFileSyncSpy.mockRestore();
+    });
+
+    it("should NOT overwrite .coder/.gitignore when it already exists", () => {
+      const mkdirSyncSpy = spyOn(fs, "mkdirSync").mockImplementation(() => undefined as any);
+      // .gitignore already exists
+      const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
+      const calls: Array<[string, string]> = [];
+      const writeFileSyncSpy = spyOn(fs, "writeFileSync").mockImplementation(
+        (p: any, data: any) => { calls.push([String(p), String(data)]); }
+      );
+
+      const context: ProjectContext = {
+        mode: "team",
+        installReady: false,
+        ecosystemReady: false,
+        git: { initialized: true, platform: null, remote: null },
+        beads: { initialized: true, stealthMode: false, bdCliInstalled: false },
+        aimgr: { installed: false, packageYaml: false, resourcesHealthy: false, coderPackageInstalled: false },
+        detectedAt: "2026-03-02T00:00:00.000Z",
+        pluginVersion: "1.0.0",
+      };
+
+      service.writeProjectContext(context);
+
+      // .gitignore should NOT be written when it already exists
+      const gitignoreCall = calls.find(([p]) => p === "/test/project/.coder/.gitignore");
+      expect(gitignoreCall).toBeUndefined();
+
+      mkdirSyncSpy.mockRestore();
+      existsSyncSpy.mockRestore();
       writeFileSyncSpy.mockRestore();
     });
 

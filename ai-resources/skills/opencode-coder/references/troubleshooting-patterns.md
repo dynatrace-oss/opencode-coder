@@ -412,7 +412,9 @@ cat .beads/interactions.jsonl | tail -20
 
 **Symptoms**: `.beads/`, `.coder/`, or `ai.package.yaml` appear in `git status` in stealth mode.
 
-**Solution**:
+**Also applies in team mode**: `.coder/project.yaml` showing as modified in `git status` — this is a known case. The plugin regenerates `.coder/project.yaml` on every startup with changing `detectedAt` timestamps and runtime flags, so it will always appear dirty unless excluded.
+
+**Solution (stealth mode):**
 
 ```bash
 # Add the full stealth exclusion block if missing
@@ -431,7 +433,17 @@ fi
 cat .git/info/exclude
 ```
 
-**Root Cause**: Files not properly excluded from git in stealth mode. The full stealth exclusion block may be missing or incomplete. Note: `.coder/AGENTS.md` is covered by the `.coder/` exclusion — no separate `AGENTS.md` entry is needed.
+**Solution (team mode — `.coder/project.yaml` showing as dirty):**
+
+The plugin auto-creates `.coder/.gitignore` (containing `*`) on startup. If your project was initialized before this fix, add `.coder/` to `.gitignore`:
+
+```bash
+grep -qF '.coder/' .gitignore 2>/dev/null || echo '.coder/' >> .gitignore
+git rm -r --cached .coder/ 2>/dev/null  # Remove from tracking if already committed
+git commit -m "chore: exclude .coder/ runtime state from git"
+```
+
+**Root Cause**: Files not properly excluded from git. In stealth mode, the full stealth exclusion block may be missing or incomplete. In team mode, `.coder/` is plugin-generated runtime state that should never be committed. Note: `.coder/AGENTS.md` is covered by the `.coder/` exclusion — no separate `AGENTS.md` entry is needed.
 
 **Note**: Use `.git/info/exclude` instead of `.gitignore` to keep exclusions local and invisible to other developers.
 

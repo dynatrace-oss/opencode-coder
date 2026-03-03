@@ -170,11 +170,17 @@ mkdir -p .coder/docs
 This block is idempotent — running it multiple times will not add duplicate entries.
 
 **For Team Mode:**
-Add the beads database to `.gitignore`:
+Exclude runtime state from git (idempotent — safe to run multiple times):
 
 ```bash
-echo ".beads/beads.db" >> .gitignore
+# Exclude .coder/ runtime state (plugin regenerates it on every startup)
+grep -qF '.coder/' .gitignore 2>/dev/null || echo '.coder/' >> .gitignore
+
+# The .beads/beads.db file is already handled by .beads/.gitignore (created by bd init)
 ```
+
+> **Note**: The plugin auto-creates `.coder/.gitignore` (containing `*`) on startup as a safety net,
+> but adding `.coder/` to `.gitignore` ensures explicit project-level exclusion.
 
 #### Step 5: Commit (Team Mode Only)
 
@@ -222,6 +228,10 @@ ai.package.yaml      # aimgr manifest (at root, excluded in stealth)
   beads.db           # gitignored (not committed)
 
 .opencode/           # Committed with the repo
+
+.coder/              # gitignored (plugin runtime state, not committed)
+  project.yaml       # Regenerated on every startup (timestamps, runtime flags)
+  .gitignore         # Auto-created by plugin, contains '*' to exclude everything
 
 docs/                # Generated docs committed with the repo
   CODING.md
@@ -293,8 +303,11 @@ cp .coder/AGENTS.md ./AGENTS.md
 # 5. Clean up the stealth workspace
 rm -rf .coder/
 
-# 6. Commit everything
-git add AGENTS.md ai.package.yaml docs/ .beads/
+# 6. Exclude .coder/ from git — the plugin recreates it on next startup
+grep -qF '.coder/' .gitignore 2>/dev/null || echo '.coder/' >> .gitignore
+
+# 7. Commit everything
+git add AGENTS.md ai.package.yaml docs/ .beads/ .gitignore
 git commit -m "chore: enable team mode"
 ```
 

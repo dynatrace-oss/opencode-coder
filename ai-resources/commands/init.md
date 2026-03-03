@@ -113,7 +113,18 @@ Run beads init and install hooks:
 bd init && bd hooks install
 ```
 
-Handle git tracking as appropriate for team mode (e.g., add `.beads/` to version control).
+Exclude runtime state from git (idempotent — safe to run multiple times):
+
+```bash
+# Exclude .coder/ runtime state from git (auto-created by plugin, not team artifacts)
+grep -qF '.coder/' .gitignore 2>/dev/null || echo '.coder/' >> .gitignore
+
+# The .beads/beads.db file is already handled by .beads/.gitignore (created by bd init)
+```
+
+> **Note**: `.coder/project.yaml` is regenerated on every plugin startup with changing timestamps.
+> The plugin also auto-creates `.coder/.gitignore` (containing `*`) on startup, so this step
+> ensures the exclusion is explicit in `.gitignore` as well.
 
 Proceed to **Step 3**.
 
@@ -200,12 +211,15 @@ cp -r .coder/docs/ ./docs/
 # 5. Clean up stealth workspace
 rm -rf .coder/
 
-# 6. Commit all artifacts to version control
-git add AGENTS.md ai.package.yaml docs/ .beads/
+# 6. Exclude .coder/ from git — the plugin recreates it on next startup
+grep -qF '.coder/' .gitignore 2>/dev/null || echo '.coder/' >> .gitignore
+
+# 7. Commit all artifacts to version control
+git add AGENTS.md ai.package.yaml docs/ .beads/ .gitignore
 git commit -m "chore: enable team mode"
 ```
 
-> After this transition, the `.beads/`, `AGENTS.md`, `ai.package.yaml`, and `docs/` files will be tracked by git and visible to all contributors.
+> After this transition, the `.beads/`, `AGENTS.md`, `ai.package.yaml`, and `docs/` files will be tracked by git and visible to all contributors. `.coder/` remains gitignored because the plugin regenerates it on every startup with changing timestamps.
 
 ---
 

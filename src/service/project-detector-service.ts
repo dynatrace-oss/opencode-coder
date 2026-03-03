@@ -344,10 +344,19 @@ export class ProjectDetectorService {
 
   /**
    * Ensure `.coder/` exists and write `context` as YAML to `.coder/project.yaml`.
+   *
+   * Also creates `.coder/.gitignore` (containing `*`) if it does not already exist,
+   * so that the entire `.coder/` directory is excluded from git in team mode.
+   * This is the same pattern used by `.beads/.gitignore`.
    */
   writeProjectContext(context: ProjectContext): void {
     const coderDir = path.join(this.workdir, ".coder");
     fs.mkdirSync(coderDir, { recursive: true });
+
+    const gitignorePath = path.join(coderDir, ".gitignore");
+    if (!fs.existsSync(gitignorePath)) {
+      fs.writeFileSync(gitignorePath, "*\n");
+    }
 
     const outputPath = path.join(coderDir, "project.yaml");
     const yamlContent = stringify(context);

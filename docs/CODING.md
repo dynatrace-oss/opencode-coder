@@ -13,13 +13,12 @@
 ```
 src/
 ├── index.ts           # Plugin entry - minimal, delegates to packages
-├── core/              # Foundation utilities (logger, version, parser, filesystem)
+├── core/              # Foundation utilities (logger, version, parser)
 ├── config/            # Configuration loading and schema
 ├── service/           # Main services (AimgrService, BeadsService, ProjectDetectorService, SessionExportService)
 ├── templates/         # Template generation for init guides
 ├── tool/              # OpenCode tool definitions (coder tool)
-├── beads/             # Beads integration (detector, context)
-└── github/            # GitHub integration (detector, remote detection)
+└── beads/             # Beads integration (detector)
 ```
 
 ## 2. Package Index Pattern
@@ -37,8 +36,6 @@ export type { VersionInfo } from "./version";
 export { parseFrontmatter } from "./parser";
 export type { Frontmatter, ParsedDocument } from "./parser";
 
-export { defaultFileSystem } from "./filesystem";
-export type { FileSystem } from "./filesystem";
 ```
 
 ### Rules

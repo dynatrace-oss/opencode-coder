@@ -31,14 +31,13 @@ bun test
 ```
 src/
 ├── index.ts           # Plugin entry point - minimal, delegates to packages
-├── core/              # Foundation utilities (logger, version, parser, filesystem)
+├── core/              # Foundation utilities (logger, version, parser)
 ├── config/            # Configuration loading and schema
-├── service/           # Main services (AimgrService, BeadsService, GitHubService,
+├── service/           # Main services (AimgrService, BeadsService,
 │                      #   SessionExportService, ProjectDetectorService)
 ├── templates/         # Install guide and init templates
 ├── tool/              # Coder tool definition
-├── beads/             # Beads integration (detector, context)
-└── github/            # GitHub integration (detector, remote detection)
+└── beads/             # Beads integration (detector)
 ```
 
 ## Directory Guidelines

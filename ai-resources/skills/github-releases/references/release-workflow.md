@@ -20,26 +20,17 @@ Read `docs/RELEASING.md` and replace TODO markers with project-specific commands
 
 ## 4. Review
 
-```
-Task(subagent_type: "reviewer", 
-     prompt: "Review release structure for v<version>")
-```
+→ Spawn a **reviewer** agent to review the release structure for v\<version\>.
 
 ## 5. Execute
 
-```
-Task(subagent_type: "tasker",
-     prompt: "Execute task <id>")
-```
+→ Spawn a **tasker** agent to execute task \<id\>.
 
 Repeat for each ready task.
 
 ## 6. Verify
 
-```
-Task(subagent_type: "verifier",
-     prompt: "Verify task <id>")
-```
+→ Spawn a **verifier** agent to verify task \<id\>.
 
 ## Rules
 

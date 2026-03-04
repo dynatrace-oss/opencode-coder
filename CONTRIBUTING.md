@@ -31,25 +31,27 @@ bun test
 ```
 src/
 ├── index.ts           # Plugin entry point - minimal, delegates to packages
-├── core/              # Foundation utilities (logger, version, parser)
+├── core/              # Foundation utilities (logger, version, parser, filesystem)
 ├── config/            # Configuration loading and schema
-├── kb/                # Knowledge base loading (commands, agents)
-├── service/           # Main services (KnowledgeBaseService, BeadsService)
-├── system-info/       # System information collection tool
+├── service/           # Main services (AimgrService, BeadsService, GitHubService,
+│                      #   SessionExportService, ProjectDetectorService)
+├── templates/         # Install guide and init templates
+├── tool/              # Coder tool definition
 ├── beads/             # Beads integration (detector, context)
 └── github/            # GitHub integration (detector, remote detection)
 ```
 
 ## Directory Guidelines
 
-### `knowledge-base/` - Published Content
+### `ai-resources/` - Published Content
 
-Everything in `knowledge-base/` is published with the npm package and accessible to ALL users who install this plugin.
+Everything in `ai-resources/` is published with the npm package and accessible to ALL users who install this plugin.
 
 **Include:**
 - Generic commands (bd, coder utilities)
 - Generic documentation (beads workflow, bug structure)
 - Generic agents (beads agents)
+- Shared skills
 
 **Never include:**
 - Project-specific content
@@ -64,7 +66,7 @@ Project-specific commands and configuration that are NOT published:
 - Internal tooling
 - Project-specific workflows
 
-**Rule of thumb:** If it only makes sense for opencode-coder development, it goes in `.opencode/`. If it's useful for any project using this plugin, it goes in `knowledge-base/`.
+**Rule of thumb:** If it only makes sense for opencode-coder development, it goes in `.opencode/`. If it's useful for any project using this plugin, it goes in `ai-resources/`.
 
 ## Coding Guidelines
 
@@ -78,7 +80,7 @@ For detailed architecture patterns and conventions, see [`docs/CODING.md`](docs/
 - Export both values AND types explicitly
 
 **Minimal Entry Point**
-- `src/index.ts` is intentionally minimal (~70 lines)
+- `src/index.ts` is intentionally minimal (~167 lines)
 - Delegates ALL functionality to domain packages
 - Only orchestrates initialization order and wires dependencies
 
@@ -150,17 +152,15 @@ Quick checklist:
 
 Commands can be added in two locations depending on their purpose:
 
-**Generic commands** (for all users) go in `knowledge-base/agent/` as Markdown files with YAML frontmatter.
+**Generic commands** (for all users) go in `ai-resources/commands/` as Markdown files with YAML frontmatter.
 
-**Project-specific commands** (for developing this plugin) go in `.opencode/commands/` or `ai-resources/commands/`.
+**Project-specific commands** (for developing this plugin) go in `.opencode/commands/`.
 
 Example command structure:
 
 ```markdown
 ---
-name: my-command
 description: What my command does
-allowed_modes: [agent, user]
 ---
 
 # My Command
@@ -170,13 +170,14 @@ Instructions for the command...
 
 ### Adding Agents
 
-Agents go in `knowledge-base/agent/` as Markdown files:
+Agents go in `ai-resources/agents/` as Markdown files:
 
 ```markdown
 ---
-name: my-agent
 description: Agent description
-model: claude-sonnet-4-20250514
+mode: primary
+model: github-copilot/claude-sonnet-4.6
+color: '#6366F1'
 ---
 
 Agent system prompt...

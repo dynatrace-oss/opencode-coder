@@ -24,7 +24,7 @@ Load the **observability-triage** skill for analyzing logs, metrics, and triagin
 
 ## Pull Requests
 
-Read `docs/PULL-REQUESTS.md` for branching strategy, PR conventions, and code review guidelines. Load the **bitbucket-pr** skill for Bitbucket Server PR management.
+Read `docs/PULL-REQUESTS.md` for branching strategy, PR conventions, and code review guidelines.
 
 ## OpenCode Documentation
 

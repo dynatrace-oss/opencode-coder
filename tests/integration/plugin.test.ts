@@ -1,39 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { OpencodeCoder } from "../../src";
-import type { PluginInput } from "@opencode-ai/sdk";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/**
- * Create a mock PluginInput for testing
- */
-function createMockPluginInput(): Partial<PluginInput> {
-  return {
-    client: {
-      // Mock client methods as needed
-      send: async () => ({ success: true }),
-      sendRaw: async (msg: any) => {
-        // Return a proper ProtocolMessage response
-        return { id: msg.id, type: "ack" as const };
-      },
-      createToast: async () => ({ success: true }),
-      receiveRaw: async () => ({ id: "test", type: "ack" as const }),
-      app: {
-        log: async () => ({ success: true }),
-      },
-    } as any,
-    cwd: join(__dirname, "..", "fixtures", "test-project"),
-  };
-}
-
-/**
- * Type assertion helper for PluginInput
- */
-function asMockPluginInput(mock: Partial<PluginInput>): PluginInput {
-  return mock as PluginInput;
-}
+import { createMockPluginInput, asMockPluginInput } from "../helpers/mock-client";
 
 describe("OpencodeCoder Plugin Integration", () => {
   describe("plugin loading", () => {

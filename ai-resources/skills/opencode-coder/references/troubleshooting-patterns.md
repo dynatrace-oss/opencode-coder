@@ -372,12 +372,12 @@ dir $env:APPDATA\opencode\logs\
 echo $OPENCODE_CODER_DISABLED
 # Should be empty or "false"
 
-# Verify knowledge-base structure
-ls -la knowledge-base/command/
-ls -la knowledge-base/agents/
+# Verify ai-resources structure
+ls -la ai-resources/commands/
+ls -la ai-resources/agents/
 ```
 
-**Root Cause**: Plugin not loaded, or knowledge-base structure is incorrect.
+**Root Cause**: Plugin not loaded, or ai-resources structure is incorrect.
 
 **Debugging**: Check OpenCode logs for plugin loading errors.
 

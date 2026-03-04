@@ -13,6 +13,10 @@ manual-test/docs/
 ~/
 .DS_Store
 
+# IDE config
+.idea/
+*.iml
+
 # Local OpenCode config (for dev testing)
 .opencode/
 

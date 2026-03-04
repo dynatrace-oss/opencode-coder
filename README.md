@@ -121,24 +121,41 @@ bd close <id>
 
 ## Available Commands
 
-### bd/* - Beads Issue Management (requires beads)
+### Plugin Commands
 
-These commands require beads to be initialized in your project.
+These commands are provided by this plugin and available in OpenCode:
 
 | Command | Description |
 |---------|-------------|
-| `/bd/create` | Create a new issue |
-| `/bd/list` | List issues with filters |
-| `/bd/ready` | Show issues ready to work |
-| `/bd/show` | Display issue details |
-| `/bd/update` | Update issue properties |
-| `/bd/close` | Close an issue |
-| `/bd/blocked` | Show blocked issues |
-| `/bd/stats` | Project statistics |
-| `/bd/sync` | Sync with remote |
-| `/bd/dep` | Manage dependencies |
-| `/bd/epic` | Create an epic with tasks |
-| `/bd/template` | Manage issue templates |
+| `/init` | Initialize project for opencode-coder (skill discovery, beads init, AGENTS.md creation) |
+| `/opencode-coder/doctor` | Diagnose plugin health and configuration |
+| `/opencode-coder/status` | Show plugin status |
+| `/opencode-coder/report-bug` | Report a bug with session context |
+| `/opencode-coder/dump-session` | Export current session data |
+| `/opencode-coder/update-agent-md` | Refresh AGENTS.md after installing new resources |
+| `/opencode-coder-dev/analyze-logs` | Analyze OpenCode logs for errors (dev use) |
+| `/opencode-coder-dev/fix-bugs` | Triage and fix bugs from logs (dev use) |
+| `/opencode-coder-dev/import-tasks` | Import tasks from GitHub issues (dev use) |
+| `/opencode-coder-dev/release` | Run the release workflow (dev use) |
+
+### Beads CLI Commands (requires `bd` installed separately)
+
+The following are **not plugin commands** — they are commands from the [beads CLI](https://github.com/hk9890/beads) (`bd`), which must be installed separately. Agents use them as shell commands when beads is initialized in your project.
+
+| Command | Description |
+|---------|-------------|
+| `bd create` | Create a new issue |
+| `bd list` | List issues with filters |
+| `bd ready` | Show issues ready to work |
+| `bd show` | Display issue details |
+| `bd update` | Update issue properties |
+| `bd close` | Close an issue |
+| `bd blocked` | Show blocked issues |
+| `bd stats` | Project statistics |
+| `bd sync` | Sync with remote |
+| `bd dep` | Manage dependencies |
+| `bd epic` | Create an epic with tasks |
+| `bd template` | Manage issue templates |
 
 ## Available Skills
 
@@ -186,9 +203,9 @@ For detailed workflow documentation, see the skills at `ai-resources/skills/task
 
 ### Workflow
 
-1. **Planner** creates epic + tasks + acceptance gate
+1. **Orchestrator** creates epic + tasks + acceptance gate
 2. **Reviewer** reviews plans and creates additional tasks/gates if needed
-3. **Task agent** implements tasks and closes when complete
+3. **Tasker** implements tasks and closes when complete
 4. **Verifier** validates gates and closes them or creates bugs
 
 ## License

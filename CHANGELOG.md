@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-03-04
+
+### Added
+
+- **PULL-REQUESTS.md**: New standard documentation file covering branching strategy, PR conventions, and code review guidelines
+
+### Fixed
+
+- **Team mode git tracking**: Auto-exclude `.coder/` from git tracking when initializing in team mode
+
+### Changed
+
+- **Package detection**: Replaced `ai.package.yaml` parsing with `aimgr list` CLI for more reliable installed-package detection
+
+### Removed
+
+- **Dead code**: Removed `GitHubService`, `filesystem.ts`, context stubs, and orphaned test fixtures
+- **bitbucket-pr skill**: Removed unused skill
+- **Stale documentation**: Fixed `CONTRIBUTING.md`, `CODING.md`, `README.md`, and skill files to reflect current codebase
+
+### Chore
+
+- **MIT LICENSE**: Added missing license file
+- **Dependency bumps**: `@opencode-ai/plugin` → 1.2.16, `@types/bun` → 1.3.10
+- **Git object store**: Optimized repository from 94 MB to 4.2 MB
+
 ## [0.31.1] - 2026-03-03
 
 ### Fixed

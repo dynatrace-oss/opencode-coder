@@ -224,7 +224,7 @@ BUGEOF
 If new info is found for an existing open issue:
 
 ```bash
-bd comment <issue-id> "Additional occurrence found in session <session_id> at <timestamp>"
+bd comments add <issue-id> "Additional occurrence found in session <session_id> at <timestamp>"
 ```
 
 ## Step 7: Summary Report
@@ -345,7 +345,7 @@ Body content here
 EOF
 
 # Add comment to existing issue
-bd comment <id> "Comment text"
+bd comments add <id> "Comment text"
 
 # List open issues
 bd list --status=open

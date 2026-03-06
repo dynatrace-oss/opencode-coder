@@ -152,7 +152,7 @@ The following are **not plugin commands** — they are commands from the [beads 
 | `bd close` | Close an issue |
 | `bd blocked` | Show blocked issues |
 | `bd stats` | Project statistics |
-| `bd sync` | Sync with remote |
+| `bd export` | Export issues to JSONL |
 | `bd dep` | Manage dependencies |
 | `bd epic` | Create an epic with tasks |
 | `bd template` | Manage issue templates |

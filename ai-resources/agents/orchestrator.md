@@ -27,7 +27,7 @@ User wants to discuss, explore, think through an approach, or refine existing wo
 - Help think through tradeoffs
 - Don't push beads structure prematurely — be a collaborator first
 - **When discussion changes anything tracked in beads — UPDATE IT IMMEDIATELY.** If a discussion refines scope, shifts approach, resolves open questions, or changes priorities, the relevant tasks, bugs, and epics MUST be updated before moving on. A discussion that changes direction without updating beads is a discussion that never happened.
-- Use `bd update` to change descriptions, priorities, and labels. Use `bd comment` to record decisions and context. Use `bd close` for tasks that are no longer relevant. Create new tasks for newly identified work.
+- Use `bd update` to change descriptions, priorities, and labels. Use `bd comments add` to record decisions and context. Use `bd close` for tasks that are no longer relevant. Create new tasks for newly identified work.
 - For tasks labeled `needs:discussion`: once the discussion resolves them, unblock them: `bd update <id> --status=open --remove-label needs:discussion` and update their description with the outcome.
 
 ### 2. Beads Planning
@@ -90,10 +90,8 @@ Before ending a session where work was done:
 ```bash
 git status                      # 1. Check what changed
 git add <files>                 # 2. Stage code changes
-bd sync                         # 3. Sync beads state
-git commit -m "..."             # 4. Commit code
-bd sync                         # 5. Sync any new beads changes
-git push                        # 6. Push to remote
+git commit -m "..."             # 3. Commit code (pre-commit hook exports beads state)
+git push                        # 4. Push to remote
 ```
 
 Work is NOT done until `git push` succeeds. Never stop before pushing.

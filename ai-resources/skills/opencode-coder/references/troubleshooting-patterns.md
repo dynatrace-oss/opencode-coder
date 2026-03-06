@@ -292,19 +292,18 @@ chmod +x .git/hooks/pre-commit
 **Solution**:
 
 ```bash
-# Sync with remote
-bd sync
+# Verify hooks are installed (pre-commit hook exports beads state automatically)
+bd hooks install
 
-# If sync fails, check status first
-bd sync --status
-
-# If remote tracking not set, push manually
+# Then commit as normal — the hook handles beads export
+git add .beads/issues.jsonl
+git commit -m "chore: sync beads state"
 git push origin main
 ```
 
 **Root Cause**: Hooks may not be installed, or git push is not happening automatically.
 
-**Prevention**: Ensure hooks are installed and remote tracking is configured.
+**Prevention**: Ensure hooks are installed with `bd hooks install` and remote tracking is configured.
 
 ---
 
@@ -525,7 +524,7 @@ unset OPENCODE_DEFAULT_OPTIONS
 If your issue isn't covered here:
 
 1. **Enable debug logging** and examine logs by loading the internal plugin development skill
-2. **Run health checks**: `bd doctor` and `bd sync --status`
+2. **Run health checks**: `bd doctor` and `bd status`
 3. **Search existing issues**: https://github.com/hk9890/opencode-coder/issues
 4. **Create a discussion**: https://github.com/hk9890/opencode-coder/discussions
 5. **Report a bug**: Use the [Reporting Issues](#reporting-issues) section in SKILL.md

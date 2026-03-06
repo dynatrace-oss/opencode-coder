@@ -24,7 +24,7 @@ Before implementing anything, you MUST evaluate whether the ticket is actually r
 
 **If the ticket is NOT ready**, do the following:
 - Do NOT write any code
-- Add a comment explaining what is missing, unclear, or contradictory: `bd comment <id> "Cannot execute: <specific issues>"`
+- Add a comment explaining what is missing, unclear, or contradictory: `bd comments add <id> "Cannot execute: <specific issues>"`
 - Report back to the orchestrator with the exact problems: missing instructions, unresolved questions, stale comments not reflected in the description, ambiguous acceptance criteria, etc.
 
 **If the ticket IS ready**, proceed to the workflow below.

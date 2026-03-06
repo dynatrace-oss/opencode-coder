@@ -48,7 +48,6 @@ Load the **task-sync** skill for syncing beads issues with external systems (Git
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
    git push
    git status  # MUST show "up to date with origin"
    ```

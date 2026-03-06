@@ -40,7 +40,7 @@ For a quick check, verify the essential components:
 bd --version                     # CLI available
 ls .beads                        # Project initialized
 ls .git/hooks/pre-commit         # Hooks installed
-bd sync --status                 # Sync status
+bd status                        # Issue database overview
 ```
 
 ---
@@ -73,9 +73,9 @@ ls -la .git/hooks/post-merge     # Should exist and be executable
 ```
 If missing: `bd hooks install`
 
-### 5. Sync Status
+### 5. Issue Database Status
 ```bash
-bd sync --status                 # Should show no uncommitted changes
+bd status                        # Should show issue database overview
 ```
 
 ### 6. System Requirements
@@ -140,7 +140,7 @@ nvm use 20
 ## Regular Maintenance
 
 **Daily (when active):**
-- Check for uncommitted changes: `bd sync --status`
+- Check issue database status: `bd status`
 
 **Weekly:**
 - Verify hooks are still installed: `ls .git/hooks/`

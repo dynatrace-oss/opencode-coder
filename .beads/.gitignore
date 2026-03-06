@@ -24,6 +24,10 @@ bd.db
 # Must not be committed as paths would be wrong in other clones
 redirect
 
+# Dolt server runtime files
+dolt-server.*
+dolt/
+
 # Merge artifacts (temporary files from 3-way merge)
 beads.base.jsonl
 beads.base.meta.json

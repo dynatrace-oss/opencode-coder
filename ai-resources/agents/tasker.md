@@ -1,7 +1,7 @@
 ---
 mode: subagent
 description: Single-task executor — implements exactly what the task says
-model: github-copilot/claude-sonnet-4.6
+model: github-copilot/gpt-5.3-codex
 color: '#3B82F6'
 ---
 

@@ -14,7 +14,14 @@ Load the opencode-coder skill for detailed guidance:
 skill({ name: "opencode-coder" })
 ```
 
-Follow the **Installation & Setup** section which has three main steps:
+Use these references as the source of truth:
+
+- `references/installation-setup.md` — install and init flow
+- `references/project-structure.md` — mode detection, paths, file-writing rules
+- `references/mode-transition.md` — switching between stealth and team
+- `references/agents-md-template.md` — AGENTS generation workflow
+
+Then follow this 3-step command flow:
 
 ---
 
@@ -36,6 +43,8 @@ The ai-resource-manager will:
 ### Step 2: Beads Initialization
 
 Initialize beads for issue tracking.
+
+> Canonical mode and path rules live in `references/project-structure.md`. Keep this command focused on execution.
 
 #### Smart Detection (run before anything else)
 
@@ -136,13 +145,13 @@ When `/init` is re-run and stealth is already active:
 
 1. **Do NOT re-ask stealth vs team** — the marker in `.git/info/exclude` is the source of truth
 2. Re-scan the codebase for changes (new docs, updated structure, new skills installed)
-3. Refresh generated docs under `.coder/docs/` — regenerate `CODING.md`, `TESTING.md`, `RELEASING.md`, `MONITORING.md`, `PULL-REQUESTS.md` as applicable
+3. Refresh generated docs in the active docs directory for the mode
 4. Check if the repo's committed `AGENTS.md` has changed since last run:
    ```bash
    git show HEAD:AGENTS.md 2>/dev/null
    ```
    If it has changed, incorporate the new content into the locally-managed version
-5. Update `.coder/AGENTS.md` if needed (stealth mode always writes here, not to project root)
+5. Update the active AGENTS file for the mode
 6. Report what was refreshed
 
 ---
@@ -152,74 +161,26 @@ When `/init` is re-run and stealth is already active:
 Generate or update AGENTS.md using the template:
 
 1. Load the `opencode-coder` skill and read `references/agents-md-template.md`
+   - Also read `references/project-structure.md` for canonical mode, path, and file-writing rules
 2. Follow the full workflow from the template (explore → map docs → migration decision → generate)
 3. This includes asking the user about migrating to standard file names if non-standard docs are found
 
-> In stealth mode, the generated AGENTS.md is written to `.coder/AGENTS.md` — the plugin's config hook ensures OpenCode loads it as additional instructions.
-
 **Key principle**: AGENTS.md is a routing table — each section points to the right docs and skills. Content lives in standard files, not in AGENTS.md itself.
 
-#### Stealth Mode: Path Awareness
-
-When operating in stealth mode, AGENTS.md is written to `.coder/AGENTS.md` (not the project root). The plugin's config hook injects it into OpenCode as additional instructions. Generated docs live under `.coder/docs/` instead of `docs/`. AGENTS.md must reference these paths:
-
-| Standard path | Stealth path |
-|---|---|
-| `AGENTS.md` (project root) | `.coder/AGENTS.md` |
-| `Read docs/CODING.md` | `Read .coder/docs/CODING.md` |
-| `Read docs/TESTING.md` | `Read .coder/docs/TESTING.md` |
-| `Read docs/RELEASING.md` | `Read .coder/docs/RELEASING.md` |
-| `Read docs/MONITORING.md` | `Read .coder/docs/MONITORING.md` |
-| `Read docs/PULL-REQUESTS.md` | `Read .coder/docs/PULL-REQUESTS.md` |
-
-In stealth mode, AGENTS.md is created at `.coder/AGENTS.md`. The plugin's config hook ensures OpenCode loads it as additional instructions alongside any existing root AGENTS.md.
-
-#### Incorporating a Team AGENTS.md
-
-If the repository has a committed `AGENTS.md` from the team (i.e., it exists in git history):
-
-```bash
-git show HEAD:AGENTS.md 2>/dev/null
-```
-
-- Read and parse the team's version for context (project conventions, tech stack, etc.)
-- Our `.coder/AGENTS.md` does NOT need to duplicate the team's content — focus on adding opencode-coder sections: doc routing (pointing to `.coder/docs/`), skill references, and beads workflow
-- The plugin injects `.coder/AGENTS.md` via the config hook → OpenCode loads both the team's root AGENTS.md and our `.coder/AGENTS.md`
-- The team's AGENTS.md remains completely untouched
-
-> **AGENTS.md is NOT placed at the project root in stealth mode.** The plugin's config hook adds `.coder/AGENTS.md` to OpenCode's instructions, which are combined with any existing root AGENTS.md.
+All mode-specific path handling, stealth behavior, and coexistence with a team `AGENTS.md` are defined in `references/project-structure.md` and `references/agents-md-template.md`.
 
 ---
 
 ## Stealth-to-Team Transition
 
-To switch from stealth mode to team mode (sharing opencode-coder artifacts with the team), follow these steps:
+Canonical transition guidance lives in `references/mode-transition.md`.
 
-```bash
-# 1. Move AGENTS.md to project root (or merge with team's existing one)
-cp .coder/AGENTS.md ./AGENTS.md
+If the user asks to switch modes during `/init` or after setup:
 
-# 2. Copy docs to standard locations
-cp -r .coder/docs/ ./docs/
-
-# 3. Update all .coder/docs/ paths to docs/ in AGENTS.md
-#    (edit AGENTS.md to replace .coder/docs/ with docs/)
-
-# 4. Remove stealth block from .git/info/exclude
-#    (delete the block starting with "# opencode-coder stealth mode")
-
-# 5. Clean up stealth workspace
-rm -rf .coder/
-
-# 6. Exclude .coder/ from git — the plugin recreates it on next startup
-grep -qF '.coder/' .gitignore 2>/dev/null || echo '.coder/' >> .gitignore
-
-# 7. Commit all artifacts to version control
-git add AGENTS.md ai.package.yaml docs/ .beads/ .gitignore
-git commit -m "chore: enable team mode"
-```
-
-> After this transition, the `.beads/`, `AGENTS.md`, `ai.package.yaml`, and `docs/` files will be tracked by git and visible to all contributors. `.coder/` remains gitignored because the plugin regenerates it on every startup with changing timestamps.
+- follow `references/mode-transition.md`
+- update AGENTS and docs to the target mode's paths
+- update git visibility rules to match the target mode
+- verify a re-run of `/init` detects the new mode correctly
 
 ---
 
@@ -230,14 +191,14 @@ Summarize the full initialization:
 > **Initialization Complete!**
 > 
 > ✓ Skills discovered and installed via ai-resource-manager
-> ✓ Beads initialized in stealth mode
+> ✓ Beads initialized in the selected mode
 > ✓ Git hooks installed
-> ✓ AGENTS.md created with 5 sections (adapted to installed skills)
+> ✓ AGENTS.md created or refreshed for the active mode
 > 
 > **Next steps:**
 > - Run `bd ready` to find available work
 > - Run `bd create "Task description" --type task` to create new issues
-> - Review AGENTS.md for project conventions
+> - Review the active AGENTS file for project conventions
 > - Re-run `/init` after installing new skills to update AGENTS.md
 
 ---

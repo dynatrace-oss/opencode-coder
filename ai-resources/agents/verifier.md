@@ -1,6 +1,7 @@
 ---
 description: Verifies outcomes at task, epic, and project level — owns gates
 model: github-copilot/gpt-5.4
+variant: high
 mode: subagent
 color: '#10B981'
 ---

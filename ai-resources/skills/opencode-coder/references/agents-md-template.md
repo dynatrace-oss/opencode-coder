@@ -8,38 +8,34 @@ Instructions for generating or updating an AGENTS.md file for any project.
 
 ---
 
+## Canonical Path Rules
+
+Load [project-structure.md](project-structure.md) first. It is the source of truth for:
+
+- stealth vs team detection
+- where AGENTS.md lives
+- where standard docs live
+- what may be shared vs local-only
+- AGENTS.md writing rules
+
+Use these placeholders throughout this template:
+
+- `{agents_md}` = `AGENTS.md` in team mode, `.coder/AGENTS.md` in stealth mode
+- `{docs}` = `docs/` in team mode, `.coder/docs/` in stealth mode
+
 ## Standard File Convention
 
-Each section maps to a standard file in `docs/`:
+Each section maps to a standard file in `{docs}`:
 
 | Section | Standard File | Always Present |
 |---------|--------------|----------------|
 | Project Overview | *(inline)* | Yes |
-| Coding | `docs/CODING.md` | Yes |
-| Testing | `docs/TESTING.md` | Only if relevant docs/skills exist |
-| Releases | `docs/RELEASING.md` | Only if relevant docs/skills exist |
-| Monitoring | `docs/MONITORING.md` | Only if relevant docs/skills exist |
-| Pull Requests | `docs/PULL-REQUESTS.md` | Only if relevant docs/skills exist |
+| Coding | `{docs}CODING.md` | Yes |
+| Testing | `{docs}TESTING.md` | Only if relevant docs/skills exist |
+| Releases | `{docs}RELEASING.md` | Only if relevant docs/skills exist |
+| Monitoring | `{docs}MONITORING.md` | Only if relevant docs/skills exist |
+| Pull Requests | `{docs}PULL-REQUESTS.md` | Only if relevant docs/skills exist |
 | Landing the Plane | *(inline)* | Only if beads is installed |
-
-> **Stealth mode**: In stealth mode, AGENTS.md is written to `.coder/AGENTS.md` (not project root) and all `docs/` paths become `.coder/docs/`. The plugin injects `.coder/AGENTS.md` into OpenCode via the config hook. See [Mode Detection](#mode-detection).
-
----
-
-## Mode Detection
-
-Before starting the workflow, detect the active mode:
-
-```bash
-grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null
-```
-
-- **Stealth mode** (marker found): AGENTS.md is written to `.coder/AGENTS.md` (not project root). All documentation files live under `.coder/docs/` instead of `docs/`. The `.coder/` directory is excluded from git via `.git/info/exclude`. The plugin's config hook injects `.coder/AGENTS.md` into OpenCode's instructions — if the project has a team AGENTS.md at root, both are loaded.
-- **Team mode** (marker not found): AGENTS.md is written to project root. Documentation files live under `docs/` as usual.
-
-Throughout this template:
-- `{agents_md}` refers to `.coder/AGENTS.md` in stealth mode, `AGENTS.md` in team mode
-- `{docs}` refers to `.coder/docs/` in stealth mode, `docs/` in team mode
 
 **Always detect mode first and use the correct path throughout all subsequent steps.**
 
@@ -91,33 +87,31 @@ A section is **active** if it has at least one matching doc file OR one matching
 
 ### Step 3: Migration Decision
 
-Check if any active section has docs under **non-standard names** (e.g., `docs/coding-guidelines.md` instead of `docs/CODING.md`, or `CONTRIBUTING.md` containing coding conventions in root instead of `docs/`).
+Check if any active section has docs under **non-standard names**.
 
 If non-standard names are found, ask the user **once**:
 
-> "This plugin uses a standard documentation structure where each topic has a dedicated file in `docs/`:
+> "This plugin uses a standard documentation structure where each topic has a dedicated file in `{docs}`:
 >
 > | Topic | Standard File |
 > |-------|--------------|
-> | Coding | `docs/CODING.md` |
-> | Testing | `docs/TESTING.md` |
-> | Releases | `docs/RELEASING.md` |
-> | Monitoring | `docs/MONITORING.md` |
-> | Pull Requests | `docs/PULL-REQUESTS.md` |
+> | Coding | `{docs}CODING.md` |
+> | Testing | `{docs}TESTING.md` |
+> | Releases | `{docs}RELEASING.md` |
+> | Monitoring | `{docs}MONITORING.md` |
+> | Pull Requests | `{docs}PULL-REQUESTS.md` |
 >
 > I found existing docs that could be migrated into this structure:
 >
-> - `docs/coding-guidelines.md` → `docs/CODING.md`
-> - `CONTRIBUTING.md` (coding conventions) → `docs/CODING.md` (CONTRIBUTING.md would reference it)
+> - `docs/coding-guidelines.md` → `{docs}CODING.md`
+> - `CONTRIBUTING.md` (coding conventions) → `{docs}CODING.md` (CONTRIBUTING.md would reference it)
 > - *(list all proposed moves)*
 >
 > Would you like to adopt the standard structure?"
 
-> **In stealth mode**: Migration targets are `.coder/docs/CODING.md`, `.coder/docs/TESTING.md`, `.coder/docs/PULL-REQUESTS.md`, etc. instead of `docs/`. Show the user the stealth paths in the migration proposal.
-
 **If yes:**
-1. Create the standard files in the docs directory (`docs/` in team mode, `.coder/docs/` in stealth mode) and move/consolidate content
-2. If `CONTRIBUTING.md` had coding conventions mixed with contribution process, split them: coding conventions go to `docs/CODING.md`, `CONTRIBUTING.md` keeps the contribution process and adds a reference to `docs/CODING.md`
+1. Create the standard files in `{docs}` and move/consolidate content
+2. If `CONTRIBUTING.md` had coding conventions mixed with contribution process, split them: coding conventions go to `{docs}CODING.md`, `CONTRIBUTING.md` keeps the contribution process and adds a reference to `{docs}CODING.md`
 3. Reference the new standard paths in AGENTS.md
 
 **If no:**
@@ -125,9 +119,7 @@ If non-standard names are found, ask the user **once**:
 
 ### Step 4: Create Missing Standard Files
 
-For the **Coding** section (always active): if no conventions files exist anywhere, create the standard file in the docs directory (`docs/CODING.md` in team mode, `.coder/docs/CODING.md` in stealth mode) with build commands, directory structure, and basic conventions extracted from the codebase.
-
-**Important**: In stealth mode, never create files under `docs/` — use `.coder/docs/` exclusively. Files under `docs/` are NOT in the stealth exclusion block and will be visible to git.
+For the **Coding** section (always active): if no conventions files exist anywhere, create `{docs}CODING.md` with build commands, directory structure, and basic conventions extracted from the codebase.
 
 For other active sections: only create the standard file if the explore step gathered enough relevant content to populate it meaningfully. If a section is active only because a skill is installed (no doc content found), just reference the skill in AGENTS.md — don't create a hollow doc file.
 
@@ -135,9 +127,7 @@ For other active sections: only create the standard file if the explore step gat
 
 ### Step 5: Generate AGENTS.md
 
-Build the file section by section:
-
-> **Path convention**: All examples below show team mode paths. In stealth mode: write the file to `.coder/AGENTS.md` (not project root), and replace `docs/` with `.coder/docs/` in all file references.
+Build the file section by section. Use `{agents_md}` and `{docs}` consistently.
 
 #### Project Overview (always, inline)
 
@@ -153,104 +143,46 @@ Just what the project is and the tech stack. Nothing else.
 
 #### Coding (always)
 
-**Team mode:**
 ```markdown
 ## Coding
 
-Read `docs/CODING.md` for build commands, project structure, and code conventions.
-```
-
-**Stealth mode:**
-```markdown
-## Coding
-
-Read `.coder/docs/CODING.md` for build commands, project structure, and code conventions.
-```
-
-If additional files are relevant (e.g., CONTRIBUTING.md was kept separately), list them too:
-
-**Team mode:**
-```markdown
-## Coding
-
-Read `docs/CODING.md` for build commands, project structure, and code conventions.
-
-Read `CONTRIBUTING.md` for contribution workflow.
-```
-
-**Stealth mode:**
-```markdown
-## Coding
-
-Read `.coder/docs/CODING.md` for build commands, project structure, and code conventions.
+Read `{docs}CODING.md` for build commands, project structure, and code conventions.
 
 Read `CONTRIBUTING.md` for contribution workflow.
 ```
 
 #### Testing (conditional)
 
-**Team mode:**
 ```markdown
 ## Testing
 
-Read `docs/TESTING.md` for test patterns and commands.
-```
-
-**Stealth mode:**
-```markdown
-## Testing
-
-Read `.coder/docs/TESTING.md` for test patterns and commands.
+Read `{docs}TESTING.md` for test patterns and commands.
 ```
 
 If a testing skill is installed, add: `Load the **skill-name** skill for [description].`
 
 #### Releases (conditional)
 
-**Team mode:**
 ```markdown
 ## Releases
 
-Load the **release-skill-name** skill for release workflow. Read `docs/RELEASING.md` for details.
-```
-
-**Stealth mode:**
-```markdown
-## Releases
-
-Load the **release-skill-name** skill for release workflow. Read `.coder/docs/RELEASING.md` for details.
+Load the **release-skill-name** skill for release workflow. Read `{docs}RELEASING.md` for details.
 ```
 
 #### Monitoring (conditional)
 
-**Team mode:**
 ```markdown
 ## Monitoring
 
-Load the **monitoring-skill-name** skill for observability and triage. Read `docs/MONITORING.md` for data sources.
-```
-
-**Stealth mode:**
-```markdown
-## Monitoring
-
-Load the **monitoring-skill-name** skill for observability and triage. Read `.coder/docs/MONITORING.md` for data sources.
+Load the **monitoring-skill-name** skill for observability and triage. Read `{docs}MONITORING.md` for data sources.
 ```
 
 #### Pull Requests (conditional)
 
-**Team mode:**
 ```markdown
 ## Pull Requests
 
-Read `docs/PULL-REQUESTS.md` for branching strategy, PR conventions, and code review guidelines.
-```
-
-**Stealth mode:**
-```markdown
-## Pull Requests
-
-Read `.coder/docs/PULL-REQUESTS.md` for branching strategy, PR conventions, and code review guidelines.
+Read `{docs}PULL-REQUESTS.md` for branching strategy, PR conventions, and code review guidelines.
 ```
 
 If a PR skill is installed, add: `Load the **skill-name** skill for [description].`
@@ -290,10 +222,7 @@ After generating, confirm:
 - [ ] Landing the Plane only appears if beads is installed
 - [ ] No duplicated content from referenced files
 - [ ] Total size is under 60 lines
-- [ ] **Stealth mode only**: AGENTS.md written to `.coder/AGENTS.md`, NOT to project root
-- [ ] **Stealth mode only**: All doc paths reference `.coder/docs/`, not `docs/`
-- [ ] **Stealth mode only**: No files were created under `docs/` directory
-- [ ] **Stealth mode only**: `.coder/docs/` directory exists with generated files
+- [ ] Mode-specific paths match `project-structure.md`
 
 ---
 
@@ -310,20 +239,17 @@ When AGENTS.md already exists:
 7. Keep custom sections in their original position; place new sections before "Landing the Plane"
 8. Offer migration if non-standard file names are detected (same as Step 3)
 
-When updating in stealth mode, the file being updated is `.coder/AGENTS.md`. Ensure all doc paths continue to reference `.coder/docs/`. If the mode has changed since the last generation, update all paths accordingly and move the file to the correct location (`.coder/AGENTS.md` for stealth, project root for team).
+If the mode changed since the last generation, move the file to the correct path and rewrite doc references accordingly.
 
 ---
 
-## Coexistence with Team AGENTS.md
+## Existing Team AGENTS.md
 
-When a project has an existing AGENTS.md tracked in git (committed by the team) AND we're in stealth mode:
+If a team `AGENTS.md` already exists and the repo is in stealth mode:
 
-1. The team's root AGENTS.md is loaded by OpenCode automatically (built-in convention)
-2. Our `.coder/AGENTS.md` is injected by the plugin's config hook as additional instructions
-3. OpenCode combines both — the agent sees instructions from both files
+- read it for context
+- write only `.coder/AGENTS.md`
+- supplement, do not overwrite or duplicate
+- keep new doc references under `.coder/docs/`
 
-**Implications for content generation:**
-- Read the team's AGENTS.md (`git show HEAD:AGENTS.md` or directly from root) for context
-- Our `.coder/AGENTS.md` should NOT duplicate the team's content (project overview, tech stack, etc.)
-- Focus on adding what the team's file doesn't cover: opencode-coder doc routing (`.coder/docs/` paths), skill references, beads workflow, and session completion protocol
-- If the team's file already has sections that overlap (e.g., a Coding section), our file can reference additional docs without repeating their content
+See [project-structure.md](project-structure.md) for the full rule set.

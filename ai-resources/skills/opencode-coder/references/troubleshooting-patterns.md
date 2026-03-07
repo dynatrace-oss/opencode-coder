@@ -120,7 +120,7 @@ bd init --stealth
 
 **Root Cause**: Beads requires an existing git repository to function.
 
-**Note**: Use `--stealth` for solo work or `--team` for shared repositories.
+**Note**: For mode selection and layout rules, see [project-structure.md](project-structure.md).
 
 ---
 
@@ -149,61 +149,20 @@ cat .git/hooks/pre-commit
 
 **Symptoms**: Need to change from stealth mode to team mode or vice versa.
 
-**Solution for stealth to team**:
+**Fix**: Follow the canonical transition workflow in [mode-transition.md](mode-transition.md).
 
-```bash
-# 1. Copy stealth docs to standard locations
-cp -r .coder/docs/ ./docs/
+Quick checks:
 
-# 2. Move .coder/AGENTS.md to the project root
-cp .coder/AGENTS.md ./AGENTS.md
+- Stealth detection is driven by the marker in `.git/info/exclude`
+- Stealth → team moves AGENTS and docs back to standard repo paths
+- Team → stealth creates a visible commit that removes shared opencode-coder artifacts from git
 
-# 3. Update AGENTS.md to reference docs/ instead of .coder/docs/
-# (manually update paths in AGENTS.md)
+After switching, verify:
 
-# 4. Remove stealth block from .git/info/exclude
-# (remove the "# opencode-coder stealth mode" block and the 4 lines following it)
-
-# 5. Clean up stealth workspace
-rm -rf .coder/
-
-# 6. Stage and commit
-git add .beads/ AGENTS.md ai.package.yaml docs/
-git commit -m "chore: switch to team mode"
-```
-
-**Solution for team to stealth**:
-
-```bash
-# 1. Create stealth workspace
-mkdir -p .coder/docs
-
-# 2. Copy docs to stealth workspace
-cp docs/CODING.md docs/TESTING.md docs/RELEASING.md docs/MONITORING.md docs/PULL-REQUESTS.md .coder/docs/ 2>/dev/null
-
-# 3. Update AGENTS.md to reference .coder/docs/ paths
-
-# 4. Remove tracked files from git index
-git rm -r --cached .beads/ AGENTS.md ai.package.yaml
-git rm --cached docs/CODING.md docs/TESTING.md docs/RELEASING.md docs/MONITORING.md docs/PULL-REQUESTS.md 2>/dev/null
-git commit -m "chore: switch to stealth mode"
-
-# 5. Add stealth exclusion block
-if ! grep -q "# opencode-coder stealth mode" .git/info/exclude 2>/dev/null; then
-  cat >> .git/info/exclude << 'STEALTH'
-
-# opencode-coder stealth mode
-.beads/
-.opencode/
-.coder/
-ai.package.yaml
-STEALTH
-fi
-```
-
-**Root Cause**: Mode is determined by whether files are tracked in git AND whether the stealth marker exists in `.git/info/exclude`.
-
-**Warning**: Team-to-stealth creates a visible commit that removes AI-related files. This commit is visible in git history and may reveal that AI tooling was previously used. Coordinate with team members before switching modes.
+- AGENTS.md is in the correct location for the active mode
+- docs are in the correct directory for the active mode
+- `.coder/` is excluded or gitignored as appropriate
+- re-running `/init` detects the new mode correctly
 
 ---
 
@@ -218,9 +177,9 @@ fi
 # Issue data in .beads/issues.jsonl is lost if .beads/ was deleted
 ```
 
-**Root Cause**: `git clean -fdx` removes files matched by exclude patterns, including stealth-excluded files. Note: `git clean -fd` does NOT remove excluded files — only `-x` or `-X` flags cause that.
+**Root Cause**: `git clean -fdx` removes files matched by exclude patterns, including stealth-excluded files.
 
-**Prevention**: Avoid `git clean -fdx` in stealth mode. Use `git clean -fd` instead (safe for stealth files). If you must use `-x`, exclude stealth directories: `git clean -fdx -e .beads/ -e .coder/ -e .opencode/`.
+**Prevention**: Avoid `git clean -fdx` in stealth mode. Prefer `git clean -fd`. If you must use `-x`, exclude stealth directories explicitly.
 
 ---
 
@@ -238,7 +197,7 @@ If marker is missing but `.coder/` exists, re-add the exclusion block manually o
 
 **Root Cause**: Detection relies on the marker comment in `.git/info/exclude`. If someone manually edited the exclude file and removed the marker, detection fails.
 
-**Robust detection**: Multi-signal — marker present OR (`.beads/` exists AND `.coder/` exists AND neither is tracked).
+See [project-structure.md](project-structure.md) for the canonical detection rules.
 
 ---
 
@@ -401,7 +360,7 @@ cat .beads/interactions.jsonl | tail -20
 
 **Root Cause**: Conflicting instructions in AGENTS.md or hooks not injecting context.
 
-**Best Practice**: Let the plugin manage agent context; keep AGENTS.md minimal.
+**Best Practice**: Keep AGENTS.md minimal and use [project-structure.md](project-structure.md) as the rule set.
 
 ---
 
@@ -411,7 +370,7 @@ cat .beads/interactions.jsonl | tail -20
 
 **Symptoms**: `.beads/`, `.coder/`, or `ai.package.yaml` appear in `git status` in stealth mode.
 
-**Also applies in team mode**: `.coder/project.yaml` showing as modified in `git status` — this is a known case. The plugin regenerates `.coder/project.yaml` on every startup with changing `detectedAt` timestamps and runtime flags, so it will always appear dirty unless excluded.
+**Also applies in team mode**: `.coder/project.yaml` showing as modified in `git status`.
 
 **Solution (stealth mode):**
 
@@ -434,7 +393,7 @@ cat .git/info/exclude
 
 **Solution (team mode — `.coder/project.yaml` showing as dirty):**
 
-The plugin auto-creates `.coder/.gitignore` (containing `*`) on startup. If your project was initialized before this fix, add `.coder/` to `.gitignore`:
+Add `.coder/` to `.gitignore` if needed:
 
 ```bash
 grep -qF '.coder/' .gitignore 2>/dev/null || echo '.coder/' >> .gitignore
@@ -442,9 +401,9 @@ git rm -r --cached .coder/ 2>/dev/null  # Remove from tracking if already commit
 git commit -m "chore: exclude .coder/ runtime state from git"
 ```
 
-**Root Cause**: Files not properly excluded from git. In stealth mode, the full stealth exclusion block may be missing or incomplete. In team mode, `.coder/` is plugin-generated runtime state that should never be committed. Note: `.coder/AGENTS.md` is covered by the `.coder/` exclusion — no separate `AGENTS.md` entry is needed.
+**Root Cause**: Files are not properly excluded from git.
 
-**Note**: Use `.git/info/exclude` instead of `.gitignore` to keep exclusions local and invisible to other developers.
+See [project-structure.md](project-structure.md) for the canonical visibility rules.
 
 ---
 
@@ -467,7 +426,7 @@ grep -v "beads.db" .gitignore | grep -q "beads" && echo "Remove .beads/ from .gi
 
 **Root Cause**: Files excluded by .gitignore or not tracked in team mode.
 
-**Best Practice**: In team mode, commit `.beads/` but always exclude `beads.db`.
+**Best Practice**: In team mode, commit `.beads/` but always exclude `beads.db`. See [project-structure.md](project-structure.md).
 
 ---
 

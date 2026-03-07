@@ -42,3 +42,7 @@ credentials.json
 mise.local.toml
 .beads/.jsonl.lock
 private/
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db

@@ -1,15 +1,14 @@
 # Beads Planning Reference
 
-Reference guide for creating epics, tasks, gates, and managing beads workflow structure.
+Reference guide for creating epics, tasks, acceptance review tasks, and managing beads workflow structure.
 
 ## Beads Types
 
 - **epic** — Large feature or initiative (contains tasks)
 - **feature** — User-facing functionality
-- **task** — Atomic unit of work
+- **task** — Atomic unit of work, including acceptance review tasks in this beads setup
 - **bug** — Defect to fix
 - **chore** — Maintenance, refactoring
-- **gate** — Blocking condition that must be resolved
 
 ## Task Quality Standards
 
@@ -76,12 +75,15 @@ Implement user authentication with JWT tokens.
 
 ## Success Criteria
 - [ ] All child tasks completed
-- [ ] Acceptance gate passed
+- [ ] Acceptance review task passed
 EOF
 
-# Create acceptance gate (every epic needs one)
-cat << 'EOF' | bd create --title="Epic Acceptance: User Authentication" --type=gate --priority=1 --body-file -
-## Gate Criteria
+# Create acceptance review task (every epic needs one)
+cat << 'EOF' | bd create --title="Acceptance Review: User Authentication" --type=task --priority=1 --body-file -
+## Description
+Verify the epic outcome before the epic is closed.
+
+## Acceptance Criteria
 - [ ] All tasks closed
 - [ ] Integration tested
 - [ ] No critical bugs
@@ -90,8 +92,8 @@ cat << 'EOF' | bd create --title="Epic Acceptance: User Authentication" --type=g
 verifier
 EOF
 
-# Link gate to epic
-bd dep add <epic-id> <gate-id>
+# Link acceptance review task to epic
+bd dep add <epic-id> <acceptance-review-id>
 ```
 
 ### Task Structure
@@ -218,7 +220,7 @@ bd dep add <postmortem-id> <bug-id>
 
 Post-mortems are ONLY for external bugs (`source:external`). Internal discovery bugs don't need them.
 
-## Labels and Gates
+## Labels and Acceptance Review Tasks
 
 ### Labels
 - `need:review` — Signals reviewer agent must review the plan
@@ -228,11 +230,13 @@ Post-mortems are ONLY for external bugs (`source:external`). Internal discovery 
 - `risk:high` — High-risk change (optional)
 - `area:<name>` — Area tag (optional)
 
-### Gates
-Gates represent **blocking conditions**, not approval states:
-- `Epic Acceptance` — Every epic should have one
-- `Security Review` — For security-sensitive work
-- `Performance Check` — For performance-critical work
+### Acceptance Review Tasks
+Use normal `task` issues for blocking review work in this beads setup:
+- `Acceptance Review: <Epic>` — Every epic should have one
+- `Security Review: <Scope>` — For security-sensitive work
+- `Performance Check: <Scope>` — For performance-critical work
+
+These tasks represent **blocking conditions**, not approval states. Add comments on the epic and review task when you need to clarify that they are serving as acceptance gates.
 
 ## Priority Guide
 
@@ -256,7 +260,7 @@ Gates represent **blocking conditions**, not approval states:
 ### Planning
 1. Create epic with clear goals
 2. Break into atomic tasks (one focused session each)
-3. Create acceptance gate
+3. Create acceptance review task
 4. Set dependencies with `bd dep add`
 5. Apply `need:review` to complex/risky items
 6. Show the plan: `bd stats`, `bd ready`, `bd blocked`
@@ -273,10 +277,10 @@ Before execution: show `bd ready`, show `bd blocked`, confirm user wants to proc
 - Continue until no ready tasks remain
 
 ### Verification
-Spawn verifier for gates. Verifier closes gates or creates bugs/tasks.
+Spawn verifier for acceptance review tasks. Verifier closes the review task or creates bugs/tasks.
 
 ### Closure
-When all tasks closed AND gate closed → close the epic.
+When all implementation tasks closed AND the acceptance review task is closed → close the epic.
 
 ## Agent Tips
 

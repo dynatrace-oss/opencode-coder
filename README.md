@@ -199,14 +199,14 @@ For detailed workflow documentation, see the skills at `ai-resources/skills/task
 | `orchestrator` | Planning, structure, orchestration - creates epics and tasks, delegates implementation |
 | `reviewer` | Reviews plans and structure (not code) |
 | `tasker` | Implements tasks and closes them when complete |
-| `verifier` | Verifies outcomes and owns acceptance gates |
+| `verifier` | Verifies outcomes and owns acceptance review tasks |
 
 ### Workflow
 
-1. **Orchestrator** creates epic + tasks + acceptance gate
-2. **Reviewer** reviews plans and creates additional tasks/gates if needed
+1. **Orchestrator** creates epic + tasks + acceptance review task
+2. **Reviewer** reviews plans and creates additional tasks/review work if needed
 3. **Tasker** implements tasks and closes when complete
-4. **Verifier** validates gates and closes them or creates bugs
+4. **Verifier** validates acceptance review tasks and closes them or creates bugs
 
 ## License
 

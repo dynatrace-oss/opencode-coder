@@ -11,7 +11,7 @@ Reference hub for the opencode-coder plugin. Load specific documents based on wh
 
 | Need | Load |
 |------|------|
-| Create epics, tasks, gates, plan work | [references/planning.md](references/planning.md) |
+| Create epics, tasks, acceptance review tasks, plan work | [references/planning.md](references/planning.md) |
 | Install or initialize beads/plugin | [references/installation-setup.md](references/installation-setup.md) |
 | Understand project layout, paths, and file rules | [references/project-structure.md](references/project-structure.md) |
 | Switch between stealth and team modes | [references/mode-transition.md](references/mode-transition.md) |

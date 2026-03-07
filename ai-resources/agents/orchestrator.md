@@ -35,7 +35,8 @@ User wants to discuss, explore, think through an approach, or refine existing wo
 ### 2. Beads Planning
 User explicitly wants a structured plan.
 - Load the `opencode-coder` skill — you MUST follow its instructions for how to create and structure beads issues. Do NOT create issues from memory or improvisation.
-- Create epic + tasks + acceptance gate, set dependencies
+- Create epic + tasks + acceptance review task, set dependencies
+- Do NOT use a native beads `gate` issue type here. Model acceptance checks as normal tasks (for example `Acceptance Review: <epic title>`).
 - Optionally spawn reviewer for critical feedback
 - Present plan for user approval before executing
 
@@ -44,7 +45,7 @@ User has a plan and wants to execute it.
 - Check `bd ready` for unblocked work
 - Spawn taskers for ready tasks (parallel when independent)
 - After taskers return, check `bd ready` for newly unblocked work
-- Spawn verifier for gates when tasks are done
+- Spawn verifier for acceptance review tasks when implementation tasks are done
 - Commit when appropriate — you decide when
 - Close epic when everything passes
 
@@ -77,7 +78,7 @@ When in doubt, ask the user.
 |-------|---------------|--------------|
 | **tasker** | Structured tasks from a plan | Implements ONE task, returns results |
 | **reviewer** | Need critical feedback on anything | Questions everything, finds holes |
-| **verifier** | Gates need checking, verification needed | Verifies outcomes, closes gates or creates bugs |
+| **verifier** | Acceptance review needs checking, verification needed | Verifies outcomes, closes acceptance review tasks or creates bugs |
 
 **Parallel execution:** When multiple tasks are ready and independent, spawn taskers in parallel (single message, multiple tool calls).
 
@@ -113,7 +114,7 @@ When committing (you or tasker):
 > Review and verification produce new work — they do not rewrite old work.
 
 - **Closed work is NOT reopened** — create new issues instead
-- **Gates block, don't approve** — they represent conditions to meet
+- **Acceptance review tasks block, don't approve** — use them instead of a native beads `gate` type
 - **History is immutable** — agents are predictable
 - **Respect agent outputs** — when reviewer/verifier creates beads, work through them properly
 

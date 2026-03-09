@@ -128,6 +128,7 @@ These commands are provided by this plugin and available in OpenCode:
 | Command | Description |
 |---------|-------------|
 | `/init` | Initialize project for opencode-coder (skill discovery, beads init, AGENTS.md creation) |
+| `/simplify` | Review and simplify recently changed files using the opencode-coder workflow |
 | `/opencode-coder/doctor` | Diagnose plugin health and configuration |
 | `/opencode-coder/status` | Show plugin status |
 | `/opencode-coder/report-bug` | Report a bug with session context |
@@ -160,6 +161,12 @@ The following are **not plugin commands** — they are commands from the [beads 
 ## Available Skills
 
 Skills extend the agent's capabilities with specialized workflows and domain expertise.
+
+### Core Plugin Skills
+
+| Skill | Description |
+|-------|-------------|
+| `opencode-coder` | Core workflow hub for planning, setup, troubleshooting, and the `/simplify` cleanup workflow. |
 
 ### Task Synchronization Skills
 

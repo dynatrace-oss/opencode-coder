@@ -7,6 +7,7 @@
     "agent/tasker",
     "agent/verifier",
     "command/init",
+    "command/simplify",
     "command/opencode-coder/doctor",
     "command/opencode-coder/dump-session",
     "command/opencode-coder/update-agent-md",

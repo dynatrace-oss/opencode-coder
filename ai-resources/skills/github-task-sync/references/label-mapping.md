@@ -204,9 +204,9 @@ When importing GitHub issue into beads:
 ```markdown
 ## Original GitHub Issue
 
-**GitHub**: hk9890/opencode-coder#123
+**GitHub**: dynatrace-oss/opencode-coder#123
 **Created**: 2026-02-01T10:00:00Z
-**URL**: https://github.com/hk9890/opencode-coder/issues/123
+**URL**: https://github.com/dynatrace-oss/opencode-coder/issues/123
 
 ## Description
 

@@ -140,7 +140,7 @@ After releasing:
 
 1. **Verify package published**:
    ```bash
-   npm view @hk9890/opencode-coder
+   npm view @dynatrace-oss/opencode-coder --registry=https://npm.pkg.github.com
    ```
 
 2. **Check GitHub release**:
@@ -150,9 +150,9 @@ After releasing:
 
 3. **Test installation** in a test project:
    ```bash
-   # In a test directory
-   npm install @hk9890/opencode-coder@latest
-   ```
+    # In a test directory
+    npm install @dynatrace-oss/opencode-coder@latest --registry=https://npm.pkg.github.com
+    ```
 
 4. **Announce release** (if significant):
    - Update project README.md if needed
@@ -246,7 +246,7 @@ The GitHub Actions workflow (`.github/workflows/release.yml`) performs:
 2. **Version Validation**: Ensures semver format, checks tag doesn't exist
 3. **Version Bump**: Updates package.json
 4. **Git Operations**: Commits version bump, creates tag, pushes to remote
-5. **Publish**: Publishes to GitHub Packages (@hk9890/opencode-coder)
+5. **Publish**: Publishes to GitHub Packages (@dynatrace-oss/opencode-coder)
 6. **GitHub Release**: Creates release with provided notes
 
 **Inputs:**
@@ -255,5 +255,14 @@ The GitHub Actions workflow (`.github/workflows/release.yml`) performs:
 
 **Outputs:**
 - Git tag: `v{version}`
-- GitHub Release: `https://github.com/hk9890/opencode-coder/releases/tag/v{version}`
-- NPM Package: `@hk9890/opencode-coder@{version}`
+- GitHub Release: `https://github.com/dynatrace-oss/opencode-coder/releases/tag/v{version}`
+- NPM Package: `@dynatrace-oss/opencode-coder@{version}`
+
+## Package Identity Migration Note
+
+The canonical package is now `@dynatrace-oss/opencode-coder` in `dynatrace-oss/opencode-coder`.
+
+If you previously installed or documented `@hk9890/opencode-coder`, update:
+
+- OpenCode plugin config to `@dynatrace-oss/opencode-coder`
+- npm scope mapping to `@dynatrace-oss:registry=https://npm.pkg.github.com`

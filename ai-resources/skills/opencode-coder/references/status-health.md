@@ -124,7 +124,7 @@ bd --version
 
 **Wrong plugin version**: Update `opencode.json` to specify version:
 ```json
-"plugin": ["@hk9890/opencode-coder@1.2.0"]
+"plugin": ["@dynatrace-oss/opencode-coder@1.2.0"]
 ```
 Then restart OpenCode.
 

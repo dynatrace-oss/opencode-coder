@@ -606,7 +606,7 @@ describe("ProjectDetectorService", () => {
   // ---------------------------------------------------------------------------
 
   describe("detectAndWrite", () => {
-    const versionInfo = { name: "@hk9890/opencode-coder", version: "1.2.3" };
+    const versionInfo = { name: "@dynatrace-oss/opencode-coder", version: "1.2.3" };
 
     it("should write context with team mode for initialized beads repo", async () => {
       // .git exists

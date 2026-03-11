@@ -39,7 +39,7 @@ gh repo view --json nameWithOwner -q '.nameWithOwner'
 
 **Purpose**: Detect GitHub repository from git remote
 
-**Output**: Repository in format `owner/repo` (e.g., `hk9890/opencode-coder`)
+**Output**: Repository in format `owner/repo` (e.g., `dynatrace-oss/opencode-coder`)
 
 **Error codes**:
 - Exit 0: Repository found

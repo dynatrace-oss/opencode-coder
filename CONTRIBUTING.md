@@ -13,7 +13,7 @@ Thank you for your interest in contributing to the opencode-coder plugin! This g
 
 ```bash
 # Clone the repository
-git clone https://github.com/hk9890/opencode-coder.git
+git clone https://github.com/dynatrace-oss/opencode-coder.git
 cd opencode-coder
 
 # Install dependencies

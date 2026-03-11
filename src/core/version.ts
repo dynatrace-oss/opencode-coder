@@ -47,7 +47,7 @@ export async function getVersionInfo(): Promise<VersionInfo> {
   
   // Fallback if package.json not found
   return {
-    name: "@hk9890/opencode-coder",
+    name: "@dynatrace-oss/opencode-coder",
     version: "unknown",
     description: "OpenCode plugin for story-driven development",
   };

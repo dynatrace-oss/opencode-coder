@@ -1,4 +1,4 @@
-# @hk9890/opencode-coder
+# @dynatrace-oss/opencode-coder
 
 OpenCode plugin for story-driven development with agents and commands.
 
@@ -25,15 +25,17 @@ Add the plugin to your OpenCode configuration (`~/.config/opencode/config.json`)
 
 ```json
 {
-  "plugins": ["@hk9890/opencode-coder"]
+  "plugins": ["@dynatrace-oss/opencode-coder"]
 }
 ```
 
 Since this package is published to GitHub Packages, you may need to configure npm to use the GitHub registry for this scope. Create or update `~/.npmrc`:
 
 ```
-@hk9890:registry=https://npm.pkg.github.com
+@dynatrace-oss:registry=https://npm.pkg.github.com
 ```
+
+If you previously used `@hk9890/opencode-coder`, migrate your OpenCode config and `.npmrc` to the `@dynatrace-oss` scope.
 
 ### 2. Initialize your project (optional)
 

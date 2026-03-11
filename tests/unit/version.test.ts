@@ -5,7 +5,7 @@ describe("getVersionInfo", () => {
   it("should return version info from package.json", async () => {
     const info = await getVersionInfo();
 
-    expect(info.name).toBe("@hk9890/opencode-coder");
+    expect(info.name).toBe("@dynatrace-oss/opencode-coder");
     expect(info.version).toMatch(/^\d+\.\d+\.\d+/);
     expect(info.description).toBe("OpenCode plugin for story-driven development with agents and commands");
   });

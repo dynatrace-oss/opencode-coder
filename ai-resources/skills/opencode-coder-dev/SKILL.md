@@ -31,6 +31,6 @@ Internal dev reference hub for the opencode-coder plugin repository. Load specif
 |----------|------|
 | Log analyzer script | `scripts/log-analyzer/` |
 | Release docs | `docs/RELEASING.md` |
-| GitHub repo | `https://github.com/hk9890/opencode-coder` |
+| GitHub repo | `https://github.com/dynatrace-oss/opencode-coder` |
 | Dev commands | `.opencode/commands/opencode-coder-dev/` |
 | This skill | `.opencode/skills/opencode-coder-dev/` |

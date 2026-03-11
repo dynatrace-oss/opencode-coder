@@ -29,7 +29,7 @@ Then follow the **Reporting Issues** section to:
 - Ask for confirmation before creating GitHub issues
 
 ### Step 3: Create Issues (if confirmed)
-- Use `gh issue create --repo hk9890/opencode-coder`
+- Use `gh issue create --repo dynatrace-oss/opencode-coder`
 - One issue per problem
 - Include proper formatting and details
 

@@ -1,11 +1,11 @@
 {
-  "name": "@hk9890/opencode-coder",
+  "name": "@dynatrace-oss/opencode-coder",
   "version": "0.32.0",
   "description": "OpenCode plugin for story-driven development with agents and commands",
-  "author": "hk9890",
+  "author": "Dynatrace OSS",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hk9890/opencode-coder.git"
+    "url": "git+https://github.com/dynatrace-oss/opencode-coder.git"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

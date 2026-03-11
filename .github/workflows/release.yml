@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@hk9890'
+          scope: '@dynatrace-oss'
 
       - name: Install dependencies
         run: bun install
@@ -121,5 +121,6 @@ jobs:
           echo "## Release v${{ inputs.version }} completed!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Tag: v${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- NPM Package: @hk9890/opencode-coder@${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- NPM Package: @dynatrace-oss/opencode-coder@${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub Release: https://github.com/${{ github.repository }}/releases/tag/v${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Verify package: npm view @dynatrace-oss/opencode-coder@${{ inputs.version }} --registry=https://npm.pkg.github.com" >> $GITHUB_STEP_SUMMARY

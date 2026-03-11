@@ -484,8 +484,8 @@ If your issue isn't covered here:
 
 1. **Enable debug logging** and examine logs by loading the internal plugin development skill
 2. **Run health checks**: `bd doctor` and `bd status`
-3. **Search existing issues**: https://github.com/hk9890/opencode-coder/issues
-4. **Create a discussion**: https://github.com/hk9890/opencode-coder/discussions
+3. **Search existing issues**: https://github.com/dynatrace-oss/opencode-coder/issues
+4. **Create a discussion**: https://github.com/dynatrace-oss/opencode-coder/discussions
 5. **Report a bug**: Use the [Reporting Issues](#reporting-issues) section in SKILL.md
 
 ## Pattern Index

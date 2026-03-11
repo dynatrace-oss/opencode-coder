@@ -16,7 +16,7 @@ Read the plugin's package.json directly:
 
 ```bash
 # Get plugin installation path
-PLUGIN_PATH="$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder"
+PLUGIN_PATH="$HOME/.cache/opencode/node_modules/@dynatrace-oss/opencode-coder"
 
 # Read and parse package.json
 if [ -f "$PLUGIN_PATH/package.json" ]; then
@@ -62,7 +62,7 @@ Check key components:
 
 ```bash
 # Plugin installed
-test -d "$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder" && echo "✓ Plugin installed" || echo "✗ Plugin NOT installed"
+test -d "$HOME/.cache/opencode/node_modules/@dynatrace-oss/opencode-coder" && echo "✓ Plugin installed" || echo "✗ Plugin NOT installed"
 
 # Plugin active
 [ "$OPENCODE_CODER_DISABLED" != "true" ] && echo "✓ Plugin active" || echo "✗ Plugin DISABLED"
@@ -93,10 +93,10 @@ For complete bash command examples, troubleshooting, and a ready-to-use status s
 🔌 OpenCode Coder Plugin Status
 
 1. Plugin Information
-   Name: @hk9890/opencode-coder
+   Name: @dynatrace-oss/opencode-coder
    Version: 0.23.0
    Description: OpenCode plugin for story-driven development
-   Location: /path/to/node_modules/@hk9890/opencode-coder
+   Location: /path/to/node_modules/@dynatrace-oss/opencode-coder
 
 2. Configuration
    Status: ACTIVE

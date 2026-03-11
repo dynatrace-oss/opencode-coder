@@ -67,7 +67,7 @@ A good bug report includes:
 
 ## Creating a GitHub Issue
 
-Issues should be reported to: https://github.com/hk9890/opencode-coder
+Issues should be reported to: https://github.com/dynatrace-oss/opencode-coder
 
 ### Bug Report Template
 
@@ -183,7 +183,7 @@ For simple, easily reproducible issues:
 
 **Manual Issue Creation:**
 
-1. Visit https://github.com/hk9890/opencode-coder/issues/new
+1. Visit https://github.com/dynatrace-oss/opencode-coder/issues/new
 2. Use a descriptive title with component in brackets:
    - `[bd ready] Returns empty when issues exist`
    - `[plugin] Knowledge-base fails to load custom commands`
@@ -193,7 +193,7 @@ For simple, easily reproducible issues:
 **Using gh CLI:**
 
 ```bash
-gh issue create --repo hk9890/opencode-coder \
+gh issue create --repo dynatrace-oss/opencode-coder \
   --title "[bd ready] Returns empty when issues exist" \
   --body "$(cat <<'EOF'
 ## Problem
@@ -236,7 +236,7 @@ cp ../assets/bug-report-template.md /tmp/bug-report.md
 # Edit the template, fill in all sections, paste system info
 # Then create the issue
 
-gh issue create --repo hk9890/opencode-coder \
+gh issue create --repo dynatrace-oss/opencode-coder \
   --title "[component] Short description" \
   --body-file /tmp/bug-report.md
 ```
@@ -252,7 +252,7 @@ If the issue is hard to reproduce or involves complex AI assistant interactions:
 # Review and sanitize the export
 # Then include in your bug report
 
-gh issue create --repo hk9890/opencode-coder \
+gh issue create --repo dynatrace-oss/opencode-coder \
   --title "[component] Short description" \
   --body "$(cat <<'EOF'
 ## Problem
@@ -270,7 +270,7 @@ EOF
 **Complete Example:**
 
 ```bash
-gh issue create --repo hk9890/opencode-coder \
+gh issue create --repo dynatrace-oss/opencode-coder \
   --title "[agent] Task agent creates duplicate commits" \
   --body "$(cat <<'EOF'
 ## Problem
@@ -386,4 +386,4 @@ If you're unsure whether something is a plugin issue:
 1. Ask in the session: "Is this a plugin issue or a project issue?"
 2. Run health checks to verify plugin setup
 3. Check the troubleshooting guides
-4. Create a GitHub discussion for questions: https://github.com/hk9890/opencode-coder/discussions
+4. Create a GitHub discussion for questions: https://github.com/dynatrace-oss/opencode-coder/discussions

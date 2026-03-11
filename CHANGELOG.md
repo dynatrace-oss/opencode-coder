@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-03-11
+
+### Added
+
+- **`/simplify` command**: Added a dedicated workflow command to review and simplify recently changed files using the opencode-coder process.
+
+### Changed
+
+- **Repository/package identity migration**: Updated project and package identity to `dynatrace-oss`, including install and release references for `@dynatrace-oss/opencode-coder`.
+- **Project setup and workflow docs**: Consolidated and clarified setup guidance, including GitHub task sync workflow and acceptance review task patterns.
+
+### Fixed
+
+- **Agent workflow enforcement**: Improved agent guidance to consistently load required skills for beads issue workflows and improved reviewer comment quality expectations.
+- **Beads command examples**: Replaced invalid `bd` command usage with current v0.59.0-compatible commands.
+
 ## [0.32.0] - 2026-03-04
 
 ### Added

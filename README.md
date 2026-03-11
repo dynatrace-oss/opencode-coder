@@ -35,8 +35,6 @@ Since this package is published to GitHub Packages, you may need to configure np
 @dynatrace-oss:registry=https://npm.pkg.github.com
 ```
 
-If you previously used `@hk9890/opencode-coder`, migrate your OpenCode config and `.npmrc` to the `@dynatrace-oss` scope.
-
 ### 2. Initialize your project (optional)
 
 If you want to use beads for issue tracking, you can initialize it in your project directory using the beads CLI (`bd init`). This is optional - the plugin works without beads too.

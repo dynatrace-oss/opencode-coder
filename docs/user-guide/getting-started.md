@@ -25,8 +25,6 @@ If needed, configure npm to use GitHub Packages for this scope in `~/.npmrc`:
 @dynatrace-oss:registry=https://npm.pkg.github.com
 ```
 
-If you have an existing setup using `@hk9890/opencode-coder`, update both your OpenCode plugin entry and npm scope mapping to `@dynatrace-oss`.
-
 ## 2. Open a project
 
 Start OpenCode in the repository where you want to use the plugin.

@@ -2,6 +2,18 @@
 
 Common error scenarios and resolutions for GitHub task synchronization.
 
+## Table of Contents
+
+- [Prerequisites Errors](#prerequisites-errors)
+- [GitHub API Errors](#github-api-errors)
+- [Network Errors](#network-errors)
+- [Beads CLI Errors](#beads-cli-errors)
+- [Sync-Specific Errors](#sync-specific-errors)
+- [Error Recovery Patterns](#error-recovery-patterns)
+- [Logging and Debugging](#logging-and-debugging)
+- [Error Message Templates](#error-message-templates)
+- [Best Practices](#best-practices)
+
 ## Prerequisites Errors
 
 ### gh CLI Not Installed

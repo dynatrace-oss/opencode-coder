@@ -111,8 +111,8 @@ Export beads issues to GitHub (create GitHub issues from beads).
 2. **Show summary to user**: Count and list of beads to export
 3. **Ask confirmation**: User selects which beads to export
 4. **For each selected bead**:
-   - Map priority to GitHub label
-   - Create GitHub issue with metadata footer
+   - Map priority and type to GitHub labels
+   - Create GitHub issue with metadata footer and `beads:<id>` back-reference label
    - Capture GitHub issue number
    - Add `github:<number>` label to bead
 5. **Show export summary**: Report exported count and GitHub URLs
@@ -121,16 +121,17 @@ Export beads issues to GitHub (create GitHub issues from beads).
 
 **Find eligible beads**:
 ```bash
-bd list --json | jq '.[] | select(.labels[]? | startswith("github:") | not)'
+bd list --json | jq '.[] | select(any(.labels[]?; startswith("github:")) | not)'
 ```
 
 **Create GitHub issue**:
 ```bash
 gh issue create --repo $REPO \
   --title "<bead-title>" \
-  --body "<bead-description>\n---\n*Created from beads: <bead-id>*" \
+  --body "<bead-description>\n---\n*Created from beads issue: <bead-id>*\n*Priority: P<priority>*\n*Type: <type>*" \
   --label "<priority-label>" \
-  --label "<type-label>"
+  --label "<type-label>" \
+  --label "beads:<bead-id>"
 ```
 
 **Update bead with GitHub label**:

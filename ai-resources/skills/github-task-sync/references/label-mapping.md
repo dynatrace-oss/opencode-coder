@@ -2,6 +2,18 @@
 
 Bidirectional mapping between GitHub labels and beads metadata for task synchronization.
 
+## Table of Contents
+
+- [Priority Mapping](#priority-mapping)
+- [Tracking Labels](#tracking-labels)
+- [Direction Tracking](#direction-tracking)
+- [Title Formatting](#title-formatting)
+- [Body Formatting](#body-formatting)
+- [Type Mapping](#type-mapping)
+- [Status Mapping](#status-mapping)
+- [Label Management Best Practices](#label-management-best-practices)
+- [Example Scenarios](#example-scenarios)
+
 ## Priority Mapping
 
 ### GitHub Labels → Beads Priority

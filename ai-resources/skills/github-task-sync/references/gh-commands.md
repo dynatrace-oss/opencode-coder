@@ -2,6 +2,17 @@
 
 Complete reference for all `gh` CLI commands used in GitHub task synchronization.
 
+## Table of Contents
+
+- [Prerequisites Commands](#prerequisites-commands)
+- [Import Commands](#import-commands)
+- [Export Commands](#export-commands)
+- [Update Commands](#update-commands)
+- [Error Handling Patterns](#error-handling-patterns)
+- [Best Practices](#best-practices)
+- [Command Cheat Sheet](#command-cheat-sheet)
+- [Integration with Beads](#integration-with-beads)
+
 ## Prerequisites Commands
 
 ### Check Authentication Status
@@ -36,6 +47,7 @@ gh repo view --json nameWithOwner -q '.nameWithOwner'
 
 **Error handling**: If fails, prompt user to check `git remote -v` and add GitHub remote
 
+<a id="import-commands"></a>
 ## Import Commands (GitHub → Beads)
 
 ### List Open Issues
@@ -109,6 +121,7 @@ gh issue view <number> --repo $REPO --json state,title,body,labels,closedAt
 
 **States**: `OPEN` or `CLOSED`
 
+<a id="export-commands"></a>
 ## Export Commands (Beads → GitHub)
 
 ### Create Issue
@@ -117,7 +130,9 @@ gh issue view <number> --repo $REPO --json state,title,body,labels,closedAt
 gh issue create --repo $REPO \
   --title "Issue title" \
   --body "Issue description" \
-  --label "priority-label"
+  --label "priority-label" \
+  --label "type-label" \
+  --label "beads:<bead-id>"
 ```
 
 **Purpose**: Create new GitHub issue from bead
@@ -160,6 +175,7 @@ EOF
 - Issues disabled: Repository doesn't have issues enabled
 - Invalid label: Label doesn't exist in repository (non-fatal, issue created without label)
 
+<a id="update-commands"></a>
 ## Update Commands (Bidirectional Sync)
 
 ### Close Issue
@@ -348,9 +364,9 @@ fi
 For multiple issues, process in loop with error handling:
 
 ```bash
-for issue in $(bd list --json | jq -r '.[] | select(.labels[]? == "github:*") | .id'); do
+for issue in $(bd list --json | jq -r '.[] | select(any(.labels[]?; startswith("github:"))) | .id'); do
   # Extract GitHub number
-  GITHUB_NUM=$(bd show $issue --json | jq -r '.labels[] | select(startswith("github:")) | sub("github:"; "")')
+  GITHUB_NUM=$(bd show $issue --json | jq -r '.[0].labels[] | select(startswith("github:")) | sub("github:"; "")')
   
   # Process issue
   if ! gh issue close $GITHUB_NUM --repo $REPO 2>&1; then

@@ -56,8 +56,7 @@ echo "✅ Available"
 
 # Check 3: Repository detection
 echo -n "  Repository: "
-REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>&1)
-if [ $? -ne 0 ]; then
+if ! REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>&1); then
     echo "❌ Not detected"
     echo ""
     echo "Error: Could not detect GitHub repository."

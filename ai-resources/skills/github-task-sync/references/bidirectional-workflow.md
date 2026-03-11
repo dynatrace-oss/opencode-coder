@@ -2,6 +2,19 @@
 
 GitHub-specific implementation details for bidirectional synchronization with beads.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [GitHub-Specific Flow](#github-specific-flow)
+- [Phase 1: Import from GitHub](#phase-1-import-from-github)
+- [Phase 2: GitHub-Specific Conflict Detection](#phase-2-github-specific-conflict-detection)
+- [Phase 3: Export to GitHub](#phase-3-export-to-github)
+- [Phase 4: GitHub-Specific Conflict Resolution](#phase-4-github-specific-conflict-resolution)
+- [GitHub-Specific Conflict Examples](#github-specific-conflict-examples)
+- [Error Handling in GitHub Commands](#error-handling-in-github-commands)
+- [Best Practices](#best-practices)
+- [Integration with task-sync Skill](#integration-with-task-sync-skill)
+
 ## Overview
 
 This document covers GitHub-specific aspects of bidirectional sync. For general workflow guidance, see `task-sync/references/bidirectional-workflow.md`.
@@ -42,7 +55,7 @@ For each issue in `GITHUB_ISSUES`:
 
 **Check for existing bead**:
 ```bash
-GITHUB_NUM=<issue.number>
+GITHUB_NUM="<issue.number>"
 EXISTING=$(bd list --json | jq -r ".[] | select(.labels[]? == \"github:$GITHUB_NUM\") | .id")
 ```
 
@@ -126,6 +139,7 @@ BEAD_TITLE_CLEAN=$(echo "$bead_title" | sed 's/ (github:#[0-9]\+)$//')
 
 if [ "$BEAD_TITLE_CLEAN" != "$gh_title" ]; then
   # Title differs - check timestamps or ask user
+  :
 fi
 ```
 
@@ -136,6 +150,7 @@ BEAD_DESC_ORIGINAL=$(echo "$bead_description" | sed '/^---$/,$d' | sed '/^## Ori
 
 if [ "$BEAD_DESC_ORIGINAL" != "$gh_body" ]; then
   # Description differs
+  :
 fi
 ```
 
@@ -173,6 +188,7 @@ done
 ```bash
 if [ "$bead_priority" != "$GH_PRIORITY" ]; then
   # Priority conflict
+  :
 fi
 ```
 
@@ -183,7 +199,7 @@ fi
 Find beads without `github:` label (not yet exported):
 
 ```bash
-bd list --json | jq -r '.[] | select(.labels[]? | startswith("github:") | not) | .id'
+bd list --json | jq -r '.[] | select(any(.labels[]?; startswith("github:")) | not) | .id'
 ```
 
 ### Step 3.2: Create GitHub Issues
@@ -237,7 +253,7 @@ For beads that are closed and have GitHub labels:
 
 ```bash
 # Find closed beads with GitHub links
-CLOSED_BEADS=$(bd list --status closed,done --json | jq -r '.[] | select(.labels[]? | startswith("github:")) | {id, github: (.labels[] | select(startswith("github:")))}'
+CLOSED_BEADS=$(bd list --status closed,done --json | jq -r '.[] | select(.labels[]? | startswith("github:")) | {id, github: (.labels[] | select(startswith("github:")))}')
 
 for entry in $CLOSED_BEADS; do
   BEAD_ID=$(echo "$entry" | jq -r '.id')
@@ -320,7 +336,7 @@ bd update $BEAD_ID --priority $gh_priority
 
 **When**: Title changed in both systems
 
-```bash
+```javascript
 # Present conflict to user via question tool
 question({
   questions: [{
@@ -360,7 +376,7 @@ esac
 
 **When**: GitHub is closed but beads is open
 
-```bash
+```javascript
 question({
   questions: [{
     header: "Status Conflict: $BEAD_ID / github:$GITHUB_NUM",

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.1] - 2026-03-13
+
+### Changed
+
+- **Startup readiness flow**: Startup now waits for aimgr initialization and can auto-repair unhealthy resources before project detection and default-agent selection.
+- **Project context shape**: Removed unused git platform/remote metadata from the generated project context.
+- **Status diagnostics**: `/coder/status` now probes supported plugin install scopes instead of assuming a single package path.
+
+### Fixed
+
+- **Default agent selection**: Prevented stale readiness state from blocking orchestrator as the default agent after successful aimgr remediation.
+- **Release verification guidance**: Clarified the difference between package visibility and GitHub Packages auth/token-scope failures.
+
+### Docs
+
+- **Architecture docs**: Updated coding and release docs to match the current startup, repair, and verification flow.
+- **Scion exploration**: Added brainstorming notes for future Scion integration work.
+
 ## [0.33.0] - 2026-03-11
 
 ### Added

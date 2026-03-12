@@ -225,6 +225,100 @@ describe("AimgrService", () => {
     });
   });
 
+  describe("verifyAndAutoRepairResources", () => {
+    beforeEach(() => {
+      aimgrService = new AimgrService({
+        logger: mockLogger,
+        client: mockClient,
+        workdir: "/test/path",
+      });
+    });
+
+    it("should return healthy without repair when verify is healthy", async () => {
+      execSyncMock.mockImplementation((cmd: string) => {
+        if (cmd === "command -v aimgr") return Buffer.from("/usr/bin/aimgr");
+        if (cmd === "aimgr verify --format json") {
+          return JSON.stringify({ status: "ok", issues: [] });
+        }
+        throw new Error(`Unexpected command: ${cmd}`);
+      });
+
+      const result = await aimgrService.verifyAndAutoRepairResources();
+
+      expect(result).toEqual({
+        verifyResult: { status: "ok", issues: [] },
+        resourcesHealthy: true,
+        repairAttempted: false,
+        repairSucceeded: false,
+      });
+      expect(execSyncMock).not.toHaveBeenCalledWith("aimgr repair --format json", expect.anything());
+      expect(mockClient.tui.showToast).not.toHaveBeenCalled();
+    });
+
+    it("should repair and return healthy when verify is unhealthy then repair succeeds", async () => {
+      let verifyCalls = 0;
+      execSyncMock.mockImplementation((cmd: string) => {
+        if (cmd === "command -v aimgr") return Buffer.from("/usr/bin/aimgr");
+        if (cmd === "aimgr verify --format json") {
+          verifyCalls += 1;
+          if (verifyCalls === 1) {
+            return JSON.stringify({ status: "degraded", issues: [{ id: "missing-resource" }] });
+          }
+          return JSON.stringify({ status: "ok", issues: [] });
+        }
+        if (cmd === "aimgr repair --format json") {
+          return JSON.stringify({ status: "ok", repaired: 1 });
+        }
+        throw new Error(`Unexpected command: ${cmd}`);
+      });
+
+      const result = await aimgrService.verifyAndAutoRepairResources();
+
+      expect(result).toEqual({
+        verifyResult: { status: "ok", issues: [] },
+        resourcesHealthy: true,
+        repairAttempted: true,
+        repairSucceeded: true,
+      });
+      expect(mockClient.tui.showToast).toHaveBeenCalledWith({
+        title: "aimgr",
+        message: "aimgr auto-repair fixed resource issues.",
+        variant: "success",
+        duration: 7000,
+      });
+    });
+
+    it("should report failed repair when verify remains unhealthy after repair attempt", async () => {
+      let verifyCalls = 0;
+      execSyncMock.mockImplementation((cmd: string) => {
+        if (cmd === "command -v aimgr") return Buffer.from("/usr/bin/aimgr");
+        if (cmd === "aimgr verify --format json") {
+          verifyCalls += 1;
+          return JSON.stringify({ status: "degraded", issues: [{ id: `issue-${verifyCalls}` }] });
+        }
+        if (cmd === "aimgr repair --format json") {
+          throw new Error("repair failed");
+        }
+        throw new Error(`Unexpected command: ${cmd}`);
+      });
+
+      const result = await aimgrService.verifyAndAutoRepairResources();
+
+      expect(result).toEqual({
+        verifyResult: { status: "degraded", issues: [{ id: "issue-2" }] },
+        resourcesHealthy: false,
+        repairAttempted: true,
+        repairSucceeded: false,
+      });
+      expect(mockClient.tui.showToast).toHaveBeenCalledWith({
+        title: "aimgr",
+        message: "aimgr auto-repair was attempted, but issues remain. Run /opencode-coder/doctor for details.",
+        variant: "warning",
+        duration: 8000,
+      });
+    });
+  });
+
   describe("autoInitialize", () => {
     beforeEach(() => {
       aimgrService = new AimgrService({

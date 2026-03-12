@@ -6,6 +6,13 @@ import * as path from "path";
 
 type OpencodeClient = PluginInput["client"];
 
+export interface AimgrStartupHealthResult {
+  verifyResult: any | null;
+  resourcesHealthy: boolean;
+  repairAttempted: boolean;
+  repairSucceeded: boolean;
+}
+
 /**
  * Options for AimgrService
  */
@@ -162,6 +169,78 @@ export class AimgrService {
       this.logger.error("Failed to run aimgr repair", { error: String(error) });
       return null;
     }
+  }
+
+  /**
+   * Return true when a verify-style JSON result reports resource issues.
+   */
+  private hasResourceIssues(result: any): boolean {
+    if (!result || typeof result !== "object") return true;
+
+    return (
+      (Array.isArray(result.issues) && result.issues.length > 0) ||
+      (Array.isArray(result.errors) && result.errors.length > 0) ||
+      (result.error && result.error !== "") ||
+      (result.status && result.status !== "ok" && result.status !== "healthy")
+    );
+  }
+
+  /**
+   * Verify resources and automatically attempt repair when fixable issues exist.
+   *
+   * The post-repair verify result is authoritative when repair is attempted.
+   */
+  async verifyAndAutoRepairResources(): Promise<AimgrStartupHealthResult> {
+    const initialVerify = this.verifyResources();
+
+    if (initialVerify === null) {
+      return {
+        verifyResult: null,
+        resourcesHealthy: false,
+        repairAttempted: false,
+        repairSucceeded: false,
+      };
+    }
+
+    if (!this.hasResourceIssues(initialVerify)) {
+      return {
+        verifyResult: initialVerify,
+        resourcesHealthy: true,
+        repairAttempted: false,
+        repairSucceeded: false,
+      };
+    }
+
+    this.logger.info("aimgr verify found resource issues, attempting automatic repair");
+    this.repairResources();
+
+    const postRepairVerify = this.verifyResources();
+    const postRepairHealthy = postRepairVerify !== null && !this.hasResourceIssues(postRepairVerify);
+
+    if (postRepairHealthy) {
+      await this.showToast({
+        title: "aimgr",
+        message: "aimgr auto-repair fixed resource issues.",
+        variant: "success",
+        duration: 7000,
+      });
+      this.logger.info("aimgr auto-repair succeeded");
+    } else {
+      await this.showToast({
+        title: "aimgr",
+        message: "aimgr auto-repair was attempted, but issues remain. Run /opencode-coder/doctor for details.",
+        variant: "warning",
+        duration: 8000,
+      });
+      this.logger.warn("aimgr auto-repair attempted but resources are still unhealthy");
+    }
+
+    return {
+      verifyResult: postRepairVerify,
+      resourcesHealthy: postRepairHealthy,
+      repairAttempted: true,
+      repairSucceeded: postRepairHealthy,
+    };
   }
 
   /**

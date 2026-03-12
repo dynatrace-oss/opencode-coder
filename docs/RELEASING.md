@@ -138,21 +138,30 @@ gh release create "v$NEW_VERSION" \
 
 After releasing:
 
-1. **Verify package published**:
+1. **Verify package metadata is published (existence check, no auth validation)**:
    ```bash
    npm view @dynatrace-oss/opencode-coder --registry=https://npm.pkg.github.com
    ```
+
+   This confirms the package/version is visible in GitHub Packages metadata.
+   It does **not** prove your npm auth token has package read access.
 
 2. **Check GitHub release**:
    ```bash
    gh release view
    ```
 
-3. **Test installation** in a test project:
+3. **Test authenticated installation** in a test project:
    ```bash
-    # In a test directory
-    npm install @dynatrace-oss/opencode-coder@latest --registry=https://npm.pkg.github.com
-    ```
+   # In a clean test directory, use a token with read:packages scope
+   # (for GitHub Packages reads). Do not assume any gh auth token works.
+   TOKEN="<token-with-read:packages>"
+   printf '@dynatrace-oss:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=%s\n' "$TOKEN" > .npmrc
+   npm install @dynatrace-oss/opencode-coder@latest
+   ```
+
+   If your environment already has a known-good npm auth setup for `npm.pkg.github.com`,
+   you may use that instead of writing a temporary token.
 
 4. **Announce release** (if significant):
    - Update project README.md if needed
@@ -237,6 +246,12 @@ gh auth status
 # Re-authenticate if needed
 gh auth login
 ```
+
+Important: `gh auth login` / `gh auth token` is **not** universally sufficient for npm
+GitHub Packages reads. The token used in `.npmrc` must include GitHub Packages read scope
+(for example `read:packages`). If install fails with `E403 permission_denied` while
+`npm view ... --registry=https://npm.pkg.github.com` succeeds, publication is likely fine
+and the problem is token scope/auth configuration.
 
 ## Release Workflow Details
 

@@ -64,77 +64,6 @@ describe("ProjectDetectorService", () => {
     });
   });
 
-  describe("detectRemoteUrl", () => {
-    it("should return origin URL when configured", () => {
-      const execSyncSpy = spyOn(childProcess, "execSync").mockReturnValue(
-        "https://github.com/user/repo.git\n" as any
-      );
-
-      const result = service.detectRemoteUrl();
-
-      expect(result).toBe("https://github.com/user/repo.git");
-      execSyncSpy.mockRestore();
-    });
-
-    it("should return null when no origin remote exists", () => {
-      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
-        throw new Error("fatal: No such remote 'origin'");
-      });
-
-      const result = service.detectRemoteUrl();
-
-      expect(result).toBeNull();
-      execSyncSpy.mockRestore();
-    });
-
-    it("should return null when remote URL is empty", () => {
-      const execSyncSpy = spyOn(childProcess, "execSync").mockReturnValue("   \n" as any);
-
-      const result = service.detectRemoteUrl();
-
-      expect(result).toBeNull();
-      execSyncSpy.mockRestore();
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Platform detection
-  // ---------------------------------------------------------------------------
-
-  describe("detectPlatform", () => {
-    it("should detect github from HTTPS remote", () => {
-      expect(service.detectPlatform("https://github.com/user/repo.git")).toBe("github");
-    });
-
-    it("should detect github from SSH remote", () => {
-      expect(service.detectPlatform("git@github.com:user/repo.git")).toBe("github");
-    });
-
-    it("should detect bitbucket from bitbucket.org remote", () => {
-      expect(service.detectPlatform("https://bitbucket.org/user/repo.git")).toBe("bitbucket");
-    });
-
-    it("should detect bitbucket from bitbucket.com remote", () => {
-      expect(service.detectPlatform("https://user@bitbucket.com/user/repo.git")).toBe("bitbucket");
-    });
-
-    it("should detect gitlab from gitlab.com remote", () => {
-      expect(service.detectPlatform("https://gitlab.com/user/repo.git")).toBe("gitlab");
-    });
-
-    it("should detect gitlab from self-hosted gitlab remote", () => {
-      expect(service.detectPlatform("https://gitlab.mycompany.com/user/repo.git")).toBe("gitlab");
-    });
-
-    it("should return null for unknown remote", () => {
-      expect(service.detectPlatform("https://codeberg.org/user/repo.git")).toBeNull();
-    });
-
-    it("should return null when remote is null", () => {
-      expect(service.detectPlatform(null)).toBeNull();
-    });
-  });
-
   // ---------------------------------------------------------------------------
   // Beads detection
   // ---------------------------------------------------------------------------
@@ -481,7 +410,7 @@ describe("ProjectDetectorService", () => {
         mode: "team",
         installReady: false,
         ecosystemReady: false,
-        git: { initialized: true, platform: "github", remote: "https://github.com/user/repo.git" },
+        git: { initialized: true },
         beads: { initialized: true, stealthMode: false, bdCliInstalled: false },
         aimgr: { installed: false, packageYaml: false, resourcesHealthy: false, coderPackageInstalled: false },
         detectedAt: "2026-03-02T00:00:00.000Z",
@@ -514,7 +443,7 @@ describe("ProjectDetectorService", () => {
         mode: "team",
         installReady: false,
         ecosystemReady: false,
-        git: { initialized: true, platform: null, remote: null },
+        git: { initialized: true },
         beads: { initialized: true, stealthMode: false, bdCliInstalled: false },
         aimgr: { installed: false, packageYaml: false, resourcesHealthy: false, coderPackageInstalled: false },
         detectedAt: "2026-03-02T00:00:00.000Z",
@@ -547,7 +476,7 @@ describe("ProjectDetectorService", () => {
         mode: "team",
         installReady: false,
         ecosystemReady: false,
-        git: { initialized: true, platform: null, remote: null },
+        git: { initialized: true },
         beads: { initialized: true, stealthMode: false, bdCliInstalled: false },
         aimgr: { installed: false, packageYaml: false, resourcesHealthy: false, coderPackageInstalled: false },
         detectedAt: "2026-03-02T00:00:00.000Z",
@@ -576,7 +505,7 @@ describe("ProjectDetectorService", () => {
         mode: "stealth",
         installReady: false,
         ecosystemReady: true,
-        git: { initialized: true, platform: "gitlab", remote: "https://gitlab.com/u/r.git" },
+        git: { initialized: true },
         beads: { initialized: false, stealthMode: true, bdCliInstalled: true },
         aimgr: { installed: true, packageYaml: true, resourcesHealthy: true, coderPackageInstalled: true },
         detectedAt: "2026-03-02T00:00:00.000Z",
@@ -587,7 +516,6 @@ describe("ProjectDetectorService", () => {
 
       expect(writtenContent).toContain("mode: stealth");
       expect(writtenContent).toContain("ecosystemReady: true");
-      expect(writtenContent).toContain("platform: gitlab");
       expect(writtenContent).toContain("stealthMode: true");
       expect(writtenContent).toContain("installed: true");
       expect(writtenContent).toContain("resourcesHealthy: true");
@@ -624,7 +552,6 @@ describe("ProjectDetectorService", () => {
       const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(false);
 
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
-        if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
         // aimgr not available
         if (cmd === "command -v aimgr") throw new Error("not found");
         return "" as any;
@@ -643,7 +570,6 @@ describe("ProjectDetectorService", () => {
       expect(writtenContent).toContain("mode: team");
       expect(writtenContent).toContain("ecosystemReady: false");
       expect(writtenContent).toContain("initialized: true");
-      expect(writtenContent).toContain("platform: github");
       expect(writtenContent).toContain("pluginVersion: 1.2.3");
 
       accessSyncSpy.mockRestore();
@@ -664,7 +590,6 @@ describe("ProjectDetectorService", () => {
       const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(false);
 
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
-        if (cmd === "git remote get-url origin") return "git@github.com:user/repo.git\n" as any;
         if (cmd === "command -v aimgr") throw new Error("not found");
         return "" as any;
       });
@@ -704,7 +629,6 @@ describe("ProjectDetectorService", () => {
       const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(false);
 
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
-        if (cmd === "git remote get-url origin") throw new Error("no origin");
         if (cmd === "command -v aimgr") throw new Error("not found");
         return "" as any;
       });
@@ -742,7 +666,6 @@ describe("ProjectDetectorService", () => {
       const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
 
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
-        if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
         if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
         if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
         return "" as any;
@@ -785,7 +708,6 @@ describe("ProjectDetectorService", () => {
         targets: [], sync_status: "in-sync", health: "ok",
       }]);
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
-        if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
         if (cmd === "command -v bd") return "/usr/local/bin/bd" as any;
         if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
         if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
@@ -834,7 +756,6 @@ describe("ProjectDetectorService", () => {
         if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
         if (cmd === "aimgr verify --format json") return JSON.stringify({ status: "ok", issues: [] }) as any;
         if (cmd === 'aimgr list "package/opencode-coder" --format json') return aimgrListResult as any;
-        if (cmd === "git remote get-url origin") return "https://github.com/user/repo.git\n" as any;
         return "" as any;
       });
 
@@ -863,7 +784,6 @@ describe("ProjectDetectorService", () => {
       // ai.package.yaml does NOT exist
       const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(false);
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
-        if (cmd === "git remote get-url origin") throw new Error("no origin");
         if (cmd === "command -v bd") return "/usr/local/bin/bd" as any;
         // aimgr is NOT installed
         if (cmd === "command -v aimgr") throw new Error("not found");
@@ -909,6 +829,39 @@ describe("ProjectDetectorService", () => {
         path.join("/test/project", ".coder"),
         { recursive: true }
       );
+
+      accessSyncSpy.mockRestore();
+      readFileSyncSpy.mockRestore();
+      existsSyncSpy.mockRestore();
+      execSyncSpy.mockRestore();
+      mkdirSyncSpy.mockRestore();
+      writeFileSyncSpy.mockRestore();
+    });
+
+    it("should use resourcesHealthyOverride as authoritative health state", async () => {
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
+      const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue("# default excludes\n" as any);
+      const existsSyncSpy = spyOn(fs, "existsSync").mockReturnValue(true);
+
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
+        if (cmd === "command -v bd") return "/usr/local/bin/bd" as any;
+        if (cmd === "command -v aimgr") return "/usr/local/bin/aimgr" as any;
+        if (cmd === 'aimgr list "package/opencode-coder" --format json') {
+          return JSON.stringify([{ type: "package", name: "opencode-coder" }]) as any;
+        }
+        if (cmd === "aimgr verify --format json") {
+          throw new Error("verify should not be called when override is provided");
+        }
+        return "" as any;
+      });
+
+      const mkdirSyncSpy = spyOn(fs, "mkdirSync").mockImplementation(() => undefined as any);
+      const writeFileSyncSpy = spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+      const result = await service.detectAndWrite(versionInfo as any, { resourcesHealthyOverride: true });
+
+      expect(result.aimgr.resourcesHealthy).toBe(true);
+      expect(result.ecosystemReady).toBe(true);
 
       accessSyncSpy.mockRestore();
       readFileSyncSpy.mockRestore();

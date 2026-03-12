@@ -102,6 +102,13 @@ npm --version
 
 # Check configured plugins in OpenCode config
 cat ~/.config/opencode/opencode.json | grep -A5 '"plugin"'
+
+# Check installed opencode-coder package location (supported scopes)
+for p in \
+  "$HOME/.cache/opencode/node_modules/@dynatrace-oss/opencode-coder" \
+  "$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder"; do
+  [ -f "$p/package.json" ] && echo "installed: $p"
+done
 ```
 
 ### Update Beads

@@ -15,11 +15,22 @@ Gather and display the following information using direct bash commands:
 Read the plugin's package.json directly:
 
 ```bash
-# Get plugin installation path
-PLUGIN_PATH="$HOME/.cache/opencode/node_modules/@dynatrace-oss/opencode-coder"
+# Probe supported plugin installation paths/scopes
+PLUGIN_CANDIDATES=(
+  "$HOME/.cache/opencode/node_modules/@dynatrace-oss/opencode-coder"
+  "$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder"
+)
+
+PLUGIN_PATH=""
+for candidate in "${PLUGIN_CANDIDATES[@]}"; do
+  if [ -f "$candidate/package.json" ]; then
+    PLUGIN_PATH="$candidate"
+    break
+  fi
+done
 
 # Read and parse package.json
-if [ -f "$PLUGIN_PATH/package.json" ]; then
+if [ -n "$PLUGIN_PATH" ] && [ -f "$PLUGIN_PATH/package.json" ]; then
   PLUGIN_NAME=$(node -p "require('$PLUGIN_PATH/package.json').name" 2>/dev/null)
   PLUGIN_VERSION=$(node -p "require('$PLUGIN_PATH/package.json').version" 2>/dev/null)
   PLUGIN_DESC=$(node -p "require('$PLUGIN_PATH/package.json').description" 2>/dev/null)
@@ -61,8 +72,25 @@ test -d .beads && echo "INITIALIZED" || echo "NOT INITIALIZED"
 Check key components:
 
 ```bash
-# Plugin installed
-test -d "$HOME/.cache/opencode/node_modules/@dynatrace-oss/opencode-coder" && echo "✓ Plugin installed" || echo "✗ Plugin NOT installed"
+# Plugin installed (supports current + legacy scopes)
+PLUGIN_CANDIDATES=(
+  "$HOME/.cache/opencode/node_modules/@dynatrace-oss/opencode-coder"
+  "$HOME/.cache/opencode/node_modules/@hk9890/opencode-coder"
+)
+
+PLUGIN_PATH=""
+for candidate in "${PLUGIN_CANDIDATES[@]}"; do
+  if [ -f "$candidate/package.json" ]; then
+    PLUGIN_PATH="$candidate"
+    break
+  fi
+done
+
+if [ -n "$PLUGIN_PATH" ]; then
+  echo "✓ Plugin installed ($PLUGIN_PATH)"
+else
+  echo "✗ Plugin NOT installed (checked: ${PLUGIN_CANDIDATES[*]})"
+fi
 
 # Plugin active
 [ "$OPENCODE_CODER_DISABLED" != "true" ] && echo "✓ Plugin active" || echo "✗ Plugin DISABLED"
@@ -117,3 +145,4 @@ For complete bash command examples, troubleshooting, and a ready-to-use status s
 - More reliable than previous system_info approach
 - Commands can be tested manually for debugging
 - See skill reference for complete documentation
+- Plugin detection should probe supported install scopes (`@dynatrace-oss`, `@hk9890`) under `~/.cache/opencode/node_modules/`

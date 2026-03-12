@@ -33,6 +33,7 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
   const aimgrService = new AimgrService({
     logger: log,
     client,
+    workdir: worktree,
   });
   log.debug("AimgrService created", { durationMs: Date.now() - aimgrStart });
 
@@ -42,9 +43,33 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
   const coderTool = createCoderTool({ sessionExportService, versionInfo });
   log.debug("Coder tool created");
 
-  // 5. Run project detection — result is awaited by the config hook to set default agent
+  // 5. Run project detection after aimgr auto-initialize.
+  // This avoids capturing a stale readiness snapshot before startup remediation.
   const projectDetector = new ProjectDetectorService({ logger: log, workdir: worktree });
-  const projectContextPromise: Promise<ProjectContext | null> = projectDetector.detectAndWrite(versionInfo)
+  const aimgrInitStart = Date.now();
+  const projectContextPromise: Promise<ProjectContext | null> = aimgrService.autoInitialize()
+    .then(() => {
+      log.debug("aimgr autoInitialize completed", { durationMs: Date.now() - aimgrInitStart });
+    })
+    .catch((err) => {
+      log.error("Failed to auto-initialize aimgr", { error: String(err) });
+    })
+    .then(() => aimgrService.verifyAndAutoRepairResources())
+    .then((health) => {
+      log.debug("aimgr verify/repair startup flow completed", {
+        durationMs: Date.now() - aimgrInitStart,
+        repairAttempted: health.repairAttempted,
+        repairSucceeded: health.repairSucceeded,
+        resourcesHealthy: health.resourcesHealthy,
+      });
+      if (health.verifyResult === null) {
+        return projectDetector.detectAndWrite(versionInfo);
+      }
+
+      return projectDetector.detectAndWrite(versionInfo, {
+        resourcesHealthyOverride: health.resourcesHealthy,
+      });
+    })
     .then((ctx) => {
       log.debug("Project context written to .coder/project.yaml", { ecosystemReady: ctx.ecosystemReady });
       return ctx;
@@ -65,50 +90,7 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
       log.error("Failed to check beads availability", { error: String(err) });
     });
 
-  // 7. Auto-initialize aimgr if available
-  // Runs in the background and doesn't block plugin loading
-  const aimgrInitStart = Date.now();
-  aimgrService.autoInitialize()
-    .then(() => {
-      log.debug("aimgr autoInitialize completed", { durationMs: Date.now() - aimgrInitStart });
-    })
-    .catch((err) => {
-      log.error("Failed to auto-initialize aimgr", { error: String(err) });
-    });
-
-  // 8. Background aimgr resource health check
-  // Runs in the background and doesn't block plugin loading
-  const aimgrVerifyStart = Date.now();
-  Promise.resolve()
-    .then(() => {
-      const result = aimgrService.verifyResources();
-      log.debug("aimgr verifyResources completed", { durationMs: Date.now() - aimgrVerifyStart });
-      if (result === null) {
-        // aimgr not installed or verify failed — skip silently
-        return;
-      }
-      // Detect issues: non-empty arrays or truthy error fields in the JSON
-      const hasIssues =
-        (Array.isArray(result.issues) && result.issues.length > 0) ||
-        (Array.isArray(result.errors) && result.errors.length > 0) ||
-        (result.error && result.error !== "") ||
-        (result.status && result.status !== "ok" && result.status !== "healthy");
-      if (hasIssues) {
-        (client as any).tui.showToast({
-          title: "aimgr",
-          message: "aimgr: resource issues detected. Run /opencode-coder/doctor for details.",
-          variant: "warning",
-          duration: 8000,
-        }).catch((err: unknown) => {
-          log.error("Failed to show aimgr verify toast", { error: String(err) });
-        });
-      }
-    })
-    .catch((err) => {
-      log.error("Failed to run aimgr verifyResources", { error: String(err) });
-    });
-
-  // Log plugin load completion with timing
+  // 7. Log plugin load completion with timing
   const loadDurationMs = Date.now() - startTime;
   log.info("OpencodeCoder plugin loaded", { durationMs: loadDurationMs, beadsEnabled: beadsService.isBeadsEnabled() });
 
@@ -156,11 +138,27 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
       // Note: default_agent is supported at runtime (OpenCode ≥1.2.15) but the
       // plugin SDK's v1 Config type definition hasn't been updated yet.
       const cfg = input as Record<string, unknown>;
-      if (!cfg["default_agent"]) {
-        if (projectContext?.ecosystemReady) {
-          cfg["default_agent"] = "orchestrator";
-          log.info("Set default_agent to orchestrator (ecosystem ready)");
-        }
+      if (cfg["default_agent"]) {
+        log.info("default_agent already configured, not overriding", {
+          existingDefaultAgent: String(cfg["default_agent"]),
+        });
+      } else if (!projectContext) {
+        log.info("Project context unavailable, not setting default_agent");
+      } else if (!projectContext.ecosystemReady) {
+        log.info("ecosystemReady=false, not setting default_agent to orchestrator", {
+          ecosystemReady: projectContext.ecosystemReady,
+        });
+        await (client as any).tui.showToast({
+          title: "Orchestrator not enabled",
+          message: "Orchestrator was not made the default agent because the project is not fully ready yet. Check aimgr/beads setup or run /opencode-coder/doctor.",
+          variant: "warning",
+          duration: 8000,
+        }).catch((err: unknown) => {
+          log.error("Failed to show orchestrator readiness toast", { error: String(err) });
+        });
+      } else {
+        cfg["default_agent"] = "orchestrator";
+        log.info("Set default_agent to orchestrator (ecosystem ready)");
       }
     },
   };

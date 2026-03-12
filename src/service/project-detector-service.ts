@@ -15,6 +15,14 @@ export interface ProjectDetectorServiceOptions {
   workdir?: string;
 }
 
+export interface ProjectDetectionOptions {
+  /**
+   * Optional authoritative aimgr resource health from startup verify/repair flow.
+   * When provided, detectAndWrite uses this value instead of running aimgr verify.
+   */
+  resourcesHealthyOverride?: boolean;
+}
+
 /**
  * Detected project context written to .coder/project.yaml on every startup.
  */
@@ -44,10 +52,6 @@ export interface ProjectContext {
   git: {
     /** Whether a .git directory exists */
     initialized: boolean;
-    /** Detected platform: 'github' | 'bitbucket' | 'gitlab' | null */
-    platform: string | null;
-    /** Origin remote URL, or null if not configured */
-    remote: string | null;
   };
 
   /** Beads issue-tracker status */
@@ -117,38 +121,6 @@ export class ProjectDetectorService {
       this.logger.debug("Git directory not found", { path: gitDir });
       return false;
     }
-  }
-
-  /**
-   * Get the origin remote URL, or null if there is no origin remote.
-   */
-  detectRemoteUrl(): string | null {
-    try {
-      const output = execSync("git remote get-url origin", {
-        cwd: this.workdir,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      }).trim();
-      this.logger.debug("Git remote URL detected", { remote: output });
-      return output || null;
-    } catch {
-      this.logger.debug("No git remote origin found", { cwd: this.workdir });
-      return null;
-    }
-  }
-
-  /**
-   * Detect the hosting platform from the remote URL.
-   *
-   * @returns 'github' | 'bitbucket' | 'gitlab' | null
-   */
-  detectPlatform(remoteUrl: string | null): string | null {
-    if (!remoteUrl) return null;
-    const url = remoteUrl.toLowerCase();
-    if (url.includes("github.com")) return "github";
-    if (url.includes("bitbucket.org") || url.includes("bitbucket.com")) return "bitbucket";
-    if (url.includes("gitlab.com") || url.includes("gitlab.")) return "gitlab";
-    return null;
   }
 
   // ---------------------------------------------------------------------------
@@ -378,15 +350,12 @@ export class ProjectDetectorService {
    *
    * @returns The detected project context.
    */
-  async detectAndWrite(versionInfo: VersionInfo): Promise<ProjectContext> {
+  async detectAndWrite(versionInfo: VersionInfo, options?: ProjectDetectionOptions): Promise<ProjectContext> {
     const start = Date.now();
     this.logger.debug("Starting project detection", { workdir: this.workdir });
 
     // Git
     const gitInitialized = this.detectGitInitialized();
-    const remote = gitInitialized ? this.detectRemoteUrl() : null;
-    const platform = this.detectPlatform(remote);
-
     // Beads
     const beadsInitialized = this.detectBeadsInitialized();
     const stealthMode = this.detectStealthMode();
@@ -398,7 +367,12 @@ export class ProjectDetectorService {
     const aimgrInstalled = this.detectAimgrInstalled();
     const packageYaml = this.detectPackageYaml();
     // Only check health when aimgr is installed (avoids double detection call)
-    const resourcesHealthy = aimgrInstalled ? this.detectResourcesHealthy() : false;
+    const resourcesHealthy =
+      options?.resourcesHealthyOverride !== undefined
+        ? options.resourcesHealthyOverride
+        : aimgrInstalled
+          ? this.detectResourcesHealthy()
+          : false;
     // Only check coder package when aimgr is installed (uses aimgr list CLI)
     const coderPackageInstalled = aimgrInstalled ? this.detectCoderPackageInstalled() : false;
 
@@ -424,8 +398,6 @@ export class ProjectDetectorService {
       ecosystemReady,
       git: {
         initialized: gitInitialized,
-        platform,
-        remote,
       },
       beads: {
         initialized: beadsInitialized,

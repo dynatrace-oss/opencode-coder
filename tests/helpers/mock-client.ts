@@ -13,6 +13,20 @@ export interface MockClient {
     log(options: { body: LogEntry }): void;
     logs: LogEntry[];
   };
+  tui: {
+    showToast(options: {
+      title: string;
+      message: string;
+      variant?: "info" | "success" | "warning" | "error";
+      duration?: number;
+    }): Promise<void>;
+    toasts: Array<{
+      title: string;
+      message: string;
+      variant?: "info" | "success" | "warning" | "error";
+      duration?: number;
+    }>;
+  };
 }
 
 export interface MockPluginInput {
@@ -28,6 +42,7 @@ export interface MockPluginInput {
  */
 export function createMockClient(): MockClient {
   const logs: LogEntry[] = [];
+  const toasts: MockClient["tui"]["toasts"] = [];
 
   return {
     app: {
@@ -35,6 +50,12 @@ export function createMockClient(): MockClient {
         logs.push(options.body);
       },
       logs,
+    },
+    tui: {
+      async showToast(options) {
+        toasts.push(options);
+      },
+      toasts,
     },
   };
 }

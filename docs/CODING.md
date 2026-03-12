@@ -95,6 +95,7 @@ class AimgrService {
   // Resource health methods (synchronous, return null when aimgr unavailable)
   verifyResources(): any   // runs `aimgr verify --format json`
   repairResources(): any   // runs `aimgr repair --format json`
+  verifyAndAutoRepairResources(): Promise<AimgrStartupHealthResult>
 
   // Main orchestration (async, catches all errors)
   autoInitialize(): Promise<void>
@@ -103,29 +104,38 @@ class AimgrService {
 
 ### Integration Pattern
 
-The service is instantiated in `src/index.ts` and runs in the background:
+The service is instantiated in `src/index.ts` and participates in startup sequencing:
 
 ```typescript
 // Create service
-const aimgrService = new AimgrService({ logger: log, client });
+const aimgrService = new AimgrService({ logger: log, client, workdir });
 
-// Run in background (doesn't block plugin loading)
-aimgrService.autoInitialize()
-  .then(() => log.debug("aimgr initialized"))
-  .catch((err) => log.error("aimgr failed", { error: err }));
+// Startup flow
+await aimgrService.autoInitialize();
+const health = await aimgrService.verifyAndAutoRepairResources();
+await detectorService.detectAndWrite(versionInfo, {
+  resourcesHealthyOverride: health.verifyResult === null ? undefined : health.resourcesHealthy,
+});
 ```
+
+This sequencing ensures that:
+- project detection uses the final startup health result
+- automatic `aimgr repair` can affect `ecosystemReady`
+- the config hook sees the current readiness state instead of a stale snapshot
 
 ### Testing
 
 - All methods are unit tested with mocks for `execSync` and `fs.existsSync`
 - Tests verify both success and failure scenarios
 - `autoInitialize` is tested for all code paths (skip, init, install, error)
+- `verifyAndAutoRepairResources` is tested for healthy, repaired, and still-unhealthy flows
 - See `tests/unit/service/aimgr-service.test.ts`
 
 ### Error Handling
 
 - Individual methods (`initializeAimgr`, `installPackage`) throw errors
 - `verifyResources` and `repairResources` return `null` instead of throwing
+- `verifyAndAutoRepairResources` returns the post-repair verification result as the authoritative startup health signal
 - `autoInitialize` catches all errors and logs them
 - Plugin continues loading even if aimgr operations fail
 - This ensures aimgr is optional and doesn't break the plugin
@@ -139,7 +149,7 @@ The `ProjectDetectorService` detects facts about the current project environment
 
 ### Key Features
 
-- **Git detection**: Checks for `.git/` directory, remote URL, and hosting platform
+- **Git detection**: Checks for `.git/` directory
 - **Beads detection**: Checks for `.beads/` directory, stealth mode, and bd CLI availability
 - **aimgr detection**: Checks for aimgr CLI, `ai.package.yaml`, and resource health
 - **Mode derivation**: Derives `stealth | team | uninitialized` from beads state
@@ -151,8 +161,6 @@ The `ProjectDetectorService` detects facts about the current project environment
 class ProjectDetectorService {
   // Git detection (synchronous)
   detectGitInitialized(): boolean
-  detectRemoteUrl(): string | null
-  detectPlatform(remoteUrl: string | null): string | null  // 'github' | 'bitbucket' | 'gitlab' | null
 
   // Beads detection (synchronous)
   detectBeadsInitialized(): boolean
@@ -174,7 +182,7 @@ class ProjectDetectorService {
   writeProjectContext(context: ProjectContext): void
 
   // Main orchestration (async, never throws)
-  detectAndWrite(versionInfo: VersionInfo): Promise<ProjectContext>
+  detectAndWrite(versionInfo: VersionInfo, options?: ProjectDetectionOptions): Promise<ProjectContext>
 }
 ```
 
@@ -187,8 +195,6 @@ interface ProjectContext {
   ecosystemReady: boolean; // all ecosystem components installed and healthy
   git: {
     initialized: boolean;
-    platform: string | null;  // 'github' | 'bitbucket' | 'gitlab' | null
-    remote: string | null;
   };
   beads: {
     initialized: boolean;
@@ -212,8 +218,15 @@ The service is called from `src/index.ts` during plugin startup:
 
 ```typescript
 const detectorService = new ProjectDetectorService({ logger: log });
-const projectContext = await detectorService.detectAndWrite(versionInfo);
+const health = await aimgrService.verifyAndAutoRepairResources();
+const projectContext = await detectorService.detectAndWrite(versionInfo, {
+  resourcesHealthyOverride: health.verifyResult === null ? undefined : health.resourcesHealthy,
+});
 ```
+
+When `resourcesHealthyOverride` is provided, the detector uses that value instead of running
+its own `aimgr verify` call. This keeps startup health evaluation authoritative and avoids
+double-checking resources after repair.
 
 ### Testing
 

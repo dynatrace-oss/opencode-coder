@@ -1,6 +1,6 @@
-import { describe, expect, it, spyOn } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import { OpencodeCoder } from "../../src";
-import { AimgrService, ProjectDetectorService } from "../../src/service";
+import { AimgrService, BeadsService, ProjectDetectorService } from "../../src/service";
 import type { ProjectContext } from "../../src/service/project-detector-service";
 import { createMockPluginInput, asMockPluginInput } from "../helpers/mock-client";
 
@@ -28,6 +28,14 @@ function createProjectContext(overrides?: Partial<ProjectContext>): ProjectConte
 }
 
 describe("OpencodeCoder Plugin Integration", () => {
+  beforeEach(() => {
+    spyOn(BeadsService.prototype, "checkBeadsAvailability").mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
   describe("plugin loading", () => {
     it("should load without errors", async () => {
       const mockInput = createMockPluginInput();

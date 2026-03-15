@@ -9,6 +9,13 @@ type OpencodeClient = PluginInput["client"];
 const COMMAND_CHECK_TIMEOUT_MS = 5_000;
 const AIMGR_COMMAND_TIMEOUT_MS = 10_000;
 
+function isExecTimeoutError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const timeoutError = error as { code?: string; killed?: boolean; signal?: string };
+  return timeoutError.code === "ETIMEDOUT" || timeoutError.killed === true || timeoutError.signal === "SIGTERM";
+}
+
 export interface AimgrStartupHealthResult {
   verifyResult: any | null;
   resourcesHealthy: boolean;
@@ -52,14 +59,23 @@ export class AimgrService {
    * Check if aimgr command is available on PATH
    */
   isAimgrAvailable(): boolean {
+    const command = "command -v aimgr";
     try {
-      execSync("command -v aimgr", {
+      execSync(command, {
         stdio: "ignore",
         timeout: COMMAND_CHECK_TIMEOUT_MS,
       });
       this.logger.debug("aimgr CLI is available");
       return true;
-    } catch {
+    } catch (error) {
+      if (isExecTimeoutError(error)) {
+        this.logger.warn("aimgr availability check timed out", {
+          command,
+          timeoutMs: COMMAND_CHECK_TIMEOUT_MS,
+        });
+        return false;
+      }
+
       this.logger.debug("aimgr CLI not found on PATH");
       return false;
     }

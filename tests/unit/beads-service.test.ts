@@ -144,7 +144,7 @@ describe("BeadsService", () => {
       accessSyncSpy.mockRestore();
     });
 
-    it("should treat bd CLI timeout as missing and show not-available toast", async () => {
+    it("should not show install toast when bd CLI check times out", async () => {
       const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
         const timeoutError = new Error("timed out") as Error & { killed: boolean; signal: string };
         timeoutError.killed = true;
@@ -162,9 +162,39 @@ describe("BeadsService", () => {
 
       await service.checkBeadsAvailability();
 
+      expect(toastCalls.length).toBe(0);
+      expect(mockLogger.hasLogged("warn", "Beads CLI not installed")).toBe(false);
+      expect(mockLogger.hasLogged("warn", "bd CLI availability check timed out")).toBe(true);
+      expect(mockLogger.hasLogged("warn", "Skipping Beads CLI install guidance due to timeout")).toBe(true);
+
+      execSyncSpy.mockRestore();
+      accessSyncSpy.mockRestore();
+    });
+
+    it("should still show beads init toast when bd check times out and .beads directory is missing", async () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
+        const timeoutError = new Error("timed out") as Error & { code: string };
+        timeoutError.code = "ETIMEDOUT";
+        throw timeoutError;
+      });
+
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => {
+        throw new Error("ENOENT");
+      });
+
+      const service = new BeadsService({
+        logger: mockLogger,
+        client: mockClient,
+        beadsEnabled: true,
+      });
+
+      await service.checkBeadsAvailability();
+
       expect(toastCalls.length).toBe(1);
-      expect(toastCalls[0].title).toBe("Beads Not Available");
-      expect(mockLogger.hasLogged("warn", "Beads CLI not installed")).toBe(true);
+      expect(toastCalls[0].title).toBe("Beads Not Initialized");
+      expect(toastCalls[0].message).toContain("bd init");
+      expect(mockLogger.hasLogged("warn", "Beads CLI not installed")).toBe(false);
+      expect(mockLogger.hasLogged("warn", "bd CLI availability check timed out")).toBe(true);
 
       execSyncSpy.mockRestore();
       accessSyncSpy.mockRestore();

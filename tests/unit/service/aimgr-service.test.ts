@@ -94,6 +94,24 @@ describe("AimgrService", () => {
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith("aimgr CLI not found on PATH");
     });
+
+    it("should return false and log timeout details when availability check times out", () => {
+      execSyncMock.mockImplementation(() => {
+        const timeoutError = new Error("timed out") as Error & { killed: boolean; signal: string };
+        timeoutError.killed = true;
+        timeoutError.signal = "SIGTERM";
+        throw timeoutError;
+      });
+
+      const result = aimgrService.isAimgrAvailable();
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith("aimgr availability check timed out", {
+        command: "command -v aimgr",
+        timeoutMs: 5000,
+      });
+      expect(mockLogger.debug).not.toHaveBeenCalledWith("aimgr CLI not found on PATH");
+    });
   });
 
   describe("hasPackageYaml", () => {

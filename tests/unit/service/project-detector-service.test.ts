@@ -151,6 +151,22 @@ describe("ProjectDetectorService", () => {
       expect(result).toBe(false);
       execSyncSpy.mockRestore();
     });
+
+    it("should return false and log timeout details when bd check times out", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
+        const timeoutError = new Error("timed out") as Error & { killed: boolean; signal: string };
+        timeoutError.killed = true;
+        timeoutError.signal = "SIGTERM";
+        throw timeoutError;
+      });
+
+      const result = service.detectBdCliInstalled();
+
+      expect(result).toBe(false);
+      expect(mockLogger.hasLogged("warn", "bd CLI availability check timed out")).toBe(true);
+      expect(mockLogger.hasLogged("debug", "bd CLI not found on PATH")).toBe(false);
+      execSyncSpy.mockRestore();
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -179,6 +195,22 @@ describe("ProjectDetectorService", () => {
       const result = service.detectAimgrInstalled();
 
       expect(result).toBe(false);
+      execSyncSpy.mockRestore();
+    });
+
+    it("should return false and log timeout details when aimgr check times out", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
+        const timeoutError = new Error("timed out") as Error & { killed: boolean; signal: string };
+        timeoutError.killed = true;
+        timeoutError.signal = "SIGTERM";
+        throw timeoutError;
+      });
+
+      const result = service.detectAimgrInstalled();
+
+      expect(result).toBe(false);
+      expect(mockLogger.hasLogged("warn", "aimgr CLI availability check timed out")).toBe(true);
+      expect(mockLogger.hasLogged("debug", "aimgr CLI not found on PATH")).toBe(false);
       execSyncSpy.mockRestore();
     });
   });
@@ -269,6 +301,24 @@ describe("ProjectDetectorService", () => {
       const result = service.detectCoderPackageInstalled();
 
       expect(result).toBe(false);
+      execSyncSpy.mockRestore();
+    });
+
+    it("should return false and log timeout details when aimgr list times out", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
+        const timeoutError = new Error("timed out") as Error & { killed: boolean; signal: string };
+        timeoutError.killed = true;
+        timeoutError.signal = "SIGTERM";
+        throw timeoutError;
+      });
+
+      const result = service.detectCoderPackageInstalled();
+
+      expect(result).toBe(false);
+      expect(
+        mockLogger.hasLogged("warn", "aimgr list timed out while checking opencode-coder package")
+      ).toBe(true);
+      expect(mockLogger.hasLogged("debug", "Could not detect opencode-coder package via aimgr list")).toBe(false);
       execSyncSpy.mockRestore();
     });
   });

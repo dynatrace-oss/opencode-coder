@@ -8,6 +8,13 @@ import type { VersionInfo } from "../core/version";
 const COMMAND_CHECK_TIMEOUT_MS = 5_000;
 const AIMGR_COMMAND_TIMEOUT_MS = 10_000;
 
+function isExecTimeoutError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const timeoutError = error as { code?: string; killed?: boolean; signal?: string };
+  return timeoutError.code === "ETIMEDOUT" || timeoutError.killed === true || timeoutError.signal === "SIGTERM";
+}
+
 /**
  * Options for ProjectDetectorService
  */
@@ -165,14 +172,23 @@ export class ProjectDetectorService {
    * Check whether the bd CLI is available on PATH.
    */
   detectBdCliInstalled(): boolean {
+    const command = "command -v bd";
     try {
-      execSync("command -v bd", {
+      execSync(command, {
         stdio: "ignore",
         timeout: COMMAND_CHECK_TIMEOUT_MS,
       });
       this.logger.debug("bd CLI is available");
       return true;
-    } catch {
+    } catch (error) {
+      if (isExecTimeoutError(error)) {
+        this.logger.warn("bd CLI availability check timed out", {
+          command,
+          timeoutMs: COMMAND_CHECK_TIMEOUT_MS,
+        });
+        return false;
+      }
+
       this.logger.debug("bd CLI not found on PATH");
       return false;
     }
@@ -186,14 +202,23 @@ export class ProjectDetectorService {
    * Check whether the aimgr CLI is available on PATH.
    */
   detectAimgrInstalled(): boolean {
+    const command = "command -v aimgr";
     try {
-      execSync("command -v aimgr", {
+      execSync(command, {
         stdio: "ignore",
         timeout: COMMAND_CHECK_TIMEOUT_MS,
       });
       this.logger.debug("aimgr CLI is available");
       return true;
-    } catch {
+    } catch (error) {
+      if (isExecTimeoutError(error)) {
+        this.logger.warn("aimgr CLI availability check timed out", {
+          command,
+          timeoutMs: COMMAND_CHECK_TIMEOUT_MS,
+        });
+        return false;
+      }
+
       this.logger.debug("aimgr CLI not found on PATH");
       return false;
     }
@@ -222,8 +247,9 @@ export class ProjectDetectorService {
    * - the result is an empty array
    */
   detectCoderPackageInstalled(): boolean {
+    const command = 'aimgr list "package/opencode-coder" --format json';
     try {
-      const stdout = execSync('aimgr list "package/opencode-coder" --format json', {
+      const stdout = execSync(command, {
         cwd: this.workdir,
         encoding: "utf-8",
         stdio: ["ignore", "pipe", "pipe"],
@@ -233,7 +259,15 @@ export class ProjectDetectorService {
       const found = Array.isArray(parsed) && parsed.length > 0;
       this.logger.debug("aimgr list package/opencode-coder", { found, count: parsed.length });
       return found;
-    } catch {
+    } catch (error) {
+      if (isExecTimeoutError(error)) {
+        this.logger.warn("aimgr list timed out while checking opencode-coder package", {
+          command,
+          timeoutMs: AIMGR_COMMAND_TIMEOUT_MS,
+        });
+        return false;
+      }
+
       this.logger.debug("Could not detect opencode-coder package via aimgr list");
       return false;
     }

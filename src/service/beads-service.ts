@@ -7,6 +7,15 @@ type OpencodeClient = PluginInput["client"];
 
 const COMMAND_CHECK_TIMEOUT_MS = 5_000;
 
+type BdCliAvailabilityStatus = "installed" | "missing" | "timeout";
+
+function isExecTimeoutError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const timeoutError = error as { code?: string; killed?: boolean; signal?: string };
+  return timeoutError.code === "ETIMEDOUT" || timeoutError.killed === true || timeoutError.signal === "SIGTERM";
+}
+
 /**
  * Options for BeadsService
  */
@@ -68,14 +77,14 @@ export class BeadsService {
     const start = Date.now();
     try {
       // Check if bd CLI is installed
-      const bdInstalled = this.isBdCliInstalled();
+      const bdCliAvailability = this.getBdCliAvailability();
 
       // Check if .beads directory exists
       const detector = new BeadsDetector({ logger: this.logger });
       const beadsDirExists = detector.detectBeadsDirectory();
 
       // Only show toast if something is missing
-      if (!bdInstalled) {
+      if (bdCliAvailability === "missing") {
         await this.showToast({
           title: "Beads Not Available",
           message: "Beads CLI not found. Install with: npm install -g beads",
@@ -84,6 +93,10 @@ export class BeadsService {
         });
         this.logger.warn("Beads CLI not installed");
         return;
+      }
+
+      if (bdCliAvailability === "timeout") {
+        this.logger.warn("Skipping Beads CLI install guidance due to timeout");
       }
 
       if (!beadsDirExists) {
@@ -107,15 +120,24 @@ export class BeadsService {
   /**
    * Check if the bd CLI is installed by running 'command -v bd'
    */
-  private isBdCliInstalled(): boolean {
+  private getBdCliAvailability(): BdCliAvailabilityStatus {
+    const command = "command -v bd";
     try {
-      execSync("command -v bd", {
+      execSync(command, {
         stdio: "ignore",
         timeout: COMMAND_CHECK_TIMEOUT_MS,
       });
-      return true;
-    } catch {
-      return false;
+      return "installed";
+    } catch (error) {
+      if (isExecTimeoutError(error)) {
+        this.logger.warn("bd CLI availability check timed out", {
+          command,
+          timeoutMs: COMMAND_CHECK_TIMEOUT_MS,
+        });
+        return "timeout";
+      }
+
+      return "missing";
     }
   }
 

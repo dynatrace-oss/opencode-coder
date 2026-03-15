@@ -52,7 +52,7 @@ Each agent has different responsibilities and failure modes. Reminders should re
 
 ```
 <system-reminder>
-- Sync beads state with `bd sync` before ending the session
+- Persist beads state with supported `bd` Dolt commands before ending the session
 - Check `bd ready` after every tasker completes to find newly unblocked work
 - Update beads immediately when discussion changes scope or approach
 - Do NOT edit code directly when a tasker should be doing the work
@@ -183,9 +183,9 @@ async function handleBeadsCreate(
 #### 2. Auto-sync after creation
 
 ```typescript
-// Automatically run bd sync after any bd create
+// Automatically persist beads changes after any bd create
 if (command.match(/^bd\s+create\b/)) {
-  // Could trigger a sync, though this might be better left to the agent
+  // Could trigger `bd dolt commit` / `bd dolt push`, though this might be better left to the agent
 }
 ```
 
@@ -226,7 +226,7 @@ if (isEpic) {
 | `bd create` | Track new issues, inject follow-up reminders |
 | `bd close` | Update session state, check if parent epic is now completable |
 | `bd ready` | Cache the result for reminders, know what's unblocked |
-| `bd sync` | Confirm sync succeeded, update plugin state |
+| `bd dolt commit` / `bd dolt push` | Confirm persistence succeeded, update plugin state |
 | `bd update` | Track scope changes |
 
 ### Combining with `chat.message` Reminders
@@ -455,5 +455,5 @@ All three mechanisms form a coherent system:
 
 - Is `tokens.input` a reliable proxy for context occupancy? (It includes cache hits which don't count against the window)
 - Should we warn the agent at 60%, 80%, or 90% fill? What's the right threshold?
-- Should we auto-trigger `bd sync` before compaction to ensure beads state is saved?
+- Should we auto-trigger `bd dolt commit` or `bd dolt push` before compaction to ensure beads state is saved?
 - Can we use `compaction.reserved` to calculate a more accurate "remaining capacity"?

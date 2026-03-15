@@ -249,6 +249,42 @@ describe("OpencodeCoder Plugin Integration", () => {
       detectCoderDirSpy.mockRestore();
     });
 
+    it("does not block config when readiness toast never resolves", async () => {
+      const detectCoderDirSpy = spyOn(ProjectDetectorService.prototype, "detectCoderDirectory").mockReturnValue(true);
+      const autoInitializeSpy = spyOn(AimgrService.prototype, "autoInitialize").mockResolvedValue(undefined);
+      const healthSpy = spyOn(AimgrService.prototype, "verifyAndAutoRepairResources").mockResolvedValue({
+        verifyResult: { status: "ok", issues: [] },
+        resourcesHealthy: true,
+        repairAttempted: false,
+        repairSucceeded: false,
+      });
+      const detectSpy = spyOn(ProjectDetectorService.prototype, "detectAndWrite").mockResolvedValue(
+        createProjectContext({ ecosystemReady: false })
+      );
+
+      const mockInput = createMockPluginInput();
+      const showToastSpy = spyOn(mockInput.client.tui, "showToast").mockImplementation(
+        () => new Promise<void>(() => {})
+      );
+      const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
+      const cfg: Record<string, unknown> = {};
+
+      await hooks.config?.(cfg as any);
+
+      expect(cfg.default_agent).toBeUndefined();
+      expect(showToastSpy).toHaveBeenCalledTimes(1);
+      expect(
+        mockInput.client.app.logs.some(
+          (entry) => entry.message === "ecosystemReady=false, not setting default_agent to orchestrator"
+        )
+      ).toBe(true);
+
+      autoInitializeSpy.mockRestore();
+      healthSpy.mockRestore();
+      detectSpy.mockRestore();
+      detectCoderDirSpy.mockRestore();
+    });
+
     it("evaluates readiness after autoInitialize so config uses final state", async () => {
       const detectCoderDirSpy = spyOn(ProjectDetectorService.prototype, "detectCoderDirectory").mockReturnValue(true);
       const order: string[] = [];

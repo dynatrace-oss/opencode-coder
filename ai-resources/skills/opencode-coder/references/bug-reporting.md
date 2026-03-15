@@ -337,7 +337,7 @@ EOF
 ### Tips for Effective Bug Reports
 
 1. **Use descriptive titles**: Include the component and a clear summary
-   - Good: `[bd sync] Fails to push when .beads/ has merge conflicts`
+   - Good: `[bd dolt push] Fails when .beads/ has merge conflicts`
    - Bad: `Sync doesn't work`
 
 2. **Enable debug logging BEFORE reproducing**:

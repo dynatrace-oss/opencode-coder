@@ -511,7 +511,7 @@ bd mol distill bd-abc123 --as "Release Workflow"
 **Example issues:**
 - "Multi-repo hydration fails validation"
 - "gt mail send fails with 'message' type validation"
-- "bd sync fails in crew worktree with redirect"
+- "bd dolt push fails in crew worktree with redirect"
 
 ### Gastown vs Basic Beads
 

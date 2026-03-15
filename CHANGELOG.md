@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.3] - 2026-03-15
+
+### Fixed
+
+- **Startup readiness warning hang**: The "Orchestrator not enabled" startup toast no longer blocks the plugin config hook when the TUI toast promise stalls, preventing blank-screen hangs in not-ready projects.
+
+### Added
+
+- **Readiness toast regression coverage**: Added integration coverage for the non-ready startup path when the readiness toast promise never resolves.
+
+### Docs
+
+- **Beads persistence guidance**: Replaced outdated `bd sync` references with supported `bd dolt` persistence commands in agent and troubleshooting docs.
+
 ## [0.34.2] - 2026-03-15
 
 ### Fixed

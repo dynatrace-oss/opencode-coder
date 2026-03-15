@@ -177,7 +177,7 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
         log.info("ecosystemReady=false, not setting default_agent to orchestrator", {
           ecosystemReady: projectContext.ecosystemReady,
         });
-        await (client as any).tui.showToast({
+        void (client as any).tui.showToast({
           title: "Orchestrator not enabled",
           message: "Orchestrator was not made the default agent because the project is not fully ready yet. Check aimgr/beads setup or run /opencode-coder/doctor.",
           variant: "warning",

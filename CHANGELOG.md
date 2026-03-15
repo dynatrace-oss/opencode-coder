@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-03-15
+
+### Added
+
+- **Project-local plugin logs**: Added daily log files at `.coder/logs/coder-YYYY-MM-DD.log` with 7-day retention so startup/runtime diagnostics are available directly in the repository context.
+- **Startup timeout guardrails**: Added bounded startup timeouts for project-context and CLI-backed checks to prevent hanging during initialization.
+
+### Fixed
+
+- **CLI availability timeout handling**: `aimgr`/`bd` availability checks now treat command timeouts explicitly and continue in degraded mode with warning logs instead of blocking startup or misreporting missing tools.
+
 ## [0.33.1] - 2026-03-13
 
 ### Changed

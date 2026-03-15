@@ -23,6 +23,7 @@ Run all test suites before releasing:
 ```bash
 bun run test:unit          # Unit tests
 bun run test:integration   # Integration tests
+bun test tests/integration/plugin.test.ts --test-name-pattern "no-.coder startup regression"  # REQUIRED for startup no-.coder safeguard
 bun run test:e2e          # End-to-end tests (optional, slower)
 ```
 
@@ -51,6 +52,7 @@ This project follows [Semantic Versioning](https://semver.org/):
 ## Pre-Release Checklist
 
 - [ ] All tests pass (`bun run test:unit && bun run test:integration`)
+- [ ] Startup no-`.coder` regression test passes locally (`bun test tests/integration/plugin.test.ts --test-name-pattern "no-.coder startup regression"`)
 - [ ] Type checking passes (`bun run typecheck`)
 - [ ] Build succeeds (`bun run build`)
 - [ ] CHANGELOG.md updated with new version and changes

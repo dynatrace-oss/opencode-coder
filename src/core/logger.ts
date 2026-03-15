@@ -4,21 +4,66 @@ import { join } from "path";
 
 export const SERVICE_NAME = "opencode-coder";
 const LOG_RETENTION_DAYS = 7;
+type LogLevel = "debug" | "info" | "warn" | "error";
 
-export type Logger = ReturnType<typeof createLogger>;
+interface BufferedFileLogEntry {
+  path: string;
+  line: string;
+}
 
-export function createLogger(client: PluginInput["client"], workdir: string) {
+export interface Logger {
+  debug(message: string, extra?: Record<string, unknown>): void;
+  info(message: string, extra?: Record<string, unknown>): void;
+  warn(message: string, extra?: Record<string, unknown>): void;
+  error(message: string, extra?: Record<string, unknown>): void;
+  enableFileLogging(): void;
+}
+
+export function createLogger(client: PluginInput["client"], workdir: string): Logger {
   // Check if debug logging is enabled via environment variable
   const isDebugEnabled = !!process.env['OPENCODE_CODER_DEBUG'];
 
   const logsDir = join(workdir, ".coder", "logs");
-  pruneOldLogFiles(logsDir);
+  let isFileLoggingEnabled = false;
+  const bufferedFileLogs: BufferedFileLogEntry[] = [];
 
-  const log = (level: "debug" | "info" | "warn" | "error", message: string, extra?: Record<string, unknown>) => {
+  const writeFileLog = (entry: BufferedFileLogEntry) => {
+    mkdirSync(logsDir, { recursive: true });
+    appendFileSync(entry.path, entry.line);
+  };
+
+  const enableFileLogging = () => {
+    if (isFileLoggingEnabled) {
+      return;
+    }
+
+    isFileLoggingEnabled = true;
+
+    try {
+      mkdirSync(logsDir, { recursive: true });
+      pruneOldLogFiles(logsDir);
+
+      for (const entry of bufferedFileLogs) {
+        appendFileSync(entry.path, entry.line);
+      }
+
+      bufferedFileLogs.length = 0;
+    } catch {
+      // Never break plugin startup/runtime if local file logging fails
+    }
+  };
+
+  const log = (level: LogLevel, message: string, extra?: Record<string, unknown>) => {
     // For debug messages, only log if OPENCODE_CODER_DEBUG is truthy
     if (level === "debug" && !isDebugEnabled) {
       return;
     }
+
+    const timestamp = new Date();
+    const fileLogEntry: BufferedFileLogEntry = {
+      path: getDailyLogPath(logsDir, timestamp),
+      line: formatLogLine(level, message, extra, timestamp),
+    };
 
     // Always use "info" level for OpenCode logging
     // (even for our internal debug messages when they are enabled)
@@ -32,9 +77,13 @@ export function createLogger(client: PluginInput["client"], workdir: string) {
     }
     client.app.log({ body });
 
+    if (!isFileLoggingEnabled) {
+      bufferedFileLogs.push(fileLogEntry);
+      return;
+    }
+
     try {
-      mkdirSync(logsDir, { recursive: true });
-      appendFileSync(getDailyLogPath(logsDir), formatLogLine(level, message, extra));
+      writeFileLog(fileLogEntry);
     } catch {
       // Never break plugin startup/runtime if local file logging fails
     }
@@ -45,6 +94,7 @@ export function createLogger(client: PluginInput["client"], workdir: string) {
     info: (message: string, extra?: Record<string, unknown>) => log("info", message, extra),
     warn: (message: string, extra?: Record<string, unknown>) => log("warn", message, extra),
     error: (message: string, extra?: Record<string, unknown>) => log("error", message, extra),
+    enableFileLogging,
   };
 }
 
@@ -52,8 +102,8 @@ function getDailyLogPath(logsDir: string, now: Date = new Date()): string {
   return join(logsDir, `coder-${toUtcDate(now)}.log`);
 }
 
-function formatLogLine(level: "debug" | "info" | "warn" | "error", message: string, extra?: Record<string, unknown>): string {
-  const timestamp = new Date().toISOString();
+function formatLogLine(level: LogLevel, message: string, extra?: Record<string, unknown>, now: Date = new Date()): string {
+  const timestamp = now.toISOString();
   const normalizedMessage = message.replaceAll("\n", "\\n");
   const base = `${timestamp} ${level.toUpperCase()} [${SERVICE_NAME}] (pid=${process.pid}) ${normalizedMessage}`;
 

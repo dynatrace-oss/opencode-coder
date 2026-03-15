@@ -51,6 +51,9 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
   // explicitly opted in via /init.
   const projectDetector = new ProjectDetectorService({ logger: log, workdir: worktree });
   const hasCoderDirectory = projectDetector.detectCoderDirectory();
+  if (hasCoderDirectory) {
+    log.enableFileLogging();
+  }
   const aimgrInitStart = Date.now();
   const projectContextPromise: Promise<ProjectContext | null> = !hasCoderDirectory
     ? Promise.resolve(null)

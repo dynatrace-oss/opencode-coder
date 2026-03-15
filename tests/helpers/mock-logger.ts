@@ -29,6 +29,7 @@ export function createMockLogger(): MockLogger {
     info: (message: string, extra?: Record<string, unknown>) => log("info", message, extra),
     warn: (message: string, extra?: Record<string, unknown>) => log("warn", message, extra),
     error: (message: string, extra?: Record<string, unknown>) => log("error", message, extra),
+    enableFileLogging: () => {},
     clear() {
       calls.length = 0;
     },

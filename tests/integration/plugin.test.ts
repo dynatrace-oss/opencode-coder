@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { OpencodeCoder } from "../../src";
 import { AimgrService, BeadsService, ProjectDetectorService } from "../../src/service";
 import type { ProjectContext } from "../../src/service/project-detector-service";
@@ -48,6 +51,49 @@ describe("OpencodeCoder Plugin Integration", () => {
       const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
       expect(hooks.tool).toBeDefined();
       expect(hooks.tool?.coder).toBeDefined();
+    });
+
+    it("no-.coder startup regression: does not create .coder or ai.package.yaml", async () => {
+      const worktree = mkdtempSync(join(tmpdir(), "opencode-coder-no-coder-"));
+
+      try {
+        const mockInput = createMockPluginInput({ worktree, directory: worktree });
+        await OpencodeCoder(asMockPluginInput(mockInput));
+
+        expect(existsSync(join(worktree, ".coder"))).toBe(false);
+        expect(existsSync(join(worktree, "ai.package.yaml"))).toBe(false);
+      } finally {
+        rmSync(worktree, { recursive: true, force: true });
+      }
+    });
+
+    it("replays early startup logs into .coder/logs when project already opted in", async () => {
+      const worktree = mkdtempSync(join(tmpdir(), "opencode-coder-with-coder-"));
+
+      try {
+        mkdirSync(join(worktree, ".coder"), { recursive: true });
+
+        const mockInput = createMockPluginInput({ worktree, directory: worktree });
+        await OpencodeCoder(asMockPluginInput(mockInput));
+
+        const today = new Date().toISOString().slice(0, 10);
+        const logPath = join(worktree, ".coder", "logs", `coder-${today}.log`);
+        const logContent = readFileSync(logPath, "utf8");
+
+        expect(logContent).toContain("OpencodeCoder plugin loading...");
+        expect(logContent).toContain("Coder directory detected");
+        expect(logContent).toContain("OpencodeCoder plugin loaded");
+
+        const loadingIndex = logContent.indexOf("OpencodeCoder plugin loading...");
+        const detectedIndex = logContent.indexOf("Coder directory detected");
+        const loadedIndex = logContent.indexOf("OpencodeCoder plugin loaded");
+
+        expect(loadingIndex).toBeGreaterThanOrEqual(0);
+        expect(detectedIndex).toBeGreaterThan(loadingIndex);
+        expect(loadedIndex).toBeGreaterThan(detectedIndex);
+      } finally {
+        rmSync(worktree, { recursive: true, force: true });
+      }
     });
 
     it("registers /init even when .coder is absent and skips startup project management", async () => {

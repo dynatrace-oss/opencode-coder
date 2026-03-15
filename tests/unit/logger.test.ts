@@ -28,6 +28,7 @@ describe("createLogger", () => {
   it("writes info logs to OpenCode and daily project log file", () => {
     const client = createMockClient();
     const logger = createLogger(client as any, tempDir);
+    logger.enableFileLogging();
 
     logger.info("plugin ready", { requestId: "abc-123" });
 
@@ -54,6 +55,7 @@ describe("createLogger", () => {
   it("does not emit debug logs when OPENCODE_CODER_DEBUG is unset", () => {
     const client = createMockClient();
     const logger = createLogger(client as any, tempDir);
+    logger.enableFileLogging();
 
     logger.debug("hidden debug");
 
@@ -67,6 +69,7 @@ describe("createLogger", () => {
     process.env["OPENCODE_CODER_DEBUG"] = "1";
     const client = createMockClient();
     const logger = createLogger(client as any, tempDir);
+    logger.enableFileLogging();
 
     logger.debug("visible debug", { mode: "startup" });
 
@@ -103,7 +106,8 @@ describe("createLogger", () => {
     writeFileSync(join(logsDir, invalidName), "invalid\n");
 
     const client = createMockClient();
-    createLogger(client as any, tempDir);
+    const logger = createLogger(client as any, tempDir);
+    logger.enableFileLogging();
 
     expect(() => readFileSync(join(logsDir, oldName), "utf8")).toThrow();
     expect(readFileSync(join(logsDir, keepName), "utf8")).toContain("keep");
@@ -116,7 +120,50 @@ describe("createLogger", () => {
     writeFileSync(join(coderDir, "logs"), "not-a-directory");
 
     const client = createMockClient();
+    const logger = createLogger(client as any, tempDir);
 
-    expect(() => createLogger(client as any, tempDir)).not.toThrow();
+    expect(() => logger.enableFileLogging()).not.toThrow();
+  });
+
+  it("keeps startup diagnostics in OpenCode sink before file logging is enabled", () => {
+    const client = createMockClient();
+    const logger = createLogger(client as any, tempDir);
+
+    logger.info("startup diagnostic");
+
+    expect(client.app.logs).toHaveLength(1);
+    expect(client.app.logs[0]).toMatchObject({
+      service: SERVICE_NAME,
+      level: "info",
+      message: "startup diagnostic",
+    });
+
+    const today = new Date().toISOString().slice(0, 10);
+    const logPath = join(tempDir, ".coder", "logs", `coder-${today}.log`);
+    expect(() => readFileSync(logPath, "utf8")).toThrow();
+  });
+
+  it("replays buffered startup logs in order when file logging is enabled", () => {
+    const client = createMockClient();
+    const logger = createLogger(client as any, tempDir);
+
+    logger.info("startup one");
+    logger.warn("startup two");
+
+    const today = new Date().toISOString().slice(0, 10);
+    const logPath = join(tempDir, ".coder", "logs", `coder-${today}.log`);
+    expect(() => readFileSync(logPath, "utf8")).toThrow();
+
+    logger.enableFileLogging();
+    logger.error("startup three");
+
+    const lines = readFileSync(logPath, "utf8").trim().split("\n");
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toContain("INFO");
+    expect(lines[0]).toContain("startup one");
+    expect(lines[1]).toContain("WARN");
+    expect(lines[1]).toContain("startup two");
+    expect(lines[2]).toContain("ERROR");
+    expect(lines[2]).toContain("startup three");
   });
 });

@@ -18,6 +18,7 @@ describe("AimgrService", () => {
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
+      enableFileLogging: vi.fn(),
     } as unknown as Logger;
 
     // Create mock client with TUI

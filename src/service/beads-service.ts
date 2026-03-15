@@ -5,6 +5,8 @@ import { execSync } from "child_process";
 
 type OpencodeClient = PluginInput["client"];
 
+const COMMAND_CHECK_TIMEOUT_MS = 5_000;
+
 /**
  * Options for BeadsService
  */
@@ -107,7 +109,10 @@ export class BeadsService {
    */
   private isBdCliInstalled(): boolean {
     try {
-      execSync("command -v bd", { stdio: "ignore" });
+      execSync("command -v bd", {
+        stdio: "ignore",
+        timeout: COMMAND_CHECK_TIMEOUT_MS,
+      });
       return true;
     } catch {
       return false;

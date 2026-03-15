@@ -5,6 +5,9 @@ import { stringify } from "yaml";
 import type { Logger } from "../core/logger";
 import type { VersionInfo } from "../core/version";
 
+const COMMAND_CHECK_TIMEOUT_MS = 5_000;
+const AIMGR_COMMAND_TIMEOUT_MS = 10_000;
+
 /**
  * Options for ProjectDetectorService
  */
@@ -163,7 +166,10 @@ export class ProjectDetectorService {
    */
   detectBdCliInstalled(): boolean {
     try {
-      execSync("command -v bd", { stdio: "ignore" });
+      execSync("command -v bd", {
+        stdio: "ignore",
+        timeout: COMMAND_CHECK_TIMEOUT_MS,
+      });
       this.logger.debug("bd CLI is available");
       return true;
     } catch {
@@ -181,7 +187,10 @@ export class ProjectDetectorService {
    */
   detectAimgrInstalled(): boolean {
     try {
-      execSync("command -v aimgr", { stdio: "ignore" });
+      execSync("command -v aimgr", {
+        stdio: "ignore",
+        timeout: COMMAND_CHECK_TIMEOUT_MS,
+      });
       this.logger.debug("aimgr CLI is available");
       return true;
     } catch {
@@ -217,7 +226,8 @@ export class ProjectDetectorService {
       const stdout = execSync('aimgr list "package/opencode-coder" --format json', {
         cwd: this.workdir,
         encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: AIMGR_COMMAND_TIMEOUT_MS,
       });
       const parsed = JSON.parse(stdout);
       const found = Array.isArray(parsed) && parsed.length > 0;
@@ -240,7 +250,11 @@ export class ProjectDetectorService {
     }
 
     try {
-      const stdout = execSync("aimgr verify --format json", { encoding: "utf-8" });
+      const stdout = execSync("aimgr verify --format json", {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: AIMGR_COMMAND_TIMEOUT_MS,
+      });
       const result = JSON.parse(stdout);
       const hasIssues =
         (Array.isArray(result.issues) && result.issues.length > 0) ||

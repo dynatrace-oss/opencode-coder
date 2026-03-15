@@ -134,6 +134,10 @@ describe("ProjectDetectorService", () => {
       const result = service.detectBdCliInstalled();
 
       expect(result).toBe(true);
+      expect(execSyncSpy).toHaveBeenCalledWith("command -v bd", {
+        stdio: "ignore",
+        timeout: 5000,
+      });
       execSyncSpy.mockRestore();
     });
 
@@ -160,6 +164,10 @@ describe("ProjectDetectorService", () => {
       const result = service.detectAimgrInstalled();
 
       expect(result).toBe(true);
+      expect(execSyncSpy).toHaveBeenCalledWith("command -v aimgr", {
+        stdio: "ignore",
+        timeout: 5000,
+      });
       execSyncSpy.mockRestore();
     });
 
@@ -214,7 +222,12 @@ describe("ProjectDetectorService", () => {
       expect(result).toBe(true);
       expect(execSyncSpy).toHaveBeenCalledWith(
         'aimgr list "package/opencode-coder" --format json',
-        { cwd: "/test/project", encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+        {
+          cwd: "/test/project",
+          encoding: "utf-8",
+          stdio: ["ignore", "pipe", "pipe"],
+          timeout: 10000,
+        }
       );
       execSyncSpy.mockRestore();
     });
@@ -282,6 +295,11 @@ describe("ProjectDetectorService", () => {
       const result = service.detectResourcesHealthy();
 
       expect(result).toBe(true);
+      expect(execSyncSpy).toHaveBeenCalledWith("aimgr verify --format json", {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 10000,
+      });
       execSyncSpy.mockRestore();
     });
 
@@ -309,6 +327,22 @@ describe("ProjectDetectorService", () => {
       const result = service.detectResourcesHealthy();
 
       expect(result).toBe(false);
+      execSyncSpy.mockRestore();
+    });
+
+    it("should return false when aimgr verify times out", () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation((cmd: string) => {
+        if (cmd === "command -v aimgr") return "" as any;
+        const timeoutError = new Error("timed out") as Error & { killed: boolean; signal: string };
+        timeoutError.killed = true;
+        timeoutError.signal = "SIGTERM";
+        throw timeoutError;
+      });
+
+      const result = service.detectResourcesHealthy();
+
+      expect(result).toBe(false);
+      expect(mockLogger.hasLogged("error", "Failed to run aimgr verify")).toBe(true);
       execSyncSpy.mockRestore();
     });
   });

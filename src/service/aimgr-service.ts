@@ -6,6 +6,9 @@ import * as path from "path";
 
 type OpencodeClient = PluginInput["client"];
 
+const COMMAND_CHECK_TIMEOUT_MS = 5_000;
+const AIMGR_COMMAND_TIMEOUT_MS = 10_000;
+
 export interface AimgrStartupHealthResult {
   verifyResult: any | null;
   resourcesHealthy: boolean;
@@ -50,7 +53,10 @@ export class AimgrService {
    */
   isAimgrAvailable(): boolean {
     try {
-      execSync("command -v aimgr", { stdio: "ignore" });
+      execSync("command -v aimgr", {
+        stdio: "ignore",
+        timeout: COMMAND_CHECK_TIMEOUT_MS,
+      });
       this.logger.debug("aimgr CLI is available");
       return true;
     } catch {
@@ -75,7 +81,11 @@ export class AimgrService {
   initializeAimgr(): void {
     try {
       this.logger.debug("Running aimgr init", { workdir: this.workdir });
-      execSync("aimgr init", { cwd: this.workdir, stdio: "pipe" });
+      execSync("aimgr init", {
+        cwd: this.workdir,
+        stdio: "ignore",
+        timeout: AIMGR_COMMAND_TIMEOUT_MS,
+      });
       this.logger.info("aimgr init completed successfully");
     } catch (error) {
       this.logger.error("Failed to run aimgr init", { error: String(error) });
@@ -89,7 +99,11 @@ export class AimgrService {
   isPackageAvailable(packageName: string): boolean {
     try {
       this.logger.debug("Checking if package is available", { packageName });
-      const stdout = execSync("aimgr repo list --format=json", { encoding: "utf-8" });
+      const stdout = execSync("aimgr repo list --format=json", {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: AIMGR_COMMAND_TIMEOUT_MS,
+      });
       const data = JSON.parse(stdout);
       
       // Check if package exists in any of the resource lists
@@ -110,7 +124,11 @@ export class AimgrService {
   installPackage(packageName: string): void {
     try {
       this.logger.debug("Installing package", { packageName, workdir: this.workdir });
-      execSync(`aimgr install package/${packageName}`, { cwd: this.workdir, stdio: "pipe" });
+      execSync(`aimgr install package/${packageName}`, {
+        cwd: this.workdir,
+        stdio: "ignore",
+        timeout: AIMGR_COMMAND_TIMEOUT_MS,
+      });
       this.logger.info("Package installed successfully", { packageName });
     } catch (error) {
       this.logger.error("Failed to install package", { packageName, error: String(error) });
@@ -133,7 +151,11 @@ export class AimgrService {
 
     try {
       this.logger.debug("Running aimgr verify --format json");
-      const stdout = execSync("aimgr verify --format json", { encoding: "utf-8" });
+      const stdout = execSync("aimgr verify --format json", {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: AIMGR_COMMAND_TIMEOUT_MS,
+      });
       const result = JSON.parse(stdout);
       this.logger.debug("aimgr verify completed", { result });
       return result;
@@ -161,7 +183,11 @@ export class AimgrService {
 
     try {
       this.logger.debug("Running aimgr repair --format json");
-      const stdout = execSync("aimgr repair --format json", { encoding: "utf-8" });
+      const stdout = execSync("aimgr repair --format json", {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: AIMGR_COMMAND_TIMEOUT_MS,
+      });
       const result = JSON.parse(stdout);
       this.logger.debug("aimgr repair completed", { result });
       return result;

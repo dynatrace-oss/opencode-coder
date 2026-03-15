@@ -77,6 +77,10 @@ describe("AimgrService", () => {
       const result = aimgrService.isAimgrAvailable();
 
       expect(result).toBe(true);
+      expect(execSyncMock).toHaveBeenCalledWith("command -v aimgr", {
+        stdio: "ignore",
+        timeout: 5000,
+      });
       expect(mockLogger.debug).toHaveBeenCalledWith("aimgr CLI is available");
     });
 
@@ -134,7 +138,11 @@ describe("AimgrService", () => {
 
       aimgrService.initializeAimgr();
 
-      expect(execSyncMock).toHaveBeenCalledWith("aimgr init", { cwd: "/test/path", stdio: "pipe" });
+      expect(execSyncMock).toHaveBeenCalledWith("aimgr init", {
+        cwd: "/test/path",
+        stdio: "ignore",
+        timeout: 10000,
+      });
       expect(mockLogger.info).toHaveBeenCalledWith("aimgr init completed successfully");
     });
 
@@ -169,6 +177,11 @@ describe("AimgrService", () => {
       const result = aimgrService.isPackageAvailable("opencode-coder");
 
       expect(result).toBe(true);
+      expect(execSyncMock).toHaveBeenCalledWith("aimgr repo list --format=json", {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 10000,
+      });
     });
 
     it("should return false when package does not exist", () => {
@@ -211,7 +224,11 @@ describe("AimgrService", () => {
 
       aimgrService.installPackage("opencode-coder");
 
-      expect(execSyncMock).toHaveBeenCalledWith("aimgr install package/opencode-coder", { cwd: "/test/path", stdio: "pipe" });
+      expect(execSyncMock).toHaveBeenCalledWith("aimgr install package/opencode-coder", {
+        cwd: "/test/path",
+        stdio: "ignore",
+        timeout: 10000,
+      });
       expect(mockLogger.info).toHaveBeenCalledWith("Package installed successfully", { packageName: "opencode-coder" });
     });
 
@@ -316,6 +333,35 @@ describe("AimgrService", () => {
         variant: "warning",
         duration: 8000,
       });
+    });
+  });
+
+  describe("timeout handling", () => {
+    beforeEach(() => {
+      aimgrService = new AimgrService({
+        logger: mockLogger,
+        client: mockClient,
+        workdir: "/test/path",
+      });
+    });
+
+    it("should return null when aimgr verify times out", () => {
+      execSyncMock.mockImplementation((cmd: string) => {
+        if (cmd === "command -v aimgr") return Buffer.from("/usr/bin/aimgr");
+
+        const timeoutError = new Error("Command timed out") as Error & { killed: boolean; signal: string };
+        timeoutError.killed = true;
+        timeoutError.signal = "SIGTERM";
+        throw timeoutError;
+      });
+
+      const result = aimgrService.verifyResources();
+
+      expect(result).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Failed to run aimgr verify",
+        expect.objectContaining({ error: expect.any(String) })
+      );
     });
   });
 

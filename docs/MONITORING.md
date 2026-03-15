@@ -7,8 +7,35 @@ opencode-coder plugin.
 
 ### OpenCode Logs
 
-OpenCode stores logs in `~/.local/state/opencode/log/`. The log-analyzer
+OpenCode stores logs in `~/.local/share/opencode/log/`. The log-analyzer
 script parses these structured logs.
+
+> opencode-coder plugin logs continue to be emitted to OpenCode logs.
+> The project-local file logs described below are an additional sink, not a
+> replacement.
+
+### Project-Local Plugin Logs
+
+In addition to OpenCode logs, opencode-coder writes plugin logs to a
+project-local file under:
+
+`<project-root>/.coder/logs/coder-YYYY-MM-DD.log`
+
+- `YYYY-MM-DD` is the UTC calendar date of the log file
+- one file is used per day (daily rotation by filename)
+- `.coder/logs/` is created lazily when logging starts
+
+This location is intentionally project-local so plugin debugging is possible
+directly from the repository, without needing to inspect ephemeral OpenCode
+file descriptors under `/proc/<pid>/fd/...`.
+
+#### Retention
+
+Project-local `coder-YYYY-MM-DD.log` files are retained for 7 days.
+Files older than 7 days are pruned automatically during startup.
+
+Retention is based on the date in the filename (not file modification time),
+so manually touching old files does not prevent pruning.
 
 #### List Recent Sessions
 
@@ -52,6 +79,16 @@ bun run scripts/log-analyzer list sessions | head -5
 
 Then query each session for errors.
 
+### Inspect Project-Local Logs
+
+```bash
+# list local plugin log files for this project
+ls .coder/logs/
+
+# inspect today's log file
+less ".coder/logs/coder-$(date -u +%F).log"
+```
+
 ## What to Look For
 
 ### Critical (needs immediate attention)
@@ -89,6 +126,31 @@ Then query each session for errors.
 - **Transient network errors** — One-off connection issues that don't
   repeat
 - **Debug-level output** — Only relevant when actively debugging
+
+## Troubleshooting
+
+### Startup Debugging
+
+If startup behavior is hard to reproduce, inspect both log sources:
+
+1. OpenCode session logs (`~/.local/share/opencode/log/`) for full runtime context
+2. Project-local plugin logs (`.coder/logs/coder-YYYY-MM-DD.log`) for a stable,
+   repository-scoped plugin timeline
+
+When debug logging is enabled (for example via `OPENCODE_CODER_DEBUG`), the
+same debug events are written to both destinations.
+
+### Duplicate-Process Investigation
+
+When multiple OpenCode/plugin processes overlap, use the project-local logs to
+disambiguate behavior by process ID (`pid`) in each line:
+
+- scan `.coder/logs/coder-YYYY-MM-DD.log` for interleaved entries
+- group by `pid` to separate concurrent plugin processes
+- correlate timestamps with OpenCode session logs as needed
+
+This is typically easier than chasing active process file handles via
+`/proc/<pid>/fd/...`, especially after processes exit.
 
 ## Analysis Tips
 

@@ -8,8 +8,11 @@ import { createCoderTool } from "./tool";
 import { isPluginDisabled } from "./config/env";
 import { getInstallGuideTemplate } from "./templates";
 
+const PROJECT_CONTEXT_TIMEOUT_MS = 30_000;
+const PROJECT_CONTEXT_TIMEOUT = Symbol("project-context-timeout");
+
 export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
-  const log = createLogger(client);
+  const log = createLogger(client, worktree);
   const startTime = Date.now();
 
   log.info("OpencodeCoder plugin loading...");
@@ -121,7 +124,24 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
       }
 
       // Await project context once for both /init gating and default_agent
-      const projectContext = await projectContextPromise;
+      let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+      const projectContextResult = await Promise.race<ProjectContext | null | typeof PROJECT_CONTEXT_TIMEOUT>([
+        projectContextPromise,
+        new Promise<typeof PROJECT_CONTEXT_TIMEOUT>((resolve) => {
+          timeoutHandle = setTimeout(() => resolve(PROJECT_CONTEXT_TIMEOUT), PROJECT_CONTEXT_TIMEOUT_MS);
+        }),
+      ]).finally(() => {
+        if (timeoutHandle) {
+          clearTimeout(timeoutHandle);
+        }
+      });
+
+      const projectContext = projectContextResult === PROJECT_CONTEXT_TIMEOUT ? null : projectContextResult;
+      if (projectContextResult === PROJECT_CONTEXT_TIMEOUT) {
+        log.warn("Project context startup timed out; continuing in degraded mode", {
+          timeoutMs: PROJECT_CONTEXT_TIMEOUT_MS,
+        });
+      }
 
       // Gate /init command based on installation readiness
       if (!projectContext || !projectContext.installReady) {

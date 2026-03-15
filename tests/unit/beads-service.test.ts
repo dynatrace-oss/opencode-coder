@@ -135,6 +135,36 @@ describe("BeadsService", () => {
 
       expect(toastCalls.length).toBe(0);
       expect(mockLogger.hasLogged("debug", "Beads availability check passed")).toBe(true);
+      expect(execSyncSpy).toHaveBeenCalledWith("command -v bd", {
+        stdio: "ignore",
+        timeout: 5000,
+      });
+
+      execSyncSpy.mockRestore();
+      accessSyncSpy.mockRestore();
+    });
+
+    it("should treat bd CLI timeout as missing and show not-available toast", async () => {
+      const execSyncSpy = spyOn(childProcess, "execSync").mockImplementation(() => {
+        const timeoutError = new Error("timed out") as Error & { killed: boolean; signal: string };
+        timeoutError.killed = true;
+        timeoutError.signal = "SIGTERM";
+        throw timeoutError;
+      });
+
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
+
+      const service = new BeadsService({
+        logger: mockLogger,
+        client: mockClient,
+        beadsEnabled: true,
+      });
+
+      await service.checkBeadsAvailability();
+
+      expect(toastCalls.length).toBe(1);
+      expect(toastCalls[0].title).toBe("Beads Not Available");
+      expect(mockLogger.hasLogged("warn", "Beads CLI not installed")).toBe(true);
 
       execSyncSpy.mockRestore();
       accessSyncSpy.mockRestore();

@@ -200,5 +200,55 @@ describe("OpencodeCoder Plugin Integration", () => {
       healthSpy.mockRestore();
       detectSpy.mockRestore();
     });
+
+    it("degrades safely when project context startup times out", async () => {
+      const autoInitializeSpy = spyOn(AimgrService.prototype, "autoInitialize").mockImplementation(
+        () => new Promise<void>(() => {})
+      );
+      const healthSpy = spyOn(AimgrService.prototype, "verifyAndAutoRepairResources").mockResolvedValue({
+        verifyResult: { status: "ok", issues: [] },
+        resourcesHealthy: true,
+        repairAttempted: false,
+        repairSucceeded: false,
+      });
+      const detectSpy = spyOn(ProjectDetectorService.prototype, "detectAndWrite").mockResolvedValue(
+        createProjectContext({ ecosystemReady: true })
+      );
+
+      const originalSetTimeout = globalThis.setTimeout;
+      const originalClearTimeout = globalThis.clearTimeout;
+      globalThis.setTimeout = ((cb: (...args: any[]) => void) => {
+        cb();
+        return 1 as any;
+      }) as typeof setTimeout;
+      globalThis.clearTimeout = (() => undefined) as typeof clearTimeout;
+
+      try {
+        const mockInput = createMockPluginInput();
+        const hooks = await OpencodeCoder(asMockPluginInput(mockInput));
+        const cfg: Record<string, unknown> = {};
+        await hooks.config?.(cfg as any);
+
+        expect(cfg.default_agent).toBeUndefined();
+        expect(cfg.command).toBeDefined();
+        expect((cfg.command as Record<string, unknown>).init).toBeDefined();
+        expect(
+          mockInput.client.app.logs.some(
+            (entry) => entry.level === "warn" && entry.message === "Project context startup timed out; continuing in degraded mode"
+          )
+        ).toBe(true);
+      } finally {
+        globalThis.setTimeout = originalSetTimeout;
+        globalThis.clearTimeout = originalClearTimeout;
+      }
+
+      // Timeout happened before startup flow completed
+      expect(healthSpy).not.toHaveBeenCalled();
+      expect(detectSpy).not.toHaveBeenCalled();
+
+      autoInitializeSpy.mockRestore();
+      healthSpy.mockRestore();
+      detectSpy.mockRestore();
+    });
   });
 });

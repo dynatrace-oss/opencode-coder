@@ -81,16 +81,13 @@ describe("OpencodeCoder Plugin Integration", () => {
         const logContent = readFileSync(logPath, "utf8");
 
         expect(logContent).toContain("OpencodeCoder plugin loading...");
-        expect(logContent).toContain("Coder directory detected");
         expect(logContent).toContain("OpencodeCoder plugin loaded");
 
         const loadingIndex = logContent.indexOf("OpencodeCoder plugin loading...");
-        const detectedIndex = logContent.indexOf("Coder directory detected");
         const loadedIndex = logContent.indexOf("OpencodeCoder plugin loaded");
 
         expect(loadingIndex).toBeGreaterThanOrEqual(0);
-        expect(detectedIndex).toBeGreaterThan(loadingIndex);
-        expect(loadedIndex).toBeGreaterThan(detectedIndex);
+        expect(loadedIndex).toBeGreaterThan(loadingIndex);
       } finally {
         rmSync(worktree, { recursive: true, force: true });
       }

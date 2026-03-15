@@ -922,6 +922,27 @@ describe("ProjectDetectorService", () => {
       writeFileSyncSpy.mockRestore();
     });
 
+    it("should detect .coder directory when it exists", () => {
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation((p: any) => {
+        if (String(p).endsWith(".coder")) return undefined;
+        throw new Error("ENOENT");
+      });
+
+      expect(service.detectCoderDirectory()).toBe(true);
+
+      accessSyncSpy.mockRestore();
+    });
+
+    it("should return false when .coder directory does not exist", () => {
+      const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => {
+        throw new Error("ENOENT");
+      });
+
+      expect(service.detectCoderDirectory()).toBe(false);
+
+      accessSyncSpy.mockRestore();
+    });
+
     it("should use resourcesHealthyOverride as authoritative health state", async () => {
       const accessSyncSpy = spyOn(fs, "accessSync").mockImplementation(() => undefined);
       const readFileSyncSpy = spyOn(fs, "readFileSync").mockReturnValue("# default excludes\n" as any);

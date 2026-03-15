@@ -115,6 +115,28 @@ export class ProjectDetectorService {
   }
 
   // ---------------------------------------------------------------------------
+  // .coder detection
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Check whether a .coder directory exists in the working directory.
+   *
+   * The plugin only performs project-local management when `.coder/` already
+   * exists or when the user explicitly creates it via `/init`.
+   */
+  detectCoderDirectory(): boolean {
+    const coderDir = path.join(this.workdir, ".coder");
+    try {
+      fs.accessSync(coderDir, fs.constants.F_OK);
+      this.logger.debug("Coder directory detected", { path: coderDir });
+      return true;
+    } catch {
+      this.logger.debug("Coder directory not found", { path: coderDir });
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Git detection
   // ---------------------------------------------------------------------------
 

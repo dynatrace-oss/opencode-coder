@@ -14,9 +14,11 @@ Let me check what's missing and help you get set up.
 
 ## Task
 
-1. Read \`.coder/project.yaml\` to check the current project state.
-2. For each missing prerequisite listed below, follow the corresponding guidance.
-3. After all items are resolved, inform the user to restart OpenCode.
+1. Ensure \`.coder/\` exists. If it does not, create it before proceeding.
+2. Read \`.coder/project.yaml\` to check the current project state when it exists.
+   - If \`.coder/project.yaml\` does not exist yet, continue with setup using direct detection as needed.
+3. For each missing prerequisite listed below, follow the corresponding guidance.
+4. After all items are resolved, inform the user to restart OpenCode.
 
 ---
 

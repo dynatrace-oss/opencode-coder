@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.1] - 2026-03-15
+
+### Fixed
+
+- **Startup side effects**: Startup no longer auto-runs aimgr bootstrap, creates `ai.package.yaml`, or writes `.coder/project.yaml` when `.coder/` is absent.
+- **Explicit setup flow**: `/init` remains available as the opt-in setup path and now creates `.coder/` before reading project context when needed.
+
 ## [0.34.0] - 2026-03-15
 
 ### Added

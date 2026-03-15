@@ -46,41 +46,49 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
   const coderTool = createCoderTool({ sessionExportService, versionInfo });
   log.debug("Coder tool created");
 
-  // 5. Run project detection after aimgr auto-initialize.
-  // This avoids capturing a stale readiness snapshot before startup remediation.
+  // 5. Only perform project-local startup management when .coder already exists.
+  // This avoids creating files or mutating the project unless the user has
+  // explicitly opted in via /init.
   const projectDetector = new ProjectDetectorService({ logger: log, workdir: worktree });
+  const hasCoderDirectory = projectDetector.detectCoderDirectory();
   const aimgrInitStart = Date.now();
-  const projectContextPromise: Promise<ProjectContext | null> = aimgrService.autoInitialize()
-    .then(() => {
-      log.debug("aimgr autoInitialize completed", { durationMs: Date.now() - aimgrInitStart });
-    })
-    .catch((err) => {
-      log.error("Failed to auto-initialize aimgr", { error: String(err) });
-    })
-    .then(() => aimgrService.verifyAndAutoRepairResources())
-    .then((health) => {
-      log.debug("aimgr verify/repair startup flow completed", {
-        durationMs: Date.now() - aimgrInitStart,
-        repairAttempted: health.repairAttempted,
-        repairSucceeded: health.repairSucceeded,
-        resourcesHealthy: health.resourcesHealthy,
-      });
-      if (health.verifyResult === null) {
-        return projectDetector.detectAndWrite(versionInfo);
-      }
+  const projectContextPromise: Promise<ProjectContext | null> = !hasCoderDirectory
+    ? Promise.resolve(null)
+    : aimgrService.autoInitialize()
+        .then(() => {
+          log.debug("aimgr autoInitialize completed", { durationMs: Date.now() - aimgrInitStart });
+        })
+        .catch((err) => {
+          log.error("Failed to auto-initialize aimgr", { error: String(err) });
+        })
+        .then(() => aimgrService.verifyAndAutoRepairResources())
+        .then((health) => {
+          log.debug("aimgr verify/repair startup flow completed", {
+            durationMs: Date.now() - aimgrInitStart,
+            repairAttempted: health.repairAttempted,
+            repairSucceeded: health.repairSucceeded,
+            resourcesHealthy: health.resourcesHealthy,
+          });
+          if (health.verifyResult === null) {
+            return projectDetector.detectAndWrite(versionInfo);
+          }
 
-      return projectDetector.detectAndWrite(versionInfo, {
-        resourcesHealthyOverride: health.resourcesHealthy,
-      });
-    })
-    .then((ctx) => {
-      log.debug("Project context written to .coder/project.yaml", { ecosystemReady: ctx.ecosystemReady });
-      return ctx;
-    })
-    .catch((err) => {
-      log.error("Project detection failed", { error: String(err) });
-      return null;
-    });
+          return projectDetector.detectAndWrite(versionInfo, {
+            resourcesHealthyOverride: health.resourcesHealthy,
+          });
+        })
+        .then((ctx) => {
+          log.debug("Project context written to .coder/project.yaml", { ecosystemReady: ctx.ecosystemReady });
+          return ctx;
+        })
+        .catch((err) => {
+          log.error("Project detection failed", { error: String(err) });
+          return null;
+        });
+
+  if (!hasCoderDirectory) {
+    log.info(".coder directory not found, skipping startup project management");
+  }
 
   // 6. Check beads availability and show toast if needed
   // Runs in the background and doesn't block plugin loading
@@ -123,7 +131,14 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
         // File doesn't exist — no-op
       }
 
-      // Await project context once for both /init gating and default_agent
+      // Always register /init so users can explicitly opt into setup.
+      input.command = input.command ?? {};
+      input.command["init"] = {
+        template: getInstallGuideTemplate(),
+        description: "Set up prerequisites for the opencode-coder plugin",
+      };
+
+      // Await project context once for default_agent decisions only.
       let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
       const projectContextResult = await Promise.race<ProjectContext | null | typeof PROJECT_CONTEXT_TIMEOUT>([
         projectContextPromise,
@@ -142,16 +157,7 @@ export const OpencodeCoder: Plugin = async ({ client, worktree }) => {
           timeoutMs: PROJECT_CONTEXT_TIMEOUT_MS,
         });
       }
-
-      // Gate /init command based on installation readiness
-      if (!projectContext || !projectContext.installReady) {
-        input.command = input.command ?? {};
-        input.command["init"] = {
-          template: getInstallGuideTemplate(),
-          description: "Set up prerequisites for the opencode-coder plugin",
-        };
-        log.info("Registered /init with installation guidance (installReady=false)");
-      }
+      log.info("Registered /init with installation guidance");
 
       // Set orchestrator as default agent when ecosystem is fully ready
       // and user hasn't explicitly configured a different default agent.

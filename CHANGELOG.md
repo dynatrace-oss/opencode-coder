@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.2] - 2026-03-15
+
+### Fixed
+
+- **Startup opt-in guardrail**: Startup no longer creates `.coder/`, `.coder/logs/`, or `ai.package.yaml` in repositories that have not explicitly opted in.
+- **Opted-in startup diagnostics**: Early startup log lines are now replayed into `.coder/logs` once file logging is enabled so opted-in projects keep a complete startup timeline.
+
+### Added
+
+- **Filesystem regression coverage**: Added real temp-directory integration coverage for both the no-`.coder` startup path and the opted-in `.coder` startup path.
+
 ## [0.34.1] - 2026-03-15
 
 ### Fixed
